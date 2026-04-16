@@ -50,15 +50,9 @@ export async function updateSession(request: NextRequest) {
 
   // If user is logged in and trying to access auth pages, redirect to dashboard
   if (user && isPublicRoute && request.nextUrl.pathname !== '/auth/callback') {
-    // Get user role from profile to determine redirect
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
+    const role = user.user_metadata?.role || 'SALES';
     const url = request.nextUrl.clone();
-    if (profile?.role === 'ADMIN') {
+    if (role === 'ADMIN') {
       url.pathname = '/admin';
     } else {
       url.pathname = '/sales';
@@ -68,14 +62,8 @@ export async function updateSession(request: NextRequest) {
 
   // RBAC: Protect admin routes
   if (user && request.nextUrl.pathname.startsWith('/admin')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    // If profile doesn't exist yet (race condition after signup), allow through
-    if (profile && profile.role !== 'ADMIN') {
+    const role = user.user_metadata?.role;
+    if (role !== 'ADMIN') {
       const url = request.nextUrl.clone();
       url.pathname = '/sales';
       return NextResponse.redirect(url);
@@ -84,14 +72,8 @@ export async function updateSession(request: NextRequest) {
 
   // RBAC: Protect sales routes
   if (user && request.nextUrl.pathname.startsWith('/sales')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    // If profile doesn't exist yet (race condition after signup), allow through
-    if (profile && profile.role !== 'SALES' && profile.role !== 'ADMIN') {
+    const role = user.user_metadata?.role;
+    if (role !== 'SALES' && role !== 'ADMIN') {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
