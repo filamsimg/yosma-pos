@@ -265,6 +265,32 @@ export default function RegisterPage() {
                 />
               </div>
 
+              {/* Invite Code */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="invite_code"
+                  className="text-slate-700 text-sm"
+                >
+                  Kode Akses {selectedRole === 'ADMIN' ? 'Admin' : 'Sales'}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="invite_code"
+                    name="invite_code"
+                    type="password"
+                    placeholder={`Masukkan kode verifikasi ${selectedRole.toLowerCase()}`}
+                    required
+                    className={`bg-white border-slate-200 placeholder:text-slate-400 h-11 pr-10 ${
+                      selectedRole === 'ADMIN' ? 'focus:border-purple-500 focus:ring-purple-500/20 text-purple-900' : 'focus:border-indigo-500 focus:ring-indigo-500/20 text-indigo-900'
+                    }`}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    {selectedRole === 'ADMIN' ? <Shield className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
+                  </div>
+                </div>
+                <p className="text-[10.5px] text-slate-500">Dapatkan kode akses ini dari sistem administrator.</p>
+              </div>
+
               {/* Submit Button */}
               <Button
                 type="submit"

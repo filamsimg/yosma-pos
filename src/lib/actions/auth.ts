@@ -54,9 +54,21 @@ export async function register(formData: FormData) {
   const password = formData.get('password') as string;
   const fullName = formData.get('full_name') as string;
   const role = (formData.get('role') as string) || 'SALES';
+  const inviteCode = formData.get('invite_code') as string;
 
-  if (!email || !password || !fullName) {
-    return { error: 'Semua field harus diisi.' };
+  if (!email || !password || !fullName || !inviteCode) {
+    return { error: 'Semua field harus diisi termasuk Kode Akses.' };
+  }
+
+  // Verify Invite Code
+  const expectedAdminCode = process.env.ADMIN_INVITE_CODE || 'YOSMA-ADMIN-2026';
+  const expectedSalesCode = process.env.SALES_INVITE_CODE || 'YOSMA-SALES-2026';
+
+  if (role === 'ADMIN' && inviteCode !== expectedAdminCode) {
+    return { error: 'Kode Akses Admin salah atau tidak valid.' };
+  }
+  if (role === 'SALES' && inviteCode !== expectedSalesCode) {
+    return { error: 'Kode Akses Sales salah atau tidak valid.' };
   }
 
   if (password.length < 6) {
