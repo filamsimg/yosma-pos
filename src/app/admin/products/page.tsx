@@ -233,91 +233,93 @@ export default function AdminProductsPage() {
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Kelola katalog produk dan penyesuaian stok ({products.length} total)
           </p>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-            <Input
-              placeholder="Cari produk atau SKU..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-slate-500 h-9"
-            />
+          {/* Header Actions */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Cari produk atau SKU..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 h-10"
+              />
+            </div>
+            <Button
+              onClick={() => handleOpenProductModal()}
+              className="bg-blue-600 hover:bg-blue-700 text-white h-10 shadow-sm"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Produk Baru
+            </Button>
           </div>
-          <Button
-            onClick={() => handleOpenProductModal()}
-            className="bg-blue-600 hover:bg-blue-500 text-white h-9"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Produk Baru
-          </Button>
         </div>
       </div>
 
       {/* Desktop Table */}
-      <Card className="border-white/5 bg-white/[0.03] hidden md:block">
+      <Card className="border-slate-200 bg-white shadow-sm hidden md:block rounded-sm">
         <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="text-slate-400">SKU</TableHead>
-                <TableHead className="text-slate-400">Nama Produk</TableHead>
-                <TableHead className="text-slate-400">Kategori</TableHead>
-                <TableHead className="text-slate-400 text-right">Harga</TableHead>
-                <TableHead className="text-slate-400 text-center">Stok</TableHead>
-                <TableHead className="text-slate-400 text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <table className="w-full table-auto text-left whitespace-nowrap">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-left">
+                <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider">SKU</th>
+                <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Nama Produk</th>
+                <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Kategori</th>
+                <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider text-right">Harga</th>
+                <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center">Stok</th>
+                <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i} className="border-white/5">
-                    {Array.from({ length: 6 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full bg-white/10" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-4 px-5"><div className="h-4 w-16 bg-slate-200 rounded"></div></td>
+                    <td className="py-4 px-5"><div className="h-4 w-32 bg-slate-200 rounded"></div></td>
+                    <td className="py-4 px-5"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+                    <td className="py-4 px-5"><div className="h-4 w-16 bg-slate-200 rounded ml-auto"></div></td>
+                    <td className="py-4 px-5"><div className="h-4 w-12 bg-slate-200 rounded mx-auto"></div></td>
+                    <td className="py-4 px-5"><div className="h-4 w-20 bg-slate-200 rounded ml-auto"></div></td>
+                  </tr>
                 ))
               ) : filteredProducts.length === 0 ? (
-                <TableRow className="border-white/5">
-                  <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                <tr>
+                  <td colSpan={6} className="text-center text-slate-500 py-8">
                     Tidak ada produk ditemukan
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ) : (
                 filteredProducts.map((p) => (
-                  <TableRow key={p.id} className="border-white/5 hover:bg-white/[0.02]">
-                    <TableCell className="text-slate-300 text-sm">{p.sku}</TableCell>
-                    <TableCell className="font-medium text-white text-sm">{p.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-white/5 text-slate-300 border-white/10">
+                  <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-5 align-middle text-sm text-slate-500">{p.sku}</td>
+                    <td className="py-4 px-5 align-middle font-medium text-slate-900 text-sm">{p.name}</td>
+                    <td className="py-4 px-5 align-middle">
+                      <span className="text-slate-500 text-sm">
                         {p.category?.name || '-'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-300 text-sm text-right">
+                      </span>
+                    </td>
+                    <td className="py-4 px-5 align-middle text-slate-900 font-medium text-sm text-right">
                       Rp {p.price.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-center">
+                    </td>
+                    <td className="py-4 px-5 align-middle text-center">
                       <Badge
-                        variant="secondary"
-                        className={
+                        variant="outline"
+                        className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${
                           p.stock <= 0
-                            ? 'bg-red-500/10 text-red-400'
+                            ? 'bg-red-50 text-red-600'
                             : p.stock < 10
-                            ? 'bg-yellow-500/10 text-yellow-400'
-                            : 'bg-green-500/10 text-green-400'
-                        }
+                            ? 'bg-amber-50 text-amber-600'
+                            : 'bg-emerald-50 text-emerald-600'
+                        }`}
                       >
                         {p.stock}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
+                    </td>
+                    <td className="py-3 px-5 align-middle text-right whitespace-nowrap">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenStockModal(p)}
-                        className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 h-8 px-2"
+                        className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 px-2"
                         title="Sesuaikan Stok"
                       >
                         <PackagePlus className="h-4 w-4" />
@@ -326,7 +328,7 @@ export default function AdminProductsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenProductModal(p)}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 h-8 px-2"
+                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
                         title="Edit Produk"
                       >
                         <Edit className="h-4 w-4" />
@@ -335,17 +337,17 @@ export default function AdminProductsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteProduct(p.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-8 px-2"
+                        className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 px-2"
                         title="Hapus Produk"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </CardContent>
       </Card>
 
@@ -353,9 +355,9 @@ export default function AdminProductsPage() {
       <div className="md:hidden space-y-2">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 rounded-xl bg-white/5 space-y-2">
-                <Skeleton className="h-4 w-1/3 bg-white/10" />
-                <Skeleton className="h-3 w-1/2 bg-white/10" />
+              <div key={i} className="p-4 rounded-xl bg-white border border-slate-200 space-y-2">
+                <Skeleton className="h-4 w-1/3 bg-slate-200" />
+                <Skeleton className="h-3 w-1/2 bg-slate-200" />
               </div>
             ))
           : filteredProducts.length === 0 ? (
@@ -365,20 +367,20 @@ export default function AdminProductsPage() {
               </div>
             ) : (
               filteredProducts.map((p) => (
-                <Card key={p.id} className="border-white/5 bg-white/5">
+                <Card key={p.id} className="border-slate-200 bg-white">
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-semibold text-white truncate">{p.name}</p>
+                          <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] px-1.5 py-0 shrink-0 ${
+                            className={`text-[10px] px-1.5 py-0 shrink-0 border-0 ${
                               p.stock <= 0
-                                ? 'bg-red-500/10 text-red-400'
+                                ? 'bg-red-50 text-red-600'
                                 : p.stock < 10
-                                ? 'bg-yellow-500/10 text-yellow-400'
-                                : 'bg-green-500/10 text-green-400'
+                                ? 'bg-amber-50 text-amber-600'
+                                : 'bg-emerald-50 text-emerald-600'
                             }`}
                           >
                             Stok: {p.stock}
@@ -390,16 +392,16 @@ export default function AdminProductsPage() {
                           <span>{p.category?.name || '-'}</span>
                         </div>
                       </div>
-                      <p className="text-sm font-bold text-blue-400 shrink-0">
+                      <p className="text-sm font-bold text-blue-600 shrink-0">
                         Rp {p.price.toLocaleString('id-ID')}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenStockModal(p)}
-                        className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 h-7 px-2 text-xs"
+                        className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-7 px-2 text-xs"
                       >
                         <PackagePlus className="h-3.5 w-3.5 mr-1" /> Stok
                       </Button>
@@ -407,7 +409,7 @@ export default function AdminProductsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenProductModal(p)}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 h-7 px-2 text-xs"
+                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-7 px-2 text-xs"
                       >
                         <Edit className="h-3.5 w-3.5 mr-1" /> Edit
                       </Button>
@@ -415,7 +417,7 @@ export default function AdminProductsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteProduct(p.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 px-2 text-xs ml-auto"
+                        className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-7 px-2 text-xs ml-auto"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
