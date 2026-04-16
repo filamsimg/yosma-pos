@@ -163,16 +163,23 @@ COMMENT ON TABLE public.stock_adjustments IS 'Audit trail for all stock changes 
 -- ----- 3a. Auto-create profile on user signup -----
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_name text;
+  v_role text;
 BEGIN
+  v_name := NEW.raw_user_meta_data->>'full_name';
+  v_role := NEW.raw_user_meta_data->>'role';
+
   INSERT INTO public.profiles (id, full_name, role)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'SALES')
+    CASE WHEN v_name IS NOT NULL AND v_name != '' THEN v_name ELSE NEW.email END,
+    CASE WHEN v_role IN ('ADMIN', 'SALES') THEN v_role::user_role ELSE 'SALES'::user_role END
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
 
 -- Drop existing trigger if any, then create
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
