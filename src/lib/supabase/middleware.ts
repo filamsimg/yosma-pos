@@ -74,7 +74,8 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'ADMIN') {
+    // If profile doesn't exist yet (race condition after signup), allow through
+    if (profile && profile.role !== 'ADMIN') {
       const url = request.nextUrl.clone();
       url.pathname = '/sales';
       return NextResponse.redirect(url);
@@ -89,7 +90,8 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'SALES' && profile?.role !== 'ADMIN') {
+    // If profile doesn't exist yet (race condition after signup), allow through
+    if (profile && profile.role !== 'SALES' && profile.role !== 'ADMIN') {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);

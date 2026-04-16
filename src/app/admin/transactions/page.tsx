@@ -170,8 +170,8 @@ export default function AdminTransactionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Transaksi</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Transaksi</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Semua transaksi dari tim sales ({transactions.length} total)
           </p>
         </div>
@@ -306,7 +306,7 @@ export default function AdminTransactionsPage() {
 
       {/* Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent showCloseButton={true} className="max-w-lg bg-slate-900 border-white/10 p-0">
+        <DialogContent showCloseButton={true} className="max-w-lg w-[calc(100%-2rem)] bg-slate-900 border-white/10 p-0">
           {selectedTxn && (
             <>
               <DialogHeader className="p-4 border-b border-white/5">

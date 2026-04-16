@@ -39,7 +39,7 @@ export default function MapCanvas({ locations }: MapCanvasProps) {
   const zoom = locations.length > 0 ? 12 : defaultZoom;
 
   return (
-    <div className="w-full h-[500px] rounded-xl overflow-hidden border border-white/10 z-0">
+    <div className="w-full h-[350px] sm:h-[500px] rounded-xl overflow-hidden border border-white/10 z-0">
       <MapContainer
         center={center}
         zoom={zoom}

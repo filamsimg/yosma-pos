@@ -156,8 +156,8 @@ export default function AdminOutletsPage() {
       {/* Header & Actions */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Daftar Outlet</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Daftar Outlet</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Kelola cabang dan lokasi outlet ({outlets.length} total)
           </p>
         </div>
@@ -181,8 +181,8 @@ export default function AdminOutletsPage() {
         </div>
       </div>
 
-      {/* Outlets List */}
-      <Card className="border-white/5 bg-white/[0.03]">
+      {/* Desktop Table */}
+      <Card className="border-white/5 bg-white/[0.03] hidden md:block">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
@@ -257,9 +257,68 @@ export default function AdminOutletsPage() {
         </CardContent>
       </Card>
 
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-2">
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="p-4 rounded-xl bg-white/5 space-y-2">
+                <Skeleton className="h-4 w-1/3 bg-white/10" />
+                <Skeleton className="h-3 w-2/3 bg-white/10" />
+              </div>
+            ))
+          : filteredOutlets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                <Store className="h-10 w-10 mb-2 opacity-40" />
+                <p className="text-sm">Tidak ada outlet ditemukan</p>
+              </div>
+            ) : (
+              filteredOutlets.map((o) => (
+                <Card key={o.id} className="border-white/5 bg-white/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <Store className="h-4 w-4 text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white">{o.name}</p>
+                        {o.address && (
+                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{o.address}</span>
+                          </p>
+                        )}
+                        {o.phone && (
+                          <p className="text-xs text-slate-500 mt-0.5">{o.phone}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenModal(o)}
+                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 h-7 px-2 text-xs"
+                      >
+                        <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteOutlet(o.id)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 px-2 text-xs"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Hapus
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+      </div>
+
       {/* Outlet Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent showCloseButton={true} className="max-w-md bg-slate-900 border-white/10">
+        <DialogContent showCloseButton={true} className="max-w-md w-[calc(100%-2rem)] bg-slate-900 border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">
               {selectedOutlet ? 'Edit Outlet' : 'Outlet Baru'}

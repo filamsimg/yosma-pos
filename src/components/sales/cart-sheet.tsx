@@ -83,9 +83,9 @@ export function CartSheet({
 
       <SheetContent
         side="bottom"
-        className="h-[85vh] rounded-t-3xl bg-slate-900 border-white/10 p-0"
+        className="h-[85dvh] h-[85vh] rounded-t-3xl bg-slate-900 border-white/10 p-0 flex flex-col"
       >
-        <SheetHeader className="p-4 pb-0">
+        <SheetHeader className="p-4 pb-0 shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <SheetTitle className="text-white text-lg">
@@ -118,7 +118,7 @@ export function CartSheet({
         ) : (
           <>
             {/* Cart Items */}
-            <ScrollArea className="flex-1 h-[calc(85vh-320px)]">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="p-4 space-y-2">
                 {items.map((item) => (
                   <div
@@ -174,7 +174,7 @@ export function CartSheet({
             </ScrollArea>
 
             {/* Checkout Section */}
-            <div className="border-t border-white/5 p-4 space-y-3">
+            <div className="border-t border-white/5 p-4 space-y-3 shrink-0">
               {/* Discount */}
               <div className="flex items-center gap-2">
                 <Label className="text-sm text-slate-400 shrink-0 w-16">

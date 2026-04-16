@@ -63,7 +63,7 @@ export async function register(formData: FormData) {
     return { error: 'Password minimal 6 karakter.' };
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -80,6 +80,21 @@ export async function register(formData: FormData) {
     }
     return { error: `Registrasi gagal: ${error.message}` };
   }
+
+  // Check if email confirmation is required
+  // When confirmation is required, session will be null
+  if (!data.session) {
+    // User exists but identity is fake (duplicate signup attempt on unconfirmed email)
+    if (data.user?.identities?.length === 0) {
+      return { error: 'Email sudah terdaftar. Silakan cek email untuk konfirmasi.' };
+    }
+    // Email confirmation required - show success message
+    return { success: true, message: 'Registrasi berhasil! Silakan cek email Anda untuk konfirmasi.' };
+  }
+
+  // If auto-confirmed (no email confirmation required), wait briefly for the
+  // database trigger to create the profile row
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   revalidatePath('/', 'layout');
 

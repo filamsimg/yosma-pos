@@ -229,8 +229,8 @@ export default function AdminProductsPage() {
       {/* Header & Actions */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Produk & Stok</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Produk & Stok</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Kelola katalog produk dan penyesuaian stok ({products.length} total)
           </p>
         </div>
@@ -254,8 +254,8 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Product List */}
-      <Card className="border-white/5 bg-white/[0.03]">
+      {/* Desktop Table */}
+      <Card className="border-white/5 bg-white/[0.03] hidden md:block">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
@@ -349,9 +349,86 @@ export default function AdminProductsPage() {
         </CardContent>
       </Card>
 
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-2">
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="p-4 rounded-xl bg-white/5 space-y-2">
+                <Skeleton className="h-4 w-1/3 bg-white/10" />
+                <Skeleton className="h-3 w-1/2 bg-white/10" />
+              </div>
+            ))
+          : filteredProducts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                <Package className="h-10 w-10 mb-2 opacity-40" />
+                <p className="text-sm">Tidak ada produk ditemukan</p>
+              </div>
+            ) : (
+              filteredProducts.map((p) => (
+                <Card key={p.id} className="border-white/5 bg-white/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-semibold text-white truncate">{p.name}</p>
+                          <Badge
+                            variant="secondary"
+                            className={`text-[10px] px-1.5 py-0 shrink-0 ${
+                              p.stock <= 0
+                                ? 'bg-red-500/10 text-red-400'
+                                : p.stock < 10
+                                ? 'bg-yellow-500/10 text-yellow-400'
+                                : 'bg-green-500/10 text-green-400'
+                            }`}
+                          >
+                            Stok: {p.stock}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>{p.sku}</span>
+                          <span>•</span>
+                          <span>{p.category?.name || '-'}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-blue-400 shrink-0">
+                        Rp {p.price.toLocaleString('id-ID')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenStockModal(p)}
+                        className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 h-7 px-2 text-xs"
+                      >
+                        <PackagePlus className="h-3.5 w-3.5 mr-1" /> Stok
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenProductModal(p)}
+                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 h-7 px-2 text-xs"
+                      >
+                        <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteProduct(p.id)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 px-2 text-xs ml-auto"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+      </div>
+
       {/* Product Modal */}
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-        <DialogContent showCloseButton={true} className="max-w-md bg-slate-900 border-white/10">
+        <DialogContent showCloseButton={true} className="max-w-md w-[calc(100%-2rem)] bg-slate-900 border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">
               {selectedProduct ? 'Edit Produk' : 'Produk Baru'}
@@ -430,7 +507,7 @@ export default function AdminProductsPage() {
 
       {/* Stock Modal */}
       <Dialog open={stockModalOpen} onOpenChange={setStockModalOpen}>
-        <DialogContent showCloseButton={true} className="max-w-sm bg-slate-900 border-white/10">
+        <DialogContent showCloseButton={true} className="max-w-sm w-[calc(100%-2rem)] bg-slate-900 border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">Sesuaikan Stok</DialogTitle>
             <DialogDescription className="text-slate-400">

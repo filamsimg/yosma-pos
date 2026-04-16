@@ -41,14 +41,14 @@ function NavContent({ pathname, onNavigate }: { pathname: string; onNavigate?: (
           <ShoppingCart className="h-4 w-4 text-white" />
         </div>
         <div>
-          <p className="text-sm font-bold text-white tracking-tight">
-            YOSMA <span className="text-blue-400">POS</span>
+          <p className="text-sm font-bold text-slate-900 tracking-tight">
+            YOSMA <span className="text-blue-600">POS</span>
           </p>
           <p className="text-[10px] text-slate-500 -mt-0.5">Admin Panel</p>
         </div>
       </div>
 
-      <Separator className="bg-white/5" />
+      <Separator className="bg-slate-100" />
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
@@ -63,10 +63,10 @@ function NavContent({ pathname, onNavigate }: { pathname: string; onNavigate?: (
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm font-medium transition-all duration-150 ${
                 isActive
-                  ? 'bg-blue-500/10 text-blue-400 shadow-sm shadow-blue-500/5'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                  ? 'bg-blue-50 text-blue-600 font-semibold'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               <Icon className="h-4.5 w-4.5 shrink-0" />
@@ -76,11 +76,11 @@ function NavContent({ pathname, onNavigate }: { pathname: string; onNavigate?: (
         })}
       </nav>
 
-      <Separator className="bg-white/5" />
+      <Separator className="bg-slate-100" />
 
       {/* Footer */}
       <div className="p-3 shrink-0">
-        <p className="text-[10px] text-slate-600 text-center">
+        <p className="text-[10px] text-slate-500 text-center">
           YOSMA POS v1.0
         </p>
       </div>
@@ -97,23 +97,23 @@ export default function AdminLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-950">
+    <div className="flex h-screen bg-[#F1F5F9]">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-56 border-r border-white/5 bg-slate-950">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 border-r border-slate-200 bg-white">
         <NavContent pathname={pathname} />
       </aside>
 
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-16 bg-white shadow-sm">
           <div className="flex items-center gap-2">
             {/* Mobile Menu */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+              <SheetTrigger className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors">
                 <Menu className="h-5 w-5" />
               </SheetTrigger>
-              <SheetContent side="left" className="w-56 p-0 bg-slate-950 border-white/5" showCloseButton={false}>
+              <SheetContent side="left" className="w-64 p-0 bg-white border-slate-200" showCloseButton={false}>
                 <SheetTitle className="sr-only">Navigation</SheetTitle>
                 <SheetDescription className="sr-only">Admin navigation menu</SheetDescription>
                 <NavContent pathname={pathname} onNavigate={() => setMobileOpen(false)} />
@@ -121,7 +121,7 @@ export default function AdminLayout({
             </Sheet>
 
             {/* Page Title */}
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-slate-900">
               {navItems.find((item) =>
                 item.exact
                   ? pathname === item.href

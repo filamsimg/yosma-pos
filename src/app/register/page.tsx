@@ -36,12 +36,14 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState('SALES');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     const formData = new FormData(e.currentTarget);
     formData.set('role', selectedRole);
@@ -60,32 +62,20 @@ export default function RegisterPage() {
     if (result?.error) {
       setError(result.error);
       setLoading(false);
+    } else if (result?.success) {
+      setSuccess(result.message || 'Registrasi berhasil! Silakan cek email Anda untuk konfirmasi.');
+      setLoading(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl animate-pulse [animation-delay:1s]" />
-        <div className="absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl animate-pulse [animation-delay:2s]" />
-      </div>
-
-      {/* Grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
 
       <div className="relative z-10 w-full max-w-md px-4 py-8">
         {/* Back to Login */}
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-200 text-sm mb-6 transition-colors group"
+          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 text-sm mb-6 transition-colors group"
         >
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
           Kembali ke Login
@@ -96,37 +86,60 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25 mb-4">
             <ShoppingCart className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Buat Akun <span className="text-indigo-400">Baru</span>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Buat Akun <span className="text-indigo-600">Baru</span>
           </h1>
-          <p className="text-slate-400 mt-1 text-sm">
+          <p className="text-slate-500 mt-1 text-sm">
             Daftar untuk mengakses YOSMA POS
           </p>
         </div>
 
         {/* Register Card */}
-        <Card className="border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-black/20">
+        <Card className="border-slate-200 bg-white shadow-md">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl text-white text-center">
+            <CardTitle className="text-xl text-slate-900 text-center">
               Registrasi
             </CardTitle>
-            <CardDescription className="text-slate-400 text-center">
+            <CardDescription className="text-slate-500 text-center">
               Lengkapi data untuk membuat akun
             </CardDescription>
           </CardHeader>
           <CardContent>
             {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
+            {/* Success Message */}
+            {success ? (
+              <div className="py-6 space-y-4">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="flex items-center justify-center w-14 h-14 rounded-full bg-green-500/10">
+                    <AlertCircle className="h-7 w-7 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-300">{success}</p>
+                    <p className="text-xs text-slate-500 mt-1">Cek folder inbox atau spam di email Anda</p>
+                  </div>
+                </div>
+                <Link href="/login">
+                  <Button
+                    variant="outline"
+                    className="w-full h-11 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all duration-300"
+                  >
+                    Kembali ke Login
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Full Name */}
               <div className="space-y-2">
-                <Label htmlFor="full_name" className="text-slate-300 text-sm">
+                <Label htmlFor="full_name" className="text-slate-700 text-sm">
                   Nama Lengkap
                 </Label>
                 <Input
@@ -136,13 +149,13 @@ export default function RegisterPage() {
                   placeholder="John Doe"
                   required
                   autoComplete="name"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 h-11"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20 h-11"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300 text-sm">
+                <Label htmlFor="email" className="text-slate-700 text-sm">
                   Email
                 </Label>
                 <Input
@@ -152,25 +165,25 @@ export default function RegisterPage() {
                   placeholder="nama@perusahaan.com"
                   required
                   autoComplete="email"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 h-11"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20 h-11"
                 />
               </div>
 
               {/* Role Selection */}
               <div className="space-y-2">
-                <Label className="text-slate-300 text-sm">Peran / Role</Label>
+                <Label className="text-slate-700 text-sm">Peran / Role</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedRole('SALES')}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300 ${
                       selectedRole === 'SALES'
-                        ? 'border-indigo-500 bg-indigo-500/10 text-white shadow-lg shadow-indigo-500/10'
-                        : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <Briefcase
-                      className={`h-6 w-6 ${selectedRole === 'SALES' ? 'text-indigo-400' : ''}`}
+                      className={`h-6 w-6 ${selectedRole === 'SALES' ? 'text-indigo-600' : ''}`}
                     />
                     <div className="text-center">
                       <p className="text-sm font-medium">Sales</p>
@@ -184,12 +197,12 @@ export default function RegisterPage() {
                     onClick={() => setSelectedRole('ADMIN')}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300 ${
                       selectedRole === 'ADMIN'
-                        ? 'border-purple-500 bg-purple-500/10 text-white shadow-lg shadow-purple-500/10'
-                        : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <Shield
-                      className={`h-6 w-6 ${selectedRole === 'ADMIN' ? 'text-purple-400' : ''}`}
+                      className={`h-6 w-6 ${selectedRole === 'ADMIN' ? 'text-purple-600' : ''}`}
                     />
                     <div className="text-center">
                       <p className="text-sm font-medium">Admin</p>
@@ -203,7 +216,7 @@ export default function RegisterPage() {
 
               {/* Password */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300 text-sm">
+                <Label htmlFor="password" className="text-slate-700 text-sm">
                   Password
                 </Label>
                 <div className="relative">
@@ -215,12 +228,12 @@ export default function RegisterPage() {
                     required
                     minLength={6}
                     autoComplete="new-password"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 h-11 pr-10"
+                    className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20 h-11 pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? (
@@ -236,7 +249,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <Label
                   htmlFor="confirm_password"
-                  className="text-slate-300 text-sm"
+                  className="text-slate-700 text-sm"
                 >
                   Konfirmasi Password
                 </Label>
@@ -248,7 +261,7 @@ export default function RegisterPage() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 h-11"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20 h-11"
                 />
               </div>
 
@@ -256,7 +269,7 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium shadow-lg shadow-indigo-500/20 transition-all duration-300 hover:shadow-indigo-500/30 hover:scale-[1.01] active:scale-[0.99] mt-2"
+                className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors mt-2"
               >
                 {loading ? (
                   <>
@@ -271,6 +284,7 @@ export default function RegisterPage() {
                 )}
               </Button>
             </form>
+            )}
           </CardContent>
         </Card>
 

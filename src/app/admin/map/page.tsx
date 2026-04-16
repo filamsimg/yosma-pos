@@ -57,8 +57,8 @@ export default function AdminMapPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Pemantauan Lokasi</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Pemantauan Lokasi</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Pantau lokasi check-in transaksi sales hari ini
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function AdminMapPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Skeleton className="w-full h-[500px] rounded-xl bg-white/10" />
+            <Skeleton className="w-full h-[350px] sm:h-[500px] rounded-xl bg-white/10" />
           ) : (
             <MapCanvas locations={locations} />
           )}

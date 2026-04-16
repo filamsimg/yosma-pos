@@ -109,32 +109,28 @@ export default function AdminDashboardPage() {
           value: `Rp ${stats.todayRevenue.toLocaleString('id-ID')}`,
           subtitle: `${stats.todayTransactions} transaksi`,
           icon: TrendingUp,
-          gradient: 'from-emerald-500 to-green-600',
-          bgGlow: 'bg-emerald-500/10',
+          colorClass: 'bg-emerald-50 text-emerald-600',
         },
         {
           title: 'Total Pendapatan',
           value: `Rp ${stats.totalRevenue.toLocaleString('id-ID')}`,
           subtitle: `${stats.totalTransactions} transaksi total`,
           icon: DollarSign,
-          gradient: 'from-blue-500 to-indigo-600',
-          bgGlow: 'bg-blue-500/10',
+          colorClass: 'bg-blue-50 text-blue-600',
         },
         {
           title: 'Produk Aktif',
           value: stats.totalProducts.toString(),
           subtitle: 'Terdaftar di katalog',
           icon: Package,
-          gradient: 'from-violet-500 to-purple-600',
-          bgGlow: 'bg-violet-500/10',
+          colorClass: 'bg-indigo-50 text-indigo-600',
         },
         {
           title: 'Tim Sales',
           value: stats.totalSales.toString(),
           subtitle: 'Pengguna aktif',
           icon: Users,
-          gradient: 'from-amber-500 to-orange-600',
-          bgGlow: 'bg-amber-500/10',
+          colorClass: 'bg-amber-50 text-amber-600',
         },
       ]
     : [];
@@ -142,11 +138,11 @@ export default function AdminDashboardPage() {
   const statusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return 'bg-green-500/10 text-green-400 border-green-500/20';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'CANCELLED':
-        return 'bg-red-500/10 text-red-400 border-red-500/20';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
       default:
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
     }
   };
 
@@ -154,8 +150,8 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Ringkasan performa bisnis Anda
         </p>
       </div>
@@ -164,10 +160,10 @@ export default function AdminDashboardPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-5 rounded-xl bg-white/5 space-y-3">
-              <Skeleton className="h-4 w-1/2 bg-white/10" />
-              <Skeleton className="h-8 w-3/4 bg-white/10" />
-              <Skeleton className="h-3 w-1/3 bg-white/10" />
+            <div key={i} className="p-5 rounded-xl bg-white border border-slate-100 shadow-sm space-y-3">
+              <Skeleton className="h-4 w-1/2 bg-slate-200" />
+              <Skeleton className="h-8 w-3/4 bg-slate-200" />
+              <Skeleton className="h-3 w-1/3 bg-slate-200" />
             </div>
           ))}
         </div>
@@ -176,55 +172,48 @@ export default function AdminDashboardPage() {
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
-              <Card
+              <div
                 key={card.title}
-                className="border-white/5 bg-white/[0.03] hover:bg-white/[0.05] transition-colors overflow-hidden relative"
+                className="rounded-sm border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between"
               >
-                {/* Decorative glow */}
-                <div
-                  className={`absolute -top-8 -right-8 w-24 h-24 rounded-full ${card.bgGlow} blur-2xl`}
-                />
-                <CardContent className="p-5 relative">
-                  <div className="flex items-start justify-between mb-3">
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100">
+                  <Icon className={`h-5 w-5 ${card.colorClass.replace(/bg-[a-z]+-50 /, '')}`} />
+                </div>
+                <div className="mt-4 flex items-end justify-between">
+                  <div>
+                    <h4 className="text-2xl font-bold text-slate-900">
+                      {card.value}
+                    </h4>
+                    <span className="text-sm font-medium text-slate-500">
                       {card.title}
-                    </p>
-                    <div
-                      className={`flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br ${card.gradient}`}
-                    >
-                      <Icon className="h-4 w-4 text-white" />
-                    </div>
+                    </span>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">
-                    {card.value}
-                  </p>
-                  <p className="text-xs text-slate-500">{card.subtitle}</p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
       )}
 
       {/* Recent Transactions */}
-      <Card className="border-white/5 bg-white/[0.03]">
+      <Card className="border-slate-200 bg-white shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base text-white">
+          <CardTitle className="text-base text-slate-900">
             Transaksi Terbaru
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-slate-500">
             10 transaksi terakhir di semua outlet
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <div className="space-y-3">
+            <div className="p-5 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex gap-4">
-                  <Skeleton className="h-10 w-10 rounded-full bg-white/10" />
+                  <Skeleton className="h-10 w-10 rounded-full bg-slate-200" />
                   <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/3 bg-white/10" />
-                    <Skeleton className="h-3 w-1/2 bg-white/10" />
+                    <Skeleton className="h-4 w-1/3 bg-slate-200" />
+                    <Skeleton className="h-3 w-1/2 bg-slate-200" />
                   </div>
                 </div>
               ))}
@@ -235,44 +224,58 @@ export default function AdminDashboardPage() {
               <p className="text-sm">Belum ada transaksi</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {recentTxns.map((txn) => (
-                <div
-                  key={txn.id}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
-                >
-                  <div className="flex items-center justify-center w-9 h-9 rounded-full bg-blue-500/10 shrink-0">
-                    <Store className="h-4 w-4 text-blue-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-white truncate">
-                        {txn.invoice_number}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] px-1.5 py-0 shrink-0 ${statusColor(txn.status)}`}
-                      >
-                        {txn.status === 'COMPLETED' ? 'Lunas' : txn.status === 'CANCELLED' ? 'Batal' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                      <span>{txn.outlet?.name || '-'}</span>
-                      <span>•</span>
-                      <span>{txn.sales?.full_name || '-'}</span>
-                      <span>•</span>
-                      <span>
-                        {format(new Date(txn.created_at), 'dd MMM HH:mm', {
-                          locale: idLocale,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-sm font-bold text-blue-400 shrink-0">
-                    Rp {txn.total_price.toLocaleString('id-ID')}
-                  </p>
-                </div>
-              ))}
+            <div className="max-w-full overflow-x-auto">
+              <table className="w-full table-auto text-left whitespace-nowrap">
+                <thead>
+                  <tr className="bg-slate-50 border-y border-slate-200 text-left">
+                    <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider rounded-tl-sm">
+                      Invoice
+                    </th>
+                    <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider border-l border-slate-200/50">
+                      Tgl & Waktu
+                    </th>
+                    <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider border-l border-slate-200/50">
+                      Outlet & Sales
+                    </th>
+                    <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider border-l border-slate-200/50">
+                      Total
+                    </th>
+                    <th className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase tracking-wider rounded-tr-sm border-l border-slate-200/50">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentTxns.map((txn) => (
+                    <tr key={txn.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-5 align-middle">
+                        <p className="text-sm font-medium text-slate-900">{txn.invoice_number}</p>
+                      </td>
+                      <td className="py-4 px-5 align-middle">
+                        <p className="text-sm text-slate-500">
+                          {format(new Date(txn.created_at), 'dd MMM yyyy', { locale: idLocale })}
+                          <span className="block text-xs text-slate-400 mt-0.5">{format(new Date(txn.created_at), 'HH:mm', { locale: idLocale })}</span>
+                        </p>
+                      </td>
+                      <td className="py-4 px-5 align-middle">
+                        <p className="text-sm font-medium text-slate-900">{txn.outlet?.name || '-'}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{txn.sales?.full_name || '-'}</p>
+                      </td>
+                      <td className="py-4 px-5 align-middle">
+                        <p className="text-sm font-bold text-indigo-600">Rp {txn.total_price.toLocaleString('id-ID')}</p>
+                      </td>
+                      <td className="py-4 px-5 align-middle">
+                        <Badge
+                          variant="outline"
+                          className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${statusColor(txn.status)}`}
+                        >
+                          {txn.status === 'COMPLETED' ? 'Lunas' : txn.status === 'CANCELLED' ? 'Batal' : 'Pending'}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
