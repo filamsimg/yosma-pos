@@ -21,8 +21,10 @@ import {
   ClipboardList,
   Menu,
   Settings,
+  LogOut,
 } from 'lucide-react';
 import { useState } from 'react';
+import { logout } from '@/lib/actions/auth';
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
@@ -78,9 +80,16 @@ function NavContent({ pathname, onNavigate }: { pathname: string; onNavigate?: (
 
       <Separator className="bg-slate-100" />
 
-      {/* Footer */}
-      <div className="p-3 shrink-0">
-        <p className="text-[10px] text-slate-500 text-center">
+      {/* Footer with Logout */}
+      <div className="p-3 shrink-0 space-y-2">
+        <button
+          onClick={() => logout()}
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-sm text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-150"
+        >
+          <LogOut className="h-4.5 w-4.5 shrink-0" />
+          Keluar
+        </button>
+        <p className="text-[10px] text-slate-400 text-center pt-2 border-t border-slate-100">
           YOSMA POS v1.0
         </p>
       </div>
