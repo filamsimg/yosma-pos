@@ -18,7 +18,7 @@ import type { Unit } from '@/types';
 
 interface UnitSelectProps {
   value: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (value: string | null) => void;
 }
 
 export function UnitSelect({ value, onValueChange }: UnitSelectProps) {

@@ -18,7 +18,7 @@ import type { Brand } from '@/types';
 
 interface BrandSelectProps {
   value: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (value: string | null) => void;
 }
 
 export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
@@ -86,7 +86,7 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
         </div>
       ) : (
         <div className="flex items-center gap-3 group">
-          <Select value={value} onValueChange={onValueChange}>
+          <Select value={value} onValueChange={(val: string | null) => onValueChange(val)}>
             <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 px-4 focus:ring-blue-600 focus:ring-offset-2 transition-all hover:bg-slate-100/50">
               <SelectValue>
                 {brands.find(b => b.id === value)?.name || (loading ? "Memuat..." : "Pilih Merk")}

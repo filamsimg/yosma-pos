@@ -100,12 +100,14 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2 h-10 px-4">
-          <FileUp className="h-4 w-4" />
-          Import Excel
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2 h-10 px-4">
+            <FileUp className="h-4 w-4" />
+            Import Excel
+          </Button>
+        }
+      />
       <DialogContent className="max-w-2xl bg-white border-slate-200 p-6 flex flex-col gap-6 rounded-xl shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-slate-900">Import Produk Massal</DialogTitle>
