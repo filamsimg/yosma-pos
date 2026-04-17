@@ -1,383 +1,337 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogHeader,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Store,
-  MapPin,
-  Loader2,
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Search, Plus, ChevronLeft, ChevronRight, Trash2 as TrashIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Outlet } from '@/types';
+
+import { OutletTable } from '@/components/admin/outlets/OutletTable';
+import { OutletForm } from '@/components/admin/outlets/OutletForm';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { 
+  upsertOutlet, 
+  softDeleteOutlet, 
+  getPaginatedOutlets,
+  bulkDeleteOutlets 
+} from '@/lib/actions/outlets';
+import { type Outlet } from '@/types';
+import { type OutletFormValues } from '@/lib/validations/outlet';
 
 export default function AdminOutletsPage() {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Modals state
-  const [modalOpen, setModalOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Form state
+  // Modal & Selection states
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Confirmation Dialog States
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [outletToDelete, setOutletToDelete] = useState<Outlet | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage, searchQuery, pageSize]);
 
   async function fetchData() {
     setLoading(true);
-    const supabase = createClient();
-    const { data } = await supabase.from('outlets').select('*').eq('is_active', true).order('name');
-    if (data) setOutlets(data);
+    const result = await getPaginatedOutlets(currentPage, pageSize, searchQuery);
+    
+    if (result.data) {
+      setOutlets(result.data);
+      setTotalPages(result.totalPages);
+      setTotalCount(result.count);
+    } else if (result.error) {
+      toast.error('Gagal mengambil data', { description: result.error });
+    }
+    
     setLoading(false);
   }
 
-  function handleOpenModal(outlet?: Outlet) {
-    if (outlet) {
-      setSelectedOutlet(outlet);
-      setFormData({
-        name: outlet.name,
-        address: outlet.address || '',
-        phone: outlet.phone || '',
-      });
-    } else {
-      setSelectedOutlet(null);
-      setFormData({
-        name: '',
-        address: '',
-        phone: '',
-      });
-    }
-    setModalOpen(true);
-  }
-
-  async function handleSaveOutlet() {
-    if (!formData.name) {
-      toast.error('Nama outlet wajib diisi');
-      return;
-    }
-
-    setActionLoading(true);
-    const supabase = createClient();
-    const payload = {
-      name: formData.name,
-      address: formData.address || null,
-      phone: formData.phone || null,
-    };
-
+  async function handleOutletSubmit(values: OutletFormValues) {
+    setIsSubmitting(true);
     try {
-      if (selectedOutlet) {
-        // Update
-        const { error } = await supabase
-          .from('outlets')
-          .update(payload)
-          .eq('id', selectedOutlet.id);
-        if (error) throw error;
-        toast.success('Outlet berhasil diperbarui');
-      } else {
-        // Insert
-        const { error } = await supabase
-          .from('outlets')
-          .insert(payload);
-        if (error) throw error;
-        toast.success('Outlet berhasil ditambahkan');
+      const result = await upsertOutlet(values, selectedOutlet?.id);
+
+      if (result.error) {
+        throw new Error(result.error);
       }
+
+      toast.success(selectedOutlet ? 'Outlet diperbarui' : 'Outlet ditambahkan');
       setModalOpen(false);
       fetchData();
     } catch (err: any) {
       toast.error('Gagal menyimpan outlet', { description: err.message });
     } finally {
-      setActionLoading(false);
+      setIsSubmitting(false);
     }
   }
 
-  async function handleDeleteOutlet(id: string) {
-    if (!confirm('Apakah Anda yakin ingin menghapus outlet ini?')) return;
-    
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('outlets')
-      .update({ is_active: false })
-      .eq('id', id);
+  async function handleDelete(id: string) {
+    const outlet = outlets.find(o => o.id === id);
+    if (!outlet) return;
+    setOutletToDelete(outlet);
+    setDeleteConfirmOpen(true);
+  }
 
-    if (error) {
-      toast.error('Gagal menghapus outlet');
+  async function confirmDeleteOutlet() {
+    if (!outletToDelete) return;
+    setIsDeleting(true);
+    const result = await softDeleteOutlet(outletToDelete.id);
+    if (result.error) {
+      toast.error('Gagal menghapus');
     } else {
-      toast.success('Outlet dihapus');
-      setOutlets(outlets.filter(p => p.id !== id));
+      toast.success('Outlet berhasil dihapus');
+      fetchData();
     }
+    setIsDeleting(false);
+    setDeleteConfirmOpen(false);
+    setOutletToDelete(null);
   }
 
-  const filteredOutlets = outlets.filter(
-    (o) =>
-      !searchQuery.trim() ||
-      o.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.address?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return;
+    setBulkDeleteConfirmOpen(true);
+  }
+
+  async function confirmBulkDelete() {
+    setIsSubmitting(true);
+    const result = await bulkDeleteOutlets(selectedIds);
+    if (result.error) {
+      toast.error('Gagal menghapus masal');
+    } else {
+      toast.success(`${selectedIds.length} outlet berhasil dihapus`);
+      setSelectedIds([]);
+      setCurrentPage(1);
+      fetchData();
+    }
+    setIsSubmitting(false);
+    setBulkDeleteConfirmOpen(false);
+  }
+
+  function handleOpenForm(outlet?: Outlet) {
+    setSelectedOutlet(outlet || null);
+    setModalOpen(true);
+  }
 
   return (
     <div className="space-y-4">
-      {/* Header & Actions */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      {/* Header section with Search & Create */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Daftar Outlet</h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Kelola cabang dan lokasi outlet ({outlets.length} total)
+            Kelola cabang dan lokasi outlet perusahaan Anda.
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Cari nama atau alamat..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-slate-500 h-9"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full sm:w-64"
             />
           </div>
           <Button
-            onClick={() => handleOpenModal()}
-            className="bg-blue-600 hover:bg-blue-500 text-white h-9"
+            onClick={() => handleOpenForm()}
+            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
           >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Outlet Baru
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Outlet Baru</span>
+            <span className="sm:hidden">Baru</span>
           </Button>
         </div>
       </div>
 
-      {/* Desktop Table */}
-      <Card className="border-white/5 bg-white/[0.03] hidden md:block">
-        <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="text-slate-400 w-[50px] text-center"><Store className="h-4 w-4 mx-auto" /></TableHead>
-                <TableHead className="text-slate-400">Nama Outlet</TableHead>
-                <TableHead className="text-slate-400">Alamat</TableHead>
-                <TableHead className="text-slate-400">No. Telepon</TableHead>
-                <TableHead className="text-slate-400 text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i} className="border-white/5">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full bg-white/10" />
-                      </TableCell>
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.length > 0 && (
+        <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+          <div className="text-blue-700 text-sm font-medium px-2">
+            <span className="font-bold">{selectedIds.length}</span> outlet dipilih
+          </div>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleBulkDelete}
+            className="bg-red-600 text-white hover:bg-white hover:text-red-600 border border-red-600 h-9 font-bold transition-all px-4"
+            disabled={isSubmitting}
+          >
+            <TrashIcon className="h-4 w-4 mr-2" />
+            Hapus Terpilih
+          </Button>
+        </div>
+      )}
+
+      {/* Main Table Container */}
+      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
+        <div className="flex-1 overflow-x-auto">
+          <OutletTable 
+            outlets={outlets}
+            loading={loading}
+            onEdit={handleOpenForm}
+            onDelete={handleDelete}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+          />
+        </div>
+
+        {/* Pagination Footer */}
+        {totalPages > 0 && (
+          <div className="border-t border-slate-100 p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                Menampilkan <span className="text-slate-900 font-bold">{outlets.length}</span> dari <span className="text-slate-900 font-bold">{totalCount}</span> outlet
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Baris:</span>
+                <Select 
+                  value={pageSize.toString()} 
+                  onValueChange={(val) => {
+                    if (val) {
+                      setPageSize(parseInt(val));
+                      setCurrentPage(1);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-16 bg-white border-slate-200 text-xs font-bold text-slate-700 focus:ring-blue-600 transition-all">
+                    <SelectValue placeholder={pageSize.toString()} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl min-w-[4rem]">
+                    {[10, 25, 50, 100].map(size => (
+                      <SelectItem key={size} value={size.toString()} className="text-xs cursor-pointer focus:bg-blue-50 focus:text-blue-600">
+                        {size}
+                      </SelectItem>
                     ))}
-                  </TableRow>
-                ))
-              ) : filteredOutlets.length === 0 ? (
-                <TableRow className="border-white/5">
-                  <TableCell colSpan={5} className="text-center text-slate-500 py-8">
-                    Tidak ada outlet ditemukan
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredOutlets.map((o) => (
-                  <TableRow key={o.id} className="border-white/5 hover:bg-white/[0.02]">
-                    <TableCell className="text-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto">
-                        <Store className="h-4 w-4 text-blue-400" />
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium text-white text-sm">{o.name}</TableCell>
-                    <TableCell className="text-slate-300 text-sm max-w-[200px] truncate">
-                      {o.address ? (
-                        <div className="flex items-center gap-1" title={o.address}>
-                          <MapPin className="h-3 w-3 text-slate-500 shrink-0" />
-                          <span className="truncate">{o.address}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-500 italic">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-slate-300 text-sm">{o.phone || '-'}</TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenModal(o)}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 h-8 px-2"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteOutlet(o.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-8 px-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-2">
-        {loading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 rounded-xl bg-white/5 space-y-2">
-                <Skeleton className="h-4 w-1/3 bg-white/10" />
-                <Skeleton className="h-3 w-2/3 bg-white/10" />
+                  </SelectContent>
+                </Select>
               </div>
-            ))
-          : filteredOutlets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                <Store className="h-10 w-10 mb-2 opacity-40" />
-                <p className="text-sm">Tidak ada outlet ditemukan</p>
+            </div>
+            
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || loading}
+                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => {
+                    const showDots = idx > 0 && p - arr[idx - 1] > 1;
+                    return (
+                      <div key={p} className="flex items-center gap-1">
+                        {showDots && <span className="text-slate-300 px-1">...</span>}
+                        <Button
+                          variant={currentPage === p ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setCurrentPage(p)}
+                          disabled={loading}
+                          className={`h-8 w-8 p-0 text-xs font-bold ${
+                            currentPage === p 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                          }`}
+                        >
+                          {p}
+                        </Button>
+                      </div>
+                    );
+                  })}
               </div>
-            ) : (
-              filteredOutlets.map((o) => (
-                <Card key={o.id} className="border-white/5 bg-white/5">
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-                        <Store className="h-4 w-4 text-blue-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white">{o.name}</p>
-                        {o.address && (
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{o.address}</span>
-                          </p>
-                        )}
-                        {o.phone && (
-                          <p className="text-xs text-slate-500 mt-0.5">{o.phone}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenModal(o)}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 h-7 px-2 text-xs"
-                      >
-                        <Edit className="h-3.5 w-3.5 mr-1" /> Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteOutlet(o.id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 px-2 text-xs"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Hapus
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-      </div>
 
-      {/* Outlet Modal */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent showCloseButton={true} className="max-w-md w-[calc(100%-2rem)] bg-slate-900 border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              {selectedOutlet ? 'Edit Outlet' : 'Outlet Baru'}
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Isi detail outlet untuk keperluan check-in sales
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="name" className="text-slate-300">Nama Outlet *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="Toko Budi Jaya"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="address" className="text-slate-300">Alamat Lengkap</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="Jl. Merdeka No. 123"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone" className="text-slate-300">No. Telepon</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
-                placeholder="0812xxxxxx"
-              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || loading}
+                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setModalOpen(false)}
-              className="bg-transparent border-white/10 text-slate-300 hover:bg-white/5"
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={handleSaveOutlet}
-              disabled={actionLoading}
-              className="bg-blue-600 hover:bg-blue-500 text-white"
-            >
-              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Simpan
-            </Button>
-          </DialogFooter>
+        )}
+      </Card>
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden shadow-2xl rounded-xl">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              {selectedOutlet ? 'Edit Outlet' : 'Tambah Outlet Baru'}
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 mt-1">
+              Isi detail outlet untuk mengelola cabang toko Anda.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-6 pt-4">
+            <OutletForm 
+              initialData={selectedOutlet}
+              loading={isSubmitting}
+              onSubmit={handleOutletSubmit}
+              onCancel={() => setModalOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog 
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Hapus Outlet?"
+        description={`Outlet "${outletToDelete?.name || ''}" akan dihapus dari sistem.`}
+        variant="danger"
+        onConfirm={confirmDeleteOutlet}
+        loading={isDeleting}
+      />
+
+      <ConfirmDialog 
+        open={bulkDeleteConfirmOpen}
+        onOpenChange={setBulkDeleteConfirmOpen}
+        title="Hapus Masal?"
+        description={`Anda akan menghapus ${selectedIds.length} outlet sekaligus. Tindakan ini tidak dapat dibatalkan.`}
+        variant="danger"
+        onConfirm={confirmBulkDelete}
+        loading={isSubmitting}
+      />
     </div>
   );
 }
