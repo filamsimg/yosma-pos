@@ -5,6 +5,8 @@ export type {
   Profile,
   Category,
   Product,
+  Brand,
+  Unit,
   Outlet,
   Transaction,
   TransactionItem,

@@ -175,25 +175,26 @@ export default function AdminProductsPage() {
         />
       </Card>
 
-      {/* Product Form Modal */}
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-        <DialogContent className="max-w-2xl w-[calc(100%-2rem)] bg-slate-900 border-white/10 p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="text-white">
+        <DialogContent className="max-w-5xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden max-h-[96vh] flex flex-col shadow-2xl rounded-xl">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-xl font-bold text-slate-900">
               {selectedProduct ? 'Edit Produk' : 'Tambah Produk Baru'}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Isi sesuai dengan detail pada tabel data barang Anda.
+            <DialogDescription className="text-slate-500 mt-1">
+              Isi detail produk untuk katalog barang Anda.
             </DialogDescription>
           </DialogHeader>
           
-          <ProductForm 
-            initialData={selectedProduct}
-            categories={categories}
-            loading={isSubmitting}
-            onSubmit={handleProductSubmit}
-            onCancel={() => setProductModalOpen(false)}
-          />
+          <div className="flex-1 overflow-y-auto p-6 pt-4">
+            <ProductForm 
+              initialData={selectedProduct}
+              categories={categories}
+              loading={isSubmitting}
+              onSubmit={handleProductSubmit}
+              onCancel={() => setProductModalOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

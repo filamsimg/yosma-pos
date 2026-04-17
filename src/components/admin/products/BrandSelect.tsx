@@ -57,59 +57,60 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        <div className="flex-1">
-          {isAdding ? (
-            <div className="flex gap-1">
-              <Input
-                placeholder="Nama merk baru..."
-                value={newBrandName}
-                onChange={(e) => setNewBrandName(e.target.value)}
-                autoFocus
-                className="bg-white/5 border-white/10 text-white h-9"
-              />
-              <Button 
-                size="sm" 
-                onClick={handleAddBrand} 
-                disabled={submitting}
-                className="bg-emerald-600 hover:bg-emerald-700 h-9"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={() => setIsAdding(false)}
-                className="text-slate-400 hover:text-white h-9"
-              >
-                Batal
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-1">
-              <Select value={value} onValueChange={onValueChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white h-9">
-                  <SelectValue placeholder={loading ? "Memuat..." : "Pilih Merk"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {brands.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setIsAdding(true)}
-                className="border-white/10 text-slate-400 hover:text-white h-9"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+    <div className="w-full">
+      {isAdding ? (
+        <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-200">
+          <Input
+            placeholder="Nama merk baru..."
+            value={newBrandName}
+            onChange={(e) => setNewBrandName(e.target.value)}
+            autoFocus
+            className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all"
+          />
+          <Button 
+            size="sm" 
+            onClick={handleAddBrand} 
+            disabled={submitting}
+            className="bg-blue-600 hover:bg-blue-700 h-12 px-4 shrink-0 shadow-sm transition-all"
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-5 w-5 text-white" />}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => setIsAdding(false)}
+            className="text-slate-500 hover:text-red-600 hover:bg-red-50 h-12 px-3 font-medium transition-all"
+          >
+            Batal
+          </Button>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-3 group">
+          <Select value={value} onValueChange={onValueChange}>
+            <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 px-4 focus:ring-blue-600 focus:ring-offset-2 transition-all hover:bg-slate-100/50">
+              <SelectValue>
+                {brands.find(b => b.id === value)?.name || (loading ? "Memuat..." : "Pilih Merk")}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-lg overflow-hidden">
+              {brands.map((b) => (
+                <SelectItem key={b.id} value={b.id} className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5 px-4 transition-colors">
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            type="button"
+            size="icon" 
+            onClick={() => setIsAdding(true)}
+            className="h-12 w-12 shrink-0 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-lg"
+            title="Tambah Merk Baru"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
