@@ -175,6 +175,18 @@ export async function createUnit(name: string) {
   return { data };
 }
 
+export async function createCategory(name: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('categories')
+    .insert([{ name }])
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+  return { data };
+}
+
 export async function deleteBrand(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('brands').delete().eq('id', id);

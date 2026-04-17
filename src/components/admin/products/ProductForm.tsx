@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Trash2 } from 'lucide-react';
-import { deleteCategory } from '@/lib/actions/products';
+import { createCategory, deleteCategory } from '@/lib/actions/products';
+import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Category, Product } from '@/types';
@@ -66,9 +66,30 @@ export function ProductForm({
   const [itemToDelete, setItemToDelete] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [submittingCategory, setSubmittingCategory] = useState(false);
+
   useEffect(() => {
     setLocalCategories(categories);
   }, [categories]);
+
+  async function handleAddCategory() {
+    if (!newCategoryName.trim()) return;
+    setSubmittingCategory(true);
+    const result = await createCategory(newCategoryName.trim());
+    if (result.error) {
+      toast.error('Gagal menambah kategori', { description: result.error });
+    } else if (result.data) {
+      const newCat = result.data as Category;
+      setLocalCategories([...localCategories, newCat].sort((a, b) => a.name.localeCompare(b.name)));
+      setValue('category_id', newCat.id, { shouldValidate: true });
+      setIsAddingCategory(false);
+      setNewCategoryName('');
+      toast.success('Kategori berhasil ditambahkan');
+    }
+    setSubmittingCategory(false);
+  }
 
   async function handleDeleteCategory(e: React.MouseEvent, c: Category) {
     e.stopPropagation();
@@ -120,35 +141,76 @@ export function ProductForm({
 
         <div className="space-y-2">
           <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Kategori *</Label>
-          <Select
-            value={categoryId}
-            onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
-            disabled={localCategories.length === 0}
-          >
-            <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus:ring-blue-600 focus:ring-offset-2 transition-all px-4">
-              <SelectValue>
-                {localCategories.find(c => c.id === categoryId)?.name || (localCategories.length === 0 ? "Memuat..." : "Pilih Kategori")}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
-              {localCategories.map((c) => (
-                <SelectItem 
-                  key={c.id} 
-                  value={c.id} 
-                  className="focus:bg-slate-50 focus:text-blue-600 py-2.5 px-4 flex items-center justify-between group/item"
-                >
-                  <span>{c.name}</span>
-                  <button
-                    onClick={(e) => handleDeleteCategory(e, c)}
-                    className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all"
-                    title="Hapus Kategori"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isAddingCategory ? (
+            <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-200">
+              <Input
+                placeholder="Nama kategori baru..."
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                autoFocus
+                className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all"
+              />
+              <Button 
+                type="button"
+                size="sm" 
+                onClick={handleAddCategory} 
+                disabled={submittingCategory}
+                className="bg-blue-600 hover:bg-blue-700 h-12 px-4 shrink-0 shadow-sm transition-all"
+              >
+                {submittingCategory ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-5 w-5 text-white" />}
+              </Button>
+              <Button 
+                type="button"
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setIsAddingCategory(false)}
+                className="text-slate-500 hover:text-red-600 hover:bg-red-50 h-12 px-3 font-medium transition-all"
+              >
+                Batal
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Select
+                value={categoryId}
+                onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
+                disabled={localCategories.length === 0}
+              >
+                <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus:ring-blue-600 focus:ring-offset-2 transition-all px-4 flex-1">
+                  <SelectValue>
+                    {localCategories.find(c => c.id === categoryId)?.name || (localCategories.length === 0 ? "Memuat..." : "Pilih Kategori")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
+                  {localCategories.map((c) => (
+                    <SelectItem 
+                      key={c.id} 
+                      value={c.id} 
+                      className="focus:bg-slate-50 focus:text-blue-600 py-2.5 px-4 flex items-center justify-between group/item"
+                    >
+                      <span>{c.name}</span>
+                      <button
+                        onClick={(e) => handleDeleteCategory(e, c)}
+                        className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all"
+                        title="Hapus Kategori"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                type="button"
+                size="icon" 
+                onClick={() => setIsAddingCategory(true)}
+                className="h-12 w-12 shrink-0 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-lg"
+                title="Tambah Kategori Baru"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
           {errors.category_id && <p className="text-xs text-red-600 mt-1 font-medium">{errors.category_id.message}</p>}
         </div>
 
