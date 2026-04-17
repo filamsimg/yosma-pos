@@ -50,12 +50,12 @@ export function ProductForm({
       category_id: initialData?.category_id || (categories[0]?.id || ''),
       brand_id: initialData?.brand_id || '',
       unit_id: initialData?.unit_id || '',
-    },
+    } as ProductFormValues,
   });
 
-  const categoryId = watch('category_id');
-  const brandId = watch('brand_id');
-  const unitId = watch('unit_id');
+  const categoryId = watch('category_id') || '';
+  const brandId = watch('brand_id') || '';
+  const unitId = watch('unit_id') || '';
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-2">
@@ -85,7 +85,7 @@ export function ProductForm({
           <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Kategori *</Label>
           <Select
             value={categoryId}
-            onValueChange={(val) => setValue('category_id', val, { shouldValidate: true })}
+            onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
             disabled={categories.length === 0}
           >
             <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus:ring-blue-600 focus:ring-offset-2 transition-all px-4">
@@ -109,7 +109,7 @@ export function ProductForm({
           <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Merk *</Label>
           <BrandSelect 
             value={brandId} 
-            onValueChange={(val) => setValue('brand_id', val, { shouldValidate: true })} 
+            onValueChange={(val: string | null) => setValue('brand_id', val || '', { shouldValidate: true })} 
           />
           {errors.brand_id && <p className="text-xs text-red-600 mt-1 font-medium">{errors.brand_id.message}</p>}
         </div>
@@ -118,7 +118,7 @@ export function ProductForm({
           <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Satuan *</Label>
           <UnitSelect 
             value={unitId} 
-            onValueChange={(val) => setValue('unit_id', val, { shouldValidate: true })} 
+            onValueChange={(val: string | null) => setValue('unit_id', val || '', { shouldValidate: true })} 
           />
           {errors.unit_id && <p className="text-xs text-red-600 mt-1 font-medium">{errors.unit_id.message}</p>}
         </div>

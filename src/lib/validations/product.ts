@@ -3,9 +3,9 @@ import { z } from 'zod';
 export const productSchema = z.object({
   name: z.string().min(3, 'Nama produk minimal 3 karakter'),
   sku: z.string().min(3, 'SKU minimal 3 karakter'),
-  description: z.string().optional(),
-  price: z.coerce.number().min(0, 'Harga tidak boleh negatif'),
-  discount_regular: z.coerce.number().min(0).max(100).default(0),
+  description: z.string().min(0),
+  price: z.number().min(0, 'Harga tidak boleh negatif'),
+  discount_regular: z.number().min(0).max(100),
   category_id: z.string().uuid('Kategori harus dipilih'),
   brand_id: z.string().uuid('Merk harus dipilih'),
   unit_id: z.string().uuid('Satuan harus dipilih'),
