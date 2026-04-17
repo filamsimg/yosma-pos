@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 
 import { ProductTable } from '@/components/admin/products/ProductTable';
 import { ProductForm } from '@/components/admin/products/ProductForm';
+import { ImportDialog } from '@/components/admin/products/ImportDialog';
 import { 
   createProduct, 
   updateProduct, 
@@ -153,9 +154,10 @@ export default function AdminProductsPage() {
               className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full sm:w-64"
             />
           </div>
+          <ImportDialog onSuccess={fetchData} />
           <Button
             onClick={() => handleOpenForm()}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4"
+            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
           >
             <Plus className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Produk Baru</span>
