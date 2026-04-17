@@ -187,6 +187,14 @@ export async function createCategory(name: string) {
   return { data };
 }
 
+export async function deleteCategory(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath('/admin/products');
+  return { success: true };
+}
+
 export async function deleteBrand(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('brands').delete().eq('id', id);
@@ -203,10 +211,42 @@ export async function deleteUnit(id: string) {
   return { success: true };
 }
 
-export async function deleteCategory(id: string) {
+export async function getPaginatedProducts(page: number, pageSize: number, search: string = '') {
   const supabase = await createClient();
-  const { error } = await supabase.from('categories').delete().eq('id', id);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from('products')
+    .select('*, category:categories(*), brand:brands(*), unit:units(*)', { count: 'exact' })
+    .eq('is_active', true)
+    .order('name');
+
+  if (search.trim()) {
+    // Note: for simpler code, we search by name or SKU
+    query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+  }
+
+  const { data, count, error } = await query.range(from, to);
+
   if (error) return { error: error.message };
+  
+  return { 
+    data: data as any[], 
+    count: count || 0,
+    totalPages: Math.ceil((count || 0) / pageSize)
+  };
+}
+
+export async function bulkDeleteProducts(ids: string[]) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ is_active: false })
+    .in('id', ids);
+
+  if (error) return { error: error.message };
+  
   revalidatePath('/admin/products');
   return { success: true };
 }

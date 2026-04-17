@@ -12,7 +12,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Search, Plus, Package } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Search, Plus, Package, ChevronLeft, ChevronRight, Trash2 as TrashIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ProductTable } from '@/components/admin/products/ProductTable';
@@ -24,7 +31,9 @@ import {
   createProduct, 
   updateProduct, 
   softDeleteProduct, 
-  adjustStock 
+  adjustStock,
+  getPaginatedProducts,
+  bulkDeleteProducts
 } from '@/lib/actions/products';
 import { type Product, type Category } from '@/types';
 import { type ProductFormValues } from '@/lib/validations/product';
@@ -34,6 +43,15 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Modal & Selection states
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Modal states
   const [productModalOpen, setProductModalOpen] = useState(false);
@@ -49,38 +67,32 @@ export default function AdminProductsPage() {
   const [productToAdjust, setProductToAdjust] = useState<Product | null>(null);
   const [isAdjusting, setIsAdjusting] = useState(false);
 
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage, searchQuery, pageSize]);
 
   async function fetchData() {
     setLoading(true);
-    const supabase = createClient();
+    const result = await getPaginatedProducts(currentPage, pageSize, searchQuery);
     
-    // Fetch products with all relations
-    const [pRes, cRes] = await Promise.all([
-      supabase
-        .from('products')
-        .select('*, category:categories(*), brand:brands(*), unit:units(*)')
-        .eq('is_active', true)
-        .order('name'),
-      supabase.from('categories').select('*').order('name'),
-    ]);
+    if (result.data) {
+      setProducts(result.data);
+      setTotalPages(result.totalPages);
+      setTotalCount(result.count);
+    } else if (result.error) {
+      toast.error('Gagal mengambil data', { description: result.error });
+    }
 
-    if (pRes.data) setProducts(pRes.data);
-    if (cRes.data) setCategories(cRes.data);
+    const supabase = createClient();
+    const { data: cData } = await supabase.from('categories').select('*').order('name');
+    if (cData) setCategories(cData);
+    
     setLoading(false);
   }
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(
-      (p) =>
-        !searchQuery.trim() ||
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.brand?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [products, searchQuery]);
+  // No need for filteredProducts here, backend handles search
 
   async function handleProductSubmit(values: ProductFormValues) {
     setIsSubmitting(true);
@@ -149,14 +161,27 @@ export default function AdminProductsPage() {
       notes: data.notes
     });
 
-    if (result.error) {
-      toast.error('Gagal menyesuaikan stok');
-    } else {
-      toast.success('Stok berhasil diperbarui');
-      fetchData();
-      setStockAdjustOpen(false);
-    }
     setIsAdjusting(false);
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return;
+    setBulkDeleteConfirmOpen(true);
+  }
+
+  async function confirmBulkDelete() {
+    setIsSubmitting(true);
+    const result = await bulkDeleteProducts(selectedIds);
+    if (result.error) {
+      toast.error('Gagal menghapus masal');
+    } else {
+      toast.success(`${selectedIds.length} produk berhasil dihapus`);
+      setSelectedIds([]);
+      setCurrentPage(1); // Back to first page to be safe
+      fetchData();
+    }
+    setIsSubmitting(false);
+    setBulkDeleteConfirmOpen(false);
   }
 
   return (
@@ -191,15 +216,121 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.length > 0 && (
+        <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+          <div className="text-blue-700 text-sm font-medium px-2">
+            <span className="font-bold">{selectedIds.length}</span> produk dipilih
+          </div>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleBulkDelete}
+            className="bg-red-600 text-white hover:bg-white hover:text-red-600 border border-red-600 h-9 font-bold transition-all px-4"
+            disabled={isSubmitting}
+          >
+            <TrashIcon className="h-4 w-4 mr-2" />
+            Hapus Terpilih
+          </Button>
+        </div>
+      )}
+
       {/* Main Table Container */}
-      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md">
-        <ProductTable 
-          products={filteredProducts}
-          loading={loading}
-          onEdit={handleOpenForm}
-          onDelete={handleDelete}
-          onAdjustStock={handleOpenStockAdjust}
-        />
+      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
+        <div className="flex-1 overflow-x-auto">
+          <ProductTable 
+            products={products}
+            loading={loading}
+            onEdit={handleOpenForm}
+            onDelete={handleDelete}
+            onAdjustStock={handleOpenStockAdjust}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+          />
+        </div>
+
+        {/* Pagination Footer */}
+        {totalPages > 0 && (
+          <div className="border-t border-slate-100 p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                Menampilkan <span className="text-slate-900 font-bold">{products.length}</span> dari <span className="text-slate-900 font-bold">{totalCount}</span> produk
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Baris:</span>
+                <Select 
+                  value={pageSize.toString()} 
+                  onValueChange={(val) => {
+                    if (val) {
+                      setPageSize(parseInt(val));
+                      setCurrentPage(1);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-16 bg-white border-slate-200 text-xs font-bold text-slate-700 focus:ring-blue-600 transition-all">
+                    <SelectValue placeholder={pageSize.toString()} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl min-w-[4rem]">
+                    {[10, 25, 50, 100].map(size => (
+                      <SelectItem key={size} value={size.toString()} className="text-xs cursor-pointer focus:bg-blue-50 focus:text-blue-600">
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || loading}
+                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => {
+                    const showDots = idx > 0 && p - arr[idx - 1] > 1;
+                    return (
+                      <div key={p} className="flex items-center gap-1">
+                        {showDots && <span className="text-slate-300 px-1">...</span>}
+                        <Button
+                          variant={currentPage === p ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setCurrentPage(p)}
+                          disabled={loading}
+                          className={`h-8 w-8 p-0 text-xs font-bold ${
+                            currentPage === p 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                          }`}
+                        >
+                          {p}
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || loading}
+                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
@@ -229,7 +360,7 @@ export default function AdminProductsPage() {
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Hapus Produk?"
-        description={`Produk "${productToDelete?.name}" akan dihapus dari katalog barang.`}
+        description={`Produk "${productToDelete?.name || ''}" akan dihapus dari katalog barang.`}
         onConfirm={confirmDeleteProduct}
         loading={isDeleting}
       />
@@ -240,6 +371,16 @@ export default function AdminProductsPage() {
         product={productToAdjust}
         onConfirm={confirmAdjustStock}
         loading={isAdjusting}
+      />
+
+      <ConfirmDialog 
+        open={bulkDeleteConfirmOpen}
+        onOpenChange={setBulkDeleteConfirmOpen}
+        title="Hapus Masal?"
+        description={`Anda akan menghapus ${selectedIds.length} produk sekaligus. Tindakan ini tidak dapat dibatalkan.`}
+        variant="danger"
+        onConfirm={confirmBulkDelete}
+        loading={isSubmitting}
       />
     </div>
   );

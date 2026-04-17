@@ -240,6 +240,7 @@ export function ProductForm({
           <Input
             type="number"
             {...register('price', { valueAsNumber: true })}
+            onFocus={(e) => e.target.select()}
             className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 font-semibold text-lg"
             placeholder="0"
           />
@@ -251,6 +252,7 @@ export function ProductForm({
           <Input
             type="number"
             {...register('discount_regular', { valueAsNumber: true })}
+            onFocus={(e) => e.target.select()}
             className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4"
             placeholder="0"
           />

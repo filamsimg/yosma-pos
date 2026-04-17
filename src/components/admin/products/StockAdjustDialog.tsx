@@ -124,6 +124,7 @@ export function StockAdjustDialog({
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 min="1"
                 className="bg-white border-slate-200 text-slate-900 h-14 text-2xl font-bold text-center focus-visible:ring-blue-600 transition-all"
               />

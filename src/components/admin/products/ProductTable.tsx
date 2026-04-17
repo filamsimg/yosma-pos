@@ -18,6 +18,8 @@ interface ProductTableProps {
   onEdit: (product: Product) => void;
   onDelete: (id: string) => void;
   onAdjustStock: (product: Product) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   loading?: boolean;
 }
 
@@ -26,6 +28,8 @@ export function ProductTable({
   onEdit,
   onDelete,
   onAdjustStock,
+  selectedIds,
+  onSelectionChange,
   loading,
 }: ProductTableProps) {
   if (loading) {
@@ -44,11 +48,35 @@ export function ProductTable({
     );
   }
 
+  const toggleAll = () => {
+    if (selectedIds.length === products.length) {
+      onSelectionChange([]);
+    } else {
+      onSelectionChange(products.map(p => p.id));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onSelectionChange(selectedIds.filter(i => i !== id));
+    } else {
+      onSelectionChange([...selectedIds, id]);
+    }
+  };
+
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto relative">
       <Table className="w-full text-left whitespace-nowrap">
         <TableHeader>
           <TableRow className="bg-slate-50 border-b border-slate-200">
+            <TableHead className="py-4 px-5 w-10">
+              <input 
+                type="checkbox" 
+                checked={products.length > 0 && selectedIds.length === products.length}
+                onChange={toggleAll}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+              />
+            </TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">SKU</TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Nama Produk</TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Merk</TableHead>
@@ -61,7 +89,18 @@ export function ProductTable({
         </TableHeader>
         <TableBody className="divide-y divide-slate-100">
           {products.map((p) => (
-            <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors">
+            <TableRow 
+              key={p.id} 
+              className={`hover:bg-slate-50/50 transition-colors ${selectedIds.includes(p.id) ? 'bg-blue-50/30' : ''}`}
+            >
+              <TableCell className="py-4 px-5">
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.includes(p.id)}
+                  onChange={() => toggleOne(p.id)}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                />
+              </TableCell>
               <TableCell className="py-4 px-5 text-sm text-slate-500">{p.sku}</TableCell>
               <TableCell className="py-4 px-5 font-medium text-slate-900 text-sm">
                 <div>
