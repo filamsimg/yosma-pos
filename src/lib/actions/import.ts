@@ -80,7 +80,7 @@ export async function bulkImportProducts(items: ProductImportItem[]) {
       } else {
         skuCounter++;
       }
-      item.sku = `YSM-${skuCounter.toString().padStart(4, '0')}`;
+      item.sku = `YAP-${skuCounter.toString().padStart(4, '0')}`;
     }
   }
 

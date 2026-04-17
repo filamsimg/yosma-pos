@@ -135,7 +135,7 @@ export function ProductForm({
           <Input
             {...register('sku')}
             className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4"
-            placeholder="KOSONGKAN UNTUK AUTO-SKU (YSM-####)"
+            placeholder="KOSONGKAN UNTUK AUTO-SKU (YAP-####)"
           />
           {errors.sku && <p className="text-xs text-red-600 mt-1 font-medium">{errors.sku.message}</p>}
         </div>

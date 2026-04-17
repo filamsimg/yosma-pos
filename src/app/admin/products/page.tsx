@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { ProductTable } from '@/components/admin/products/ProductTable';
 import { ProductForm } from '@/components/admin/products/ProductForm';
 import { ImportDialog } from '@/components/admin/products/ImportDialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { StockAdjustDialog } from '@/components/admin/products/StockAdjustDialog';
 import { 
   createProduct, 
   updateProduct, 
@@ -37,6 +39,15 @@ export default function AdminProductsPage() {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // New Premium Dialog States
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [stockAdjustOpen, setStockAdjustOpen] = useState(false);
+  const [productToAdjust, setProductToAdjust] = useState<Product | null>(null);
+  const [isAdjusting, setIsAdjusting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -96,14 +107,25 @@ export default function AdminProductsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Hapus produk ini?')) return;
-    const result = await softDeleteProduct(id);
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    setProductToDelete(product);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function confirmDeleteProduct() {
+    if (!productToDelete) return;
+    setIsDeleting(true);
+    const result = await softDeleteProduct(productToDelete.id);
     if (result.error) {
       toast.error('Gagal menghapus');
     } else {
-      toast.success('Produk dihapus');
-      setProducts(prev => prev.filter(p => p.id !== id));
+      toast.success('Produk berhasil dihapus');
+      setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
     }
+    setIsDeleting(false);
+    setDeleteConfirmOpen(false);
+    setProductToDelete(null);
   }
 
   function handleOpenForm(product?: Product) {
@@ -111,27 +133,30 @@ export default function AdminProductsPage() {
     setProductModalOpen(true);
   }
 
-  // Stock management could be simplified or stay here for now
-  async function handleAdjustStock(product: Product) {
-    const amountStr = prompt(`Masukkan jumlah penyesuaian untuk ${product.name} (Stok saat ini: ${product.stock}):`, '10');
-    if (!amountStr || isNaN(parseInt(amountStr))) return;
+  function handleOpenStockAdjust(product: Product) {
+    setProductToAdjust(product);
+    setStockAdjustOpen(true);
+  }
 
-    const quantity = parseInt(amountStr);
-    const reason = quantity > 0 ? 'RESTOCK' : 'CORRECTION';
+  async function confirmAdjustStock(data: { quantity: number; reason: string; notes: string }) {
+    if (!productToAdjust) return;
+    setIsAdjusting(true);
     
     const result = await adjustStock({
-      product_id: product.id,
-      quantity: Math.abs(quantity),
-      reason,
-      notes: 'Penyesuaian manual dari tabel'
+      product_id: productToAdjust.id,
+      quantity: data.quantity,
+      reason: data.reason as any,
+      notes: data.notes
     });
 
     if (result.error) {
       toast.error('Gagal menyesuaikan stok');
     } else {
-      toast.success('Stok diperbarui');
+      toast.success('Stok berhasil diperbarui');
       fetchData();
+      setStockAdjustOpen(false);
     }
+    setIsAdjusting(false);
   }
 
   return (
@@ -173,7 +198,7 @@ export default function AdminProductsPage() {
           loading={loading}
           onEdit={handleOpenForm}
           onDelete={handleDelete}
-          onAdjustStock={handleAdjustStock}
+          onAdjustStock={handleOpenStockAdjust}
         />
       </Card>
 
@@ -199,6 +224,23 @@ export default function AdminProductsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog 
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Hapus Produk?"
+        description={`Produk "${productToDelete?.name}" akan dihapus dari katalog barang.`}
+        onConfirm={confirmDeleteProduct}
+        loading={isDeleting}
+      />
+
+      <StockAdjustDialog 
+        open={stockAdjustOpen}
+        onOpenChange={setStockAdjustOpen}
+        product={productToAdjust}
+        onConfirm={confirmAdjustStock}
+        loading={isAdjusting}
+      />
     </div>
   );
 }

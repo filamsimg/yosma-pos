@@ -13,18 +13,18 @@ export async function generateNextSKU() {
   const { data } = await supabase
     .from('products')
     .select('sku')
-    .ilike('sku', 'YSM-%')
+    .ilike('sku', 'YAP-%')
     .order('sku', { ascending: false })
     .limit(1);
 
   if (!data || data.length === 0) {
-    return 'YSM-0001';
+    return 'YAP-0001';
   }
 
   const lastSku = data[0].sku;
   const lastNumber = parseInt(lastSku.split('-')[1]) || 0;
   const nextNumber = lastNumber + 1;
-  return `YSM-${nextNumber.toString().padStart(4, '0')}`;
+  return `YAP-${nextNumber.toString().padStart(4, '0')}`;
 }
 
 export async function createProduct(values: ProductFormValues) {
