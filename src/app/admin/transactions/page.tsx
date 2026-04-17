@@ -170,7 +170,7 @@ export default function AdminTransactionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Transaksi</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Transaksi</h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Semua transaksi dari tim sales ({transactions.length} total)
           </p>

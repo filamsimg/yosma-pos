@@ -123,7 +123,8 @@ export function ProductForm({
           <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Nama Produk *</Label>
           <Input
             {...register('name')}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 text-base"
+            onChange={(e) => setValue('name', e.target.value.toUpperCase())}
+            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 text-base uppercase"
             placeholder="Masukkan nama lengkap produk (Contoh: ABARTUS TANG)"
           />
           {errors.name && <p className="text-xs text-red-600 mt-1 font-medium">{errors.name.message}</p>}
@@ -146,9 +147,9 @@ export function ProductForm({
               <Input
                 placeholder="Nama kategori baru..."
                 value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
+                onChange={(e) => setNewCategoryName(e.target.value.toUpperCase())}
                 autoFocus
-                className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all"
+                className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all uppercase"
               />
               <Button 
                 type="button"

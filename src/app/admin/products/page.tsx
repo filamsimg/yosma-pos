@@ -139,7 +139,7 @@ export default function AdminProductsPage() {
       {/* Header section with Search & Create */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Produk & Stok</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Produk & Stok</h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Kelola katalog produk dengan Merk, Satuan, dan Harga Diskon.
           </p>

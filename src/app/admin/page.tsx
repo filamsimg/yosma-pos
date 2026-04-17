@@ -150,7 +150,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Dashboard</h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Ringkasan performa bisnis Anda
         </p>

@@ -91,7 +91,7 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
           <Input
             placeholder="PCS, BTL..."
             value={newUnitName}
-            onChange={(e) => setNewUnitName(e.target.value)}
+            onChange={(e) => setNewUnitName(e.target.value.toUpperCase())}
             autoFocus
             className="bg-white border-slate-200 text-slate-900 h-12 px-4 uppercase focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all"
           />

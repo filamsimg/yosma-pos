@@ -57,7 +57,7 @@ export default function AdminMapPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Pemantauan Lokasi</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Pemantauan Lokasi</h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Pantau lokasi check-in transaksi sales hari ini
           </p>
