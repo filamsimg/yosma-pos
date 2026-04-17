@@ -1,6 +1,7 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema, type ProductFormValues } from '@/lib/validations/product';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
+import { deleteCategory } from '@/lib/actions/products';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Category, Product } from '@/types';
 
 interface ProductFormProps {
@@ -57,6 +61,39 @@ export function ProductForm({
   const brandId = watch('brand_id') || '';
   const unitId = watch('unit_id') || '';
 
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
+  async function handleDeleteCategory(e: React.MouseEvent, c: Category) {
+    e.stopPropagation();
+    e.preventDefault();
+    setItemToDelete(c);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function confirmDeleteCategory() {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+
+    const result = await deleteCategory(itemToDelete.id);
+    if (result.error) {
+      toast.error('Gagal menghapus kategori', { description: result.error });
+    } else {
+      setLocalCategories(localCategories.filter((c) => c.id !== itemToDelete.id));
+      if (categoryId === itemToDelete.id) setValue('category_id', '', { shouldValidate: true });
+      toast.success('Kategori berhasil dihapus');
+    }
+    setIsDeleting(false);
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
@@ -76,7 +113,7 @@ export function ProductForm({
           <Input
             {...register('sku')}
             className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4"
-            placeholder="Contoh: PROD-001"
+            placeholder="KOSONGKAN UNTUK AUTO-SKU (YSM-####)"
           />
           {errors.sku && <p className="text-xs text-red-600 mt-1 font-medium">{errors.sku.message}</p>}
         </div>
@@ -86,17 +123,28 @@ export function ProductForm({
           <Select
             value={categoryId}
             onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
-            disabled={categories.length === 0}
+            disabled={localCategories.length === 0}
           >
             <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus:ring-blue-600 focus:ring-offset-2 transition-all px-4">
               <SelectValue>
-                {categories.find(c => c.id === categoryId)?.name || (categories.length === 0 ? "Memuat..." : "Pilih Kategori")}
+                {localCategories.find(c => c.id === categoryId)?.name || (localCategories.length === 0 ? "Memuat..." : "Pilih Kategori")}
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id} className="focus:bg-slate-50 focus:text-blue-600 py-2.5">
-                  {c.name}
+              {localCategories.map((c) => (
+                <SelectItem 
+                  key={c.id} 
+                  value={c.id} 
+                  className="focus:bg-slate-50 focus:text-blue-600 py-2.5 px-4 flex items-center justify-between group/item"
+                >
+                  <span>{c.name}</span>
+                  <button
+                    onClick={(e) => handleDeleteCategory(e, c)}
+                    className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all"
+                    title="Hapus Kategori"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -174,6 +222,14 @@ export function ProductForm({
           Simpan Produk
         </Button>
       </div>
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Hapus Kategori?"
+        description={`Kategori "${itemToDelete?.name}" akan dihapus permanen. Produk yang menggunakannya akan menjadi tanpa kategori.`}
+        onConfirm={confirmDeleteCategory}
+        loading={isDeleting}
+      />
     </form>
   );
 }

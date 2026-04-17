@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { generateNextSKU } from './products';
 
 export interface ProductImportItem {
   nama: string;
@@ -55,7 +56,24 @@ export async function bulkImportProducts(items: ProductImportItem[]) {
     data?.forEach(u => unitMap.set(u.name.toLowerCase(), u.id));
   }
 
-  // 4. Prepare product data
+  // 4. Handle auto-SKU for items without SKU
+  let nextSkuBase: string | null = null;
+  let skuCounter = 0;
+
+  for (const item of items) {
+    if (!item.sku || item.sku.trim() === '') {
+      if (!nextSkuBase) {
+        nextSkuBase = await generateNextSKU();
+        const parts = nextSkuBase.split('-');
+        skuCounter = parseInt(parts[1]);
+      } else {
+        skuCounter++;
+      }
+      item.sku = `YSM-${skuCounter.toString().padStart(4, '0')}`;
+    }
+  }
+
+  // 5. Prepare product data
   const productsToUpsert = items.map((item) => ({
     sku: item.sku,
     name: item.nama,
@@ -69,7 +87,7 @@ export async function bulkImportProducts(items: ProductImportItem[]) {
     is_active: true,
   }));
 
-  // 5. Upsert products by SKU
+  // 6. Upsert products by SKU
   const { error } = await supabase
     .from('products')
     .upsert(productsToUpsert, { onConflict: 'sku' });

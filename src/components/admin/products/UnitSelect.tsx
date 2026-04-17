@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Check, Loader2 } from 'lucide-react';
-import { createUnit } from '@/lib/actions/products';
+import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
+import { createUnit, deleteUnit } from '@/lib/actions/products';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Unit } from '@/types';
 
 interface UnitSelectProps {
@@ -27,6 +28,9 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newUnitName, setNewUnitName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Unit | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchUnits();
@@ -54,6 +58,30 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
       toast.success('Satuan berhasil ditambahkan');
     }
     setSubmitting(false);
+  }
+
+  async function handleDeleteUnit(e: React.MouseEvent, u: Unit) {
+    e.stopPropagation();
+    e.preventDefault();
+    setItemToDelete(u);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function confirmDeleteUnit() {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+
+    const result = await deleteUnit(itemToDelete.id);
+    if (result.error) {
+      toast.error('Gagal menghapus satuan', { description: result.error });
+    } else {
+      setUnits(units.filter((u) => u.id !== itemToDelete.id));
+      if (value === itemToDelete.id) onValueChange(null);
+      toast.success('Satuan berhasil dihapus');
+    }
+    setIsDeleting(false);
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
   }
 
   return (
@@ -94,8 +122,19 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-lg overflow-hidden">
               {units.map((u) => (
-                <SelectItem key={u.id} value={u.id} className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5 px-4 transition-colors">
-                  {u.name}
+                <SelectItem 
+                  key={u.id} 
+                  value={u.id} 
+                  className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5 px-4 transition-colors group/item flex items-center justify-between"
+                >
+                  <span>{u.name}</span>
+                  <button
+                    onClick={(e) => handleDeleteUnit(e, u)}
+                    className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all"
+                    title="Hapus Satuan"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -111,6 +150,15 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Hapus Satuan?"
+        description={`Satuan "${itemToDelete?.name}" akan dihapus permanen. Produk yang menggunakannya akan menjadi tanpa satuan.`}
+        onConfirm={confirmDeleteUnit}
+        loading={isDeleting}
+      />
     </div>
   );
 }

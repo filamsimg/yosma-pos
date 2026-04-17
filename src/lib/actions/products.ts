@@ -8,6 +8,25 @@ import { revalidatePath } from 'next/cache';
  * PRODUCTS ACTIONS
  */
 
+export async function generateNextSKU() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('products')
+    .select('sku')
+    .ilike('sku', 'YSM-%')
+    .order('sku', { ascending: false })
+    .limit(1);
+
+  if (!data || data.length === 0) {
+    return 'YSM-0001';
+  }
+
+  const lastSku = data[0].sku;
+  const lastNumber = parseInt(lastSku.split('-')[1]) || 0;
+  const nextNumber = lastNumber + 1;
+  return `YSM-${nextNumber.toString().padStart(4, '0')}`;
+}
+
 export async function createProduct(values: ProductFormValues) {
   const validated = productSchema.safeParse(values);
   if (!validated.success) {
@@ -15,6 +34,11 @@ export async function createProduct(values: ProductFormValues) {
   }
 
   const supabase = await createClient();
+  
+  // Auto-generate SKU if empty
+  if (!validated.data.sku || validated.data.sku.trim() === '') {
+    validated.data.sku = await generateNextSKU();
+  }
   
   const { data, error } = await supabase
     .from('products')
@@ -149,4 +173,28 @@ export async function createUnit(name: string) {
 
   if (error) return { error: error.message };
   return { data };
+}
+
+export async function deleteBrand(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('brands').delete().eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath('/admin/products');
+  return { success: true };
+}
+
+export async function deleteUnit(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('units').delete().eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath('/admin/products');
+  return { success: true };
+}
+
+export async function deleteCategory(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath('/admin/products');
+  return { success: true };
 }

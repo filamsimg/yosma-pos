@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const productSchema = z.object({
   name: z.string().min(3, 'Nama produk minimal 3 karakter'),
-  sku: z.string().min(3, 'SKU minimal 3 karakter'),
+  sku: z.string().min(0),
   description: z.string().min(0),
   price: z.number().min(0, 'Harga tidak boleh negatif'),
   discount_regular: z.number().min(0).max(100),

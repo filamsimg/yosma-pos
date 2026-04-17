@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Check, Loader2 } from 'lucide-react';
-import { createBrand } from '@/lib/actions/products';
+import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
+import { createBrand, deleteBrand } from '@/lib/actions/products';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Brand } from '@/types';
 
 interface BrandSelectProps {
@@ -27,6 +28,9 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Brand | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchBrands();
@@ -54,6 +58,30 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
       toast.success('Merk berhasil ditambahkan');
     }
     setSubmitting(false);
+  }
+
+  async function handleDeleteBrand(e: React.MouseEvent, b: Brand) {
+    e.stopPropagation();
+    e.preventDefault();
+    setItemToDelete(b);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function confirmDeleteBrand() {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+
+    const result = await deleteBrand(itemToDelete.id);
+    if (result.error) {
+      toast.error('Gagal menghapus merk', { description: result.error });
+    } else {
+      setBrands(brands.filter((b) => b.id !== itemToDelete.id));
+      if (value === itemToDelete.id) onValueChange(null);
+      toast.success('Merk berhasil dihapus');
+    }
+    setIsDeleting(false);
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
   }
 
   return (
@@ -94,8 +122,19 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
             </SelectTrigger>
             <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-lg overflow-hidden">
               {brands.map((b) => (
-                <SelectItem key={b.id} value={b.id} className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5 px-4 transition-colors">
-                  {b.name}
+                <SelectItem 
+                  key={b.id} 
+                  value={b.id} 
+                  className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5 px-4 transition-colors group/item flex items-center justify-between"
+                >
+                  <span>{b.name}</span>
+                  <button
+                    onClick={(e) => handleDeleteBrand(e, b)}
+                    className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all"
+                    title="Hapus Merk"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -111,6 +150,15 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Hapus Merk?"
+        description={`Merk "${itemToDelete?.name}" akan dihapus permanen. Produk yang menggunakannya akan menjadi tanpa merk.`}
+        onConfirm={confirmDeleteBrand}
+        loading={isDeleting}
+      />
     </div>
   );
 }

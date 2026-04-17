@@ -49,7 +49,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
         stok: Number(row['Stok'] || row['stok'] || row['Stok Awal'] || 0),
         deskripsi: row['Deskripsi'] || row['deskripsi'] || '',
         diskon_reguler: Number(row['Diskon'] || row['diskon'] || 0),
-      })).filter(item => item.nama && item.sku); // Basic validation
+      })).filter(item => item.nama); // Allow empty SKU for auto-generation
 
       setPreview(mappedData);
     };
@@ -178,7 +178,9 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
                 {preview.slice(0, 10).map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-3 py-2 text-slate-900">{row.nama}</td>
-                    <td className="px-3 py-2 text-slate-600 font-mono">{row.sku}</td>
+                    <td className="px-3 py-2 text-slate-600 font-mono">
+                      {row.sku || <span className="text-[10px] text-blue-500 font-sans italic">Otomatis</span>}
+                    </td>
                     <td className="px-3 py-2 text-slate-600">{row.merk}</td>
                     <td className="px-3 py-2 font-semibold text-blue-600">Rp {row.harga.toLocaleString()}</td>
                   </tr>
