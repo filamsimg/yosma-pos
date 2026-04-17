@@ -1,0 +1,129 @@
+'use client';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Edit, Trash2, PackagePlus } from 'lucide-react';
+import type { Product } from '@/types';
+
+interface ProductTableProps {
+  products: Product[];
+  onEdit: (product: Product) => void;
+  onDelete: (id: string) => void;
+  onAdjustStock: (product: Product) => void;
+  loading?: boolean;
+}
+
+export function ProductTable({
+  products,
+  onEdit,
+  onDelete,
+  onAdjustStock,
+  loading,
+}: ProductTableProps) {
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-slate-400">
+        Memuat data produk...
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="p-8 text-center text-slate-400">
+        Tidak ada produk ditemukan.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table className="w-full text-left whitespace-nowrap">
+        <TableHeader>
+          <TableRow className="bg-slate-50 border-b border-slate-200">
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">SKU</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Nama Produk</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Merk</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Satuan</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-right">Harga</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-center">Diskon</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-center">Stok</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-right">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="divide-y divide-slate-100">
+          {products.map((p) => (
+            <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors">
+              <TableCell className="py-4 px-5 text-sm text-slate-500">{p.sku}</TableCell>
+              <TableCell className="py-4 px-5 font-medium text-slate-900 text-sm">
+                <div>
+                  {p.name}
+                  <div className="text-[10px] text-slate-400 font-normal">{p.category?.name}</div>
+                </div>
+              </TableCell>
+              <TableCell className="py-4 px-5 text-slate-500 text-sm">{p.brand?.name || '-'}</TableCell>
+              <TableCell className="py-4 px-5 text-slate-500 text-sm">{p.unit?.name || '-'}</TableCell>
+              <TableCell className="py-4 px-5 text-slate-900 font-medium text-sm text-right">
+                Rp {p.price.toLocaleString('id-ID')}
+              </TableCell>
+              <TableCell className="py-4 px-5 text-center text-slate-500 text-xs">
+                {p.discount_regular > 0 ? `${p.discount_regular}%` : '-'}
+              </TableCell>
+              <TableCell className="py-4 px-5 text-center">
+                <Badge
+                  variant="outline"
+                  className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${
+                    p.stock <= 0
+                      ? 'bg-red-50 text-red-600'
+                      : p.stock < 10
+                      ? 'bg-amber-50 text-amber-600'
+                      : 'bg-emerald-50 text-emerald-600'
+                  }`}
+                >
+                  {p.stock} {p.unit?.name}
+                </Badge>
+              </TableCell>
+              <TableCell className="py-3 px-5 text-right whitespace-nowrap">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onAdjustStock(p)}
+                  className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 px-2"
+                  title="Sesuaikan Stok"
+                >
+                  <PackagePlus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(p)}
+                  className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
+                  title="Edit Produk"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(p.id)}
+                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 px-2"
+                  title="Hapus Produk"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}

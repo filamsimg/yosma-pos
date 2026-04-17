@@ -26,6 +26,20 @@ export interface Category {
   created_at: string;
 }
 
+// ----- Brands -----
+export interface Brand {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+// ----- Units -----
+export interface Unit {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 // ----- Products -----
 export interface Product {
   id: string;
@@ -35,12 +49,17 @@ export interface Product {
   price: number;
   stock: number;
   category_id: string | null;
+  brand_id: string | null;
+  unit_id: string | null;
+  discount_regular: number;
   image_url: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   // Joined fields
   category?: Category;
+  brand?: Brand;
+  unit?: Unit;
 }
 
 // ----- Outlets -----
