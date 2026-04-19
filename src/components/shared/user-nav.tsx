@@ -10,9 +10,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Shield, Briefcase } from 'lucide-react';
+import { LogOut, Shield, Briefcase, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 export function UserNav() {
   const { user } = useAuth();
@@ -36,21 +38,30 @@ export function UserNav() {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-2">
-            <p className="text-sm font-medium leading-none">
-              {user.full_name}
-            </p>
-            <Badge variant="secondary" className="w-fit text-xs gap-1">
-              {user.role === 'ADMIN' ? (
-                <Shield className="h-3 w-3" />
-              ) : (
-                <Briefcase className="h-3 w-3" />
-              )}
-              {user.role}
-            </Badge>
-          </div>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm font-medium leading-none">
+                {user.full_name}
+              </p>
+              <Badge variant="secondary" className="w-fit text-xs gap-1">
+                {user.role === 'ADMIN' ? (
+                  <Shield className="h-3 w-3" />
+                ) : (
+                  <Briefcase className="h-3 w-3" />
+                )}
+                {user.role}
+              </Badge>
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <Link href={user.role === 'ADMIN' ? '/admin/profile' : '/sales/profile'}>
+          <DropdownMenuItem className="cursor-pointer">
+            <User className="mr-2 h-4 w-4 text-slate-500" />
+            <span>Profil Saya</span>
+          </DropdownMenuItem>
+        </Link>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"

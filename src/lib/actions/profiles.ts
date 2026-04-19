@@ -72,3 +72,31 @@ export async function updateProfile(id: string, values: Partial<Profile>) {
   revalidatePath('/admin/outlets');
   return { success: true };
 }
+
+export async function updateMyProfile(values: { full_name: string; phone?: string }) {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: 'Tidak diizinkan karena sesi berakhir' };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: values.full_name,
+      phone: values.phone || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', user.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/admin/profile');
+  revalidatePath('/sales/profile');
+  // Revalidate auth session layout if needed
+  
+  return { success: true };
+}
