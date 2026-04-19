@@ -13,4 +13,5 @@ export type {
   StockAdjustment,
   CartItem,
   PaginatedResponse,
+  OutletType,
 } from './database';

@@ -47,4 +47,6 @@ export const VISIT_DAYS = [
 export const VISIT_FREQUENCIES = [
   { value: 'Seminggu Sekali', label: 'Seminggu Sekali' },
   { value: '2 Minggu Sekali', label: '2 Minggu Sekali' },
+  { value: '3 Minggu Sekali', label: '3 Minggu Sekali' },
+  { value: 'Sebulan Sekali', label: 'Sebulan Sekali' },
 ] as const;

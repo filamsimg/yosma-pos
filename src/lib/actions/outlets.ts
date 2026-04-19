@@ -34,6 +34,7 @@ export async function upsertOutlet(values: OutletFormValues, id?: string) {
   const supabase = await createClient();
   const payload = {
     name: values.name,
+    type: values.type || null,
     address: values.address || null,
     phone: values.phone || null,
     visit_day: values.visit_day || null,
@@ -80,5 +81,26 @@ export async function bulkDeleteOutlets(ids: string[]) {
   if (error) return { error: error.message };
   
   revalidatePath('/admin/outlets');
+  return { success: true };
+}
+
+export async function getOutletTypes() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('outlet_types').select('*').order('name');
+  if (error) return [];
+  return data as any[];
+}
+
+export async function createOutletType(name: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('outlet_types').insert({ name }).select().single();
+  if (error) return { error: error.message };
+  return { data };
+}
+
+export async function deleteOutletType(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('outlet_types').delete().eq('id', id);
+  if (error) return { error: error.message };
   return { success: true };
 }

@@ -69,6 +69,7 @@ export interface Product {
 export interface Outlet {
   id: string;
   name: string;
+  type: string | null;
   address: string | null;
   lat: number | null;
   lng: number | null;
@@ -80,6 +81,13 @@ export interface Outlet {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// ----- Outlet Types -----
+export interface OutletType {
+  id: string;
+  name: string;
+  created_at: string;
 }
 
 // ----- Transactions -----
