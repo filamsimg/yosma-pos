@@ -22,6 +22,7 @@ import {
   Menu,
   Settings,
   LogOut,
+  UserCog,
 } from 'lucide-react';
 import { useState } from 'react';
 import { logout } from '@/lib/actions/auth';
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/admin/products', icon: Package, label: 'Produk', exact: false },
   { href: '/admin/outlets', icon: Store, label: 'Outlet', exact: false },
   { href: '/admin/map', icon: MapPin, label: 'Peta', exact: false },
+  { href: '/admin/profiles', icon: UserCog, label: 'Karyawan', exact: false },
 ];
 
 function NavContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
