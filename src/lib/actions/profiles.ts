@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { Profile } from '@/types';
 import { revalidatePath } from 'next/cache';
 
@@ -99,4 +100,22 @@ export async function updateMyProfile(values: { full_name: string; phone?: strin
   // Revalidate auth session layout if needed
   
   return { success: true };
+}
+
+export async function adminResetPassword(profileId: string) {
+  const supabase = createAdminClient();
+  
+  // Default password for reset
+  const defaultPassword = process.env.DEFAULT_RESET_PASSWORD || 'yosma12345';
+
+  const { error } = await supabase.auth.admin.updateUserById(
+    profileId,
+    { password: defaultPassword }
+  );
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true, defaultPassword };
 }

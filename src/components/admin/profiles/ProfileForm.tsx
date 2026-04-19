@@ -13,8 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { adminResetPassword } from '@/lib/actions/profiles';
 import type { Profile } from '@/types';
+import { useState } from 'react';
 
 interface ProfileFormProps {
   initialData?: Profile | null;
@@ -29,6 +33,9 @@ export function ProfileForm({
   onCancel,
   loading,
 }: ProfileFormProps) {
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -140,6 +147,27 @@ export function ProfileForm({
           />
         </div>
 
+        {/* Reset Password Section (Only for existing profiles) */}
+        {initialData && (
+          <div className="pt-4 border-t border-dashed border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-4 rounded-lg">
+              <div>
+                <Label className="text-slate-800 font-bold block">Reset Password</Label>
+                <p className="text-xs text-slate-500 mt-1">Kembalikan sandi karyawan ini ke sandi bawaan.</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setResetConfirmOpen(true)}
+                className="border-slate-200 text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all font-bold h-10 px-4 whitespace-nowrap"
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Reset Ke Default
+              </Button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-4">
@@ -160,6 +188,26 @@ export function ProfileForm({
           {initialData ? 'Simpan Perubahan' : 'Selesai'}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        onOpenChange={setResetConfirmOpen}
+        title="Reset Password Karyawan?"
+        description={`Sandi "${initialData?.full_name}" akan dikembalikan ke sandi standar yosma12345. Harap infokan karyawan tersebut setelah berhasil.`}
+        onConfirm={async () => {
+          if (!initialData) return;
+          setIsResetting(true);
+          const result = await adminResetPassword(initialData.id);
+          if (result.success) {
+            toast.success('Password berhasil di-reset', { description: `Password baru: ${result.defaultPassword}` });
+            setResetConfirmOpen(false);
+          } else {
+            toast.error('Gagal reset password', { description: result.error });
+          }
+          setIsResetting(false);
+        }}
+        loading={isResetting}
+      />
     </form>
   );
 }
