@@ -20,8 +20,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose,
-  SheetFooter,
 } from '@/components/ui/sheet';
 import {
   ShoppingCart,
@@ -31,7 +29,7 @@ import {
   Receipt,
   X,
   Loader2,
-  CheckCircle2,
+  Wallet,
 } from 'lucide-react';
 import { PAYMENT_METHODS } from '@/lib/constants';
 import type { PaymentMethod } from '@/types';
@@ -52,7 +50,6 @@ export function CartSheet({
     discount,
     paymentMethod,
     addItem,
-    removeItem,
     updateQuantity,
     setDiscount,
     setPaymentMethod,
@@ -69,103 +66,111 @@ export function CartSheet({
   return (
     <Sheet>
       <SheetTrigger
-        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:scale-105 active:scale-95"
-        style={{ display: itemCount > 0 ? 'flex' : 'none' }}
-      >
-        <ShoppingCart className="h-5 w-5" />
-        <div className="text-left">
-          <p className="text-xs font-bold">{itemCount} item</p>
-          <p className="text-[10px] opacity-80">
-            Rp {totalPrice.toLocaleString('id-ID')}
-          </p>
-        </div>
-      </SheetTrigger>
+        render={
+          <button
+            className="fixed bottom-6 right-6 z-30 flex items-center gap-3 px-6 py-4 rounded-[28px] bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
+            style={{ display: itemCount > 0 ? 'flex' : 'none' }}
+          >
+            <div className="relative">
+              <ShoppingCart className="h-6 w-6 group-hover:rotate-12 transition-transform" />
+              <span className="absolute -top-2 -right-2 bg-white text-blue-600 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {itemCount}
+              </span>
+            </div>
+            <div className="text-left">
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">TOTAL BAYAR</p>
+              <p className="text-sm font-black leading-none">
+                Rp {totalPrice.toLocaleString('id-ID')}
+              </p>
+            </div>
+          </button>
+        }
+      />
 
       <SheetContent
         side="bottom"
-        className="h-[85dvh] h-[85vh] rounded-t-3xl bg-slate-900 border-white/10 p-0 flex flex-col"
+        className="h-[90vh] rounded-t-[40px] bg-white border-slate-200 p-0 flex flex-col shadow-2xl"
       >
-        <SheetHeader className="p-4 pb-0 shrink-0">
+        <SheetHeader className="p-6 pb-2 shrink-0">
           <div className="flex items-center justify-between">
-            <div>
-              <SheetTitle className="text-white text-lg">
-                Keranjang
-              </SheetTitle>
-              <SheetDescription className="text-slate-400 text-sm">
-                {itemCount} item — Rp {subtotal.toLocaleString('id-ID')}
-              </SheetDescription>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
+                <ShoppingCart className="h-6 w-6" />
+              </div>
+              <div>
+                <SheetTitle className="text-xl font-black text-slate-900 tracking-tight">
+                  KERANJANG BELANJA
+                </SheetTitle>
+                <SheetDescription className="text-slate-400 font-bold text-xs uppercase tracking-wider">
+                  {itemCount} ITEM TERPILIH
+                </SheetDescription>
+              </div>
             </div>
             {items.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearCart}
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 rounded-xl font-bold text-xs"
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                Hapus Semua
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                DENGOSKAN
               </Button>
             )}
           </div>
         </SheetHeader>
 
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-            <ShoppingCart className="h-12 w-12 mb-3 opacity-40" />
-            <p className="text-sm">Keranjang kosong</p>
-            <p className="text-xs mt-1">Tambah produk dari katalog</p>
+          <div className="flex flex-col items-center justify-center flex-1 text-slate-300">
+            <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+              <ShoppingCart className="h-10 w-10 opacity-20" />
+            </div>
+            <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Keranjang Kosong</p>
+            <p className="text-xs font-bold text-slate-300 mt-1 uppercase tracking-tight">Silakan tambah produk dari katalog</p>
           </div>
         ) : (
           <>
             {/* Cart Items */}
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-4 space-y-2">
+            <ScrollArea className="flex-1 px-6">
+              <div className="space-y-3 py-4">
                 {items.map((item) => (
                   <div
                     key={item.product.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 shadow-sm"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-black text-slate-900 truncate uppercase tracking-tighter">
                         {item.product.name}
                       </p>
-                      <p className="text-xs text-blue-400 font-semibold">
+                      <p className="text-xs font-bold text-blue-600 mt-0.5">
                         Rp {item.price_at_sale.toLocaleString('id-ID')}
                       </p>
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-xl shadow-inner shrink-0">
                       <button
-                        onClick={() =>
-                          updateQuantity(
-                            item.product.id,
-                            item.quantity - 1
-                          )
-                        }
-                        className="flex items-center justify-center w-7 h-7 rounded-md bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90"
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-4 w-4" />
                       </button>
-                      <span className="text-sm font-semibold text-white min-w-6 text-center">
+                      <span className="text-sm font-black text-slate-900 min-w-6 text-center">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => addItem(item.product)}
                         disabled={item.quantity >= item.product.stock}
-                        className="flex items-center justify-center w-7 h-7 rounded-md bg-white/5 text-slate-400 hover:text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-30"
+                        className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all active:scale-90 disabled:opacity-20"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-4 w-4" />
                       </button>
                     </div>
 
                     {/* Item Subtotal */}
-                    <div className="text-right shrink-0 min-w-16">
-                      <p className="text-sm font-bold text-white">
-                        Rp{' '}
-                        {(
-                          item.price_at_sale * item.quantity
-                        ).toLocaleString('id-ID')}
+                    <div className="text-right shrink-0 min-w-[100px]">
+                      <p className="text-sm font-black text-slate-900">
+                        Rp {(item.price_at_sale * item.quantity).toLocaleString('id-ID')}
                       </p>
                     </div>
                   </div>
@@ -174,73 +179,65 @@ export function CartSheet({
             </ScrollArea>
 
             {/* Checkout Section */}
-            <div className="border-t border-white/5 p-4 space-y-3 shrink-0">
-              {/* Discount */}
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-slate-400 shrink-0 w-16">
-                  Diskon
-                </Label>
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
-                    Rp
-                  </span>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={subtotal}
-                    value={discount || ''}
-                    onChange={(e) =>
-                      setDiscount(parseInt(e.target.value) || 0)
-                    }
-                    placeholder="0"
-                    className="pl-8 bg-white/5 border-white/10 text-white h-9 text-sm"
-                  />
+            <div className="bg-slate-50 border-t border-slate-200 p-6 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px]">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Discount */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
+                    <Receipt className="h-3 w-3" /> POTONGAN (Rp)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={subtotal}
+                      value={discount || ''}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
+                      className="bg-white border-slate-200 text-slate-900 h-11 rounded-xl font-black text-sm pl-4 shadow-sm focus-visible:ring-blue-600"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Method */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
+                    <Wallet className="h-3 w-3" /> PEMBAYARAN
+                  </Label>
+                  <Select
+                    value={paymentMethod}
+                    onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                  >
+                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-11 rounded-xl font-bold text-sm shadow-sm focus:ring-blue-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200 rounded-xl overflow-hidden shadow-2xl">
+                      {PAYMENT_METHODS.map((pm) => (
+                        <SelectItem key={pm.value} value={pm.value} className="font-bold text-xs">
+                          {pm.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-slate-400 shrink-0 w-16">
-                  Bayar
-                </Label>
-                <Select
-                  value={paymentMethod}
-                  onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
-                >
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_METHODS.map((pm) => (
-                      <SelectItem key={pm.value} value={pm.value}>
-                        {pm.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator className="bg-white/5" />
-
-              {/* Totals */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Subtotal</span>
-                  <span className="text-white">
-                    Rp {subtotal.toLocaleString('id-ID')}
-                  </span>
+              {/* Summary Totals */}
+              <div className="p-4 bg-white/50 border border-slate-200/50 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-slate-400">SUBTOTAL</span>
+                  <span className="text-slate-600">Rp {subtotal.toLocaleString('id-ID')}</span>
                 </div>
                 {discount > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">Diskon</span>
-                    <span className="text-red-400">
-                      - Rp {discount.toLocaleString('id-ID')}
-                    </span>
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-400">TOTAL DISKON</span>
+                    <span className="text-red-500">- Rp {discount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between text-base font-bold">
-                  <span className="text-white">Total</span>
-                  <span className="text-blue-400">
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-sm font-black text-slate-900">HASIL AKHIR</span>
+                  <span className="text-lg font-black text-blue-600">
                     Rp {totalPrice.toLocaleString('id-ID')}
                   </span>
                 </div>
@@ -250,18 +247,18 @@ export function CartSheet({
               <Button
                 onClick={onCheckout}
                 disabled={checkoutLoading || disabled || items.length === 0}
-                className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold text-base shadow-lg shadow-green-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow-xl shadow-blue-200 rounded-2xl active:scale-95 transition-all"
               >
                 {checkoutLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Memproses Transaksi...
-                  </>
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>MENYIMPAN...</span>
+                  </div>
                 ) : (
-                  <>
-                    <Receipt className="mr-2 h-5 w-5" />
-                    Bayar Rp {totalPrice.toLocaleString('id-ID')}
-                  </>
+                  <div className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    <span>KONFIRMASI BAYAR</span>
+                  </div>
                 )}
               </Button>
             </div>

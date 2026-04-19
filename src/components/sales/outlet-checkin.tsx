@@ -29,6 +29,7 @@ import {
   Navigation,
   X,
   AlertCircle,
+  Map,
 } from 'lucide-react';
 import type { Outlet } from '@/types';
 
@@ -151,19 +152,31 @@ export function OutletCheckin({
   // If already checked in
   if (checkedIn && checkinData) {
     return (
-      <Card className="border-green-500/20 bg-green-500/5">
-        <CardContent className="flex items-center gap-3 p-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500/10">
-            <CheckCircle2 className="h-5 w-5 text-green-400" />
+      <Card className="border-blue-100 bg-white shadow-md shadow-blue-50/50 rounded-[24px] overflow-hidden">
+        <CardContent className="flex items-center gap-4 p-5">
+          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 shadow-sm shadow-emerald-50">
+            <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-green-300 truncate">
-              Check-in: {checkinData.outlet.name}
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">TER-CHECKIN</p>
+            <p className="text-sm font-black text-slate-900 truncate">
+              {checkinData.outlet.name}
             </p>
-            <p className="text-xs text-green-400/60 truncate">
-              {checkinData.outlet.address || 'Lokasi tercatat'}
-            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <MapPin className="h-3 w-3 text-slate-300" />
+              <p className="text-xs font-medium text-slate-400 truncate">
+                {checkinData.outlet.address || 'Lokasi GPS Tercatat'}
+              </p>
+            </div>
           </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 h-8 font-bold text-[10px]"
+            onClick={() => window.location.reload()} // Quick way to 'reset' session if needed
+          >
+            GANTI
+          </Button>
         </CardContent>
       </Card>
     );
@@ -171,118 +184,131 @@ export function OutletCheckin({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger className="w-full">
-        <Card className="border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors cursor-pointer">
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500/10">
-              <MapPin className="h-5 w-5 text-blue-400" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-blue-300">
-                Check-in ke Outlet
-              </p>
-              <p className="text-xs text-blue-400/60">
-                Pilih outlet, ambil foto, dan mulai transaksi
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </DialogTrigger>
+      <DialogTrigger 
+        render={
+          <Card className="border-blue-200 bg-white shadow-xl shadow-blue-100/50 rounded-[24px] overflow-hidden hover:scale-[1.02] transition-all cursor-pointer group active:scale-95">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200 group-hover:rotate-12 transition-transform">
+                <MapPin className="h-6 w-6" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-base font-black text-slate-900 tracking-tight">
+                  Mulai Check-in
+                </p>
+                <p className="text-xs font-bold text-slate-400 mt-0.5 flex items-center gap-1">
+                  <Store className="h-3 w-3" />
+                  Pilih outlet kunjungan Anda
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        }
+      />
       <DialogContent
-        showCloseButton={true}
-        className="max-w-lg w-[calc(100%-2rem)] max-h-[90vh] overflow-hidden flex flex-col bg-slate-900 border-white/10 p-0"
+        className="max-w-lg w-[calc(100%-2rem)] max-h-[92vh] overflow-hidden flex flex-col bg-white border-slate-200 p-0 rounded-[32px] shadow-2xl"
       >
-        {/* Header */}
-        <DialogHeader className="p-4 border-b border-white/5">
-          <DialogTitle className="text-lg font-semibold text-white">
-            Check-in Outlet
+        <DialogHeader className="p-6 pb-4 bg-slate-50/50 border-b border-slate-100">
+          <DialogTitle className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-200">
+              <Map className="h-4 w-4" />
+            </div>
+            CHECK-IN OUTLET
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-400 mt-0.5">
-            Pilih outlet dan ambil foto untuk memulai
+          <DialogDescription className="text-sm font-bold text-slate-400 mt-1">
+            Validasi lokasi dan foto untuk mulai jualan
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Step 1: Location */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">
-                1
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
+              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                01
               </span>
-              Lokasi GPS
+              Validasi Lokasi GPS
             </div>
             {geo.latitude && geo.longitude ? (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                <Navigation className="h-4 w-4 text-green-400" />
-                <span className="text-sm text-green-300">
-                  {geo.latitude.toFixed(6)}, {geo.longitude.toFixed(6)}
-                </span>
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm shadow-emerald-50/50 animate-in zoom-in-95 duration-300">
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm">
+                  <Navigation className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">LOKASI TERDETEKSI</p>
+                  <span className="text-sm font-bold text-emerald-600 font-mono">
+                    {geo.latitude.toFixed(6)}, {geo.longitude.toFixed(6)}
+                  </span>
+                </div>
               </div>
             ) : (
               <Button
                 onClick={geo.getCurrentPosition}
                 disabled={geo.loading}
-                variant="outline"
-                className="w-full border-white/10 bg-white/5 text-white hover:bg-white/10"
+                className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-blue-200 transition-all font-bold shadow-sm"
               >
                 {geo.loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin text-blue-600" />
                 ) : (
-                  <Navigation className="mr-2 h-4 w-4" />
+                  <Navigation className="mr-2 h-5 w-5 text-blue-500" />
                 )}
-                {geo.loading ? 'Mendapatkan lokasi...' : 'Ambil Lokasi GPS'}
+                {geo.loading ? 'Sedang Melacak...' : 'Aktifkan GPS Sekarang'}
               </Button>
             )}
             {geo.error && (
-              <p className="text-xs text-red-400 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" /> {geo.error}
-              </p>
+              <div className="p-3 bg-red-50 rounded-xl border border-red-100 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <p className="text-xs text-red-600 font-bold tracking-tight"> {geo.error}</p>
+              </div>
             )}
           </div>
 
           {/* Step 2: Select Outlet */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">
-                2
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
+              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                02
               </span>
-              Pilih Outlet
+              Pilih Outlet Kunjungan
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
               <Input
-                placeholder="Cari outlet..."
+                placeholder="Cari apotik / toko..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-slate-500 h-10"
+                className="pl-10 h-12 bg-slate-50 border-slate-200 text-slate-900 rounded-xl font-medium focus-visible:bg-white transition-all shadow-inner"
               />
             </div>
-            <ScrollArea className="h-40 rounded-lg border border-white/10">
-              <div className="p-1 space-y-0.5">
+            <ScrollArea className="h-44 rounded-2xl border border-slate-100 bg-slate-50/30 p-2 shadow-inner">
+              <div className="space-y-1.5">
                 {filteredOutlets.length === 0 ? (
-                  <p className="text-sm text-slate-500 p-3 text-center">
-                    Tidak ada outlet ditemukan
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-10 opacity-30 text-slate-400">
+                    <Store className="h-8 w-8 mb-2" />
+                    <p className="text-xs font-bold">Apotik tidak ditemukan</p>
+                  </div>
                 ) : (
                   filteredOutlets.map((outlet) => (
                     <button
                       key={outlet.id}
                       onClick={() => setSelectedOutlet(outlet)}
-                      className={`w-full flex items-center gap-3 p-2.5 rounded-md text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all relative overflow-hidden ${
                         selectedOutlet?.id === outlet.id
-                          ? 'bg-blue-500/15 border border-blue-500/30 text-blue-300'
-                          : 'hover:bg-white/5 text-slate-300 border border-transparent'
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-100'
                       }`}
                     >
-                      <Store className="h-4 w-4 shrink-0 text-slate-500" />
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedOutlet?.id === outlet.id ? 'bg-white/20' : 'bg-slate-100 text-slate-400'}`}>
+                        <Store className="h-4 w-4" />
+                      </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <p className={`text-sm font-black truncate ${selectedOutlet?.id === outlet.id ? 'text-white' : 'text-slate-900'}`}>
                           {outlet.name}
                         </p>
                         {outlet.address && (
-                          <p className="text-xs text-slate-500 truncate">
-                            {outlet.address}
-                          </p>
+                          <div className="flex items-center gap-1 mt-0.5 opacity-70">
+                            <MapPin className="h-2.5 w-2.5" />
+                            <p className="text-[10px] font-bold truncate tracking-tight">{outlet.address}</p>
+                          </div>
                         )}
                       </div>
                     </button>
@@ -293,12 +319,12 @@ export function OutletCheckin({
           </div>
 
           {/* Step 3: Photo */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">
-                3
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
+              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                03
               </span>
-              Foto Outlet
+              Foto Bukti Kunjungan
             </div>
 
             <input
@@ -311,47 +337,45 @@ export function OutletCheckin({
             />
 
             {img.preview ? (
-              <div className="relative rounded-lg overflow-hidden border border-white/10">
+              <div className="relative rounded-2xl overflow-hidden border-2 border-blue-500/20 shadow-xl group">
                 <img
                   src={img.preview}
                   alt="Preview outlet"
-                  className="w-full h-40 object-cover"
+                  className="w-full h-44 object-cover"
                 />
-                <button
-                  onClick={() => {
-                    img.clearImage();
-                    if (fileInputRef.current) fileInputRef.current.value = '';
-                  }}
-                  className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                   <button
+                    onClick={() => {
+                      img.clearImage();
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="p-3 rounded-full bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
                 {img.loading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+                    <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
                   </div>
                 )}
               </div>
             ) : (
               <Button
                 onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-                className="w-full h-24 border-dashed border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white flex flex-col gap-1"
+                className="w-full h-32 rounded-2xl bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
               >
-                <Camera className="h-6 w-6" />
-                <span className="text-xs">Ambil Foto Outlet</span>
+                <div className="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white shadow-inner">
+                  <Camera className="h-6 w-6" />
+                </div>
+                <span className="text-xs font-black uppercase tracking-widest">Buka Kamera</span>
               </Button>
-            )}
-            {img.error && (
-              <p className="text-xs text-red-400 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" /> {img.error}
-              </p>
             )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/5">
+        <div className="p-6 bg-slate-50 border-t border-slate-100">
           <Button
             onClick={handleCheckin}
             disabled={
@@ -361,17 +385,17 @@ export function OutletCheckin({
               !img.compressedFile ||
               uploading
             }
-            className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium shadow-lg shadow-blue-500/20"
+            className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-xl shadow-blue-200 active:scale-95 transition-all"
           >
             {uploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Mengunggah...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                MENYIMPAN DATA...
               </>
             ) : (
               <>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Check-in Sekarang
+                <CheckCircle2 className="mr-2 h-5 w-5" />
+                KONFIRMASI CHECK-IN
               </>
             )}
           </Button>

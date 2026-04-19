@@ -23,7 +23,12 @@ import {
   Store,
   ChevronRight,
   Printer,
+  History,
+  MapPin,
+  Clock,
+  ExternalLink
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Transaction, TransactionItem } from '@/types';
@@ -76,10 +81,13 @@ export default function SalesHistoryPage() {
       .map(
         (item) => `
       <tr>
-        <td style="padding: 6px 0; border-bottom: 1px solid #eee;">${item.product?.name || '-'}</td>
-        <td style="padding: 6px 0; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-        <td style="padding: 6px 0; border-bottom: 1px solid #eee; text-align: right;">Rp ${item.price_at_sale.toLocaleString('id-ID')}</td>
-        <td style="padding: 6px 0; border-bottom: 1px solid #eee; text-align: right;">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #efefef;">
+          <div style="font-weight: 700; font-size: 13px;">${item.product?.name || '-'}</div>
+          <div style="font-size: 11px; color: #666;">SKU: ${item.product?.sku || '-'}</div>
+        </td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #efefef; text-align: center; font-weight: 600;">${item.quantity}</td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #efefef; text-align: right; font-weight: 500;">Rp ${item.price_at_sale.toLocaleString('id-ID')}</td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #efefef; text-align: right; font-weight: 700;">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
       </tr>
     `
       )
@@ -87,10 +95,10 @@ export default function SalesHistoryPage() {
 
     const statusLabel =
       selectedTxn.status === 'COMPLETED'
-        ? 'Lunas'
+        ? 'LUNAS'
         : selectedTxn.status === 'CANCELLED'
-        ? 'Batal'
-        : 'Pending';
+        ? 'BATAL'
+        : 'PENDING';
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -98,59 +106,55 @@ export default function SalesHistoryPage() {
       <head>
         <title>Invoice ${selectedTxn.invoice_number}</title>
         <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', sans-serif; padding: 24px; max-width: 400px; margin: 0 auto; color: #1a1a1a; }
-          .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #333; padding-bottom: 16px; }
-          .header h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; }
-          .header p { font-size: 11px; color: #666; margin-top: 2px; }
-          .info { margin-bottom: 16px; }
-          .info-row { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; }
-          .info-row .label { color: #666; }
-          .info-row .value { font-weight: 500; }
-          table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
-          th { text-align: left; padding: 8px 0; border-bottom: 2px solid #333; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-          .totals { border-top: 2px solid #333; padding-top: 12px; }
-          .total-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
-          .total-row.grand { font-size: 16px; font-weight: 700; border-top: 1px solid #ddd; padding-top: 8px; margin-top: 4px; }
-          .footer { text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed #ccc; }
-          .footer p { font-size: 11px; color: #999; }
-          .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-          .status.completed { background: #dcfce7; color: #166534; }
-          .status.cancelled { background: #fef2f2; color: #991b1b; }
-          .status.pending { background: #fef9c3; color: #854d0e; }
-          @media print { body { padding: 0; } }
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+          body { padding: 30px; max-width: 500px; margin: 0 auto; color: #0f172a; line-height: 1.4; }
+          .logo { color: #2563eb; font-weight: 800; font-size: 24px; letter-spacing: -0.025em; margin-bottom: 4px; }
+          .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #f1f5f9; }
+          .header p { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+          .invoice-box { background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+          .invoice-box b { font-size: 14px; color: #1e293b; }
+          .info { margin-bottom: 25px; display: grid; grid-template-cols: 1fr 1fr; gap: 15px; }
+          .info-block label { display: block; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+          .info-block span { font-size: 12px; font-weight: 600; color: #334155; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+          th { text-align: left; padding: 12px 0; border-bottom: 2px solid #0f172a; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; }
+          .totals { margin-top: 10px; }
+          .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 500; color: #64748b; }
+          .total-row.grand { padding-top: 15px; margin-top: 10px; border-top: 2px solid #f1f5f9; color: #0f172a; font-size: 18px; font-weight: 800; }
+          .total-row.grand span:last-child { color: #2563eb; }
+          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #cbd5e1; }
+          .footer p { font-size: 11px; color: #94a3b8; font-weight: 500; }
+          @media print { body { padding: 0; } .invoice-box { background: #f8fafc !important; -webkit-print-color-adjust: exact; } }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1>YOSMA POS</h1>
-          <p>Sales Monitoring & Point of Sale</p>
+          <div class="logo">YOSMA <span style="color: #0f172a">POS</span></div>
+          <p>Electronic Sales Receipt</p>
+        </div>
+
+        <div class="invoice-box">
+          <b>${selectedTxn.invoice_number}</b>
+          <span style="font-size: 10px; font-weight: 800; background: #2563eb; color: #fff; padding: 4px 10px; border-radius: 6px;">${statusLabel}</span>
         </div>
 
         <div class="info">
-          <div class="info-row">
-            <span class="label">Invoice</span>
-            <span class="value">${selectedTxn.invoice_number}</span>
+          <div class="info-block">
+            <label>Tanggal</label>
+            <span>${format(new Date(selectedTxn.created_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}</span>
           </div>
-          <div class="info-row">
-            <span class="label">Tanggal</span>
-            <span class="value">${format(new Date(selectedTxn.created_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}</span>
+          <div class="info-block">
+            <label>Outlet</label>
+            <span>${selectedTxn.outlet?.name || '-'}</span>
           </div>
-          <div class="info-row">
-            <span class="label">Outlet</span>
-            <span class="value">${selectedTxn.outlet?.name || '-'}</span>
+          <div class="info-block">
+            <label>Metode</label>
+            <span>${selectedTxn.payment_method}</span>
           </div>
-          <div class="info-row">
-            <span class="label">Sales</span>
-            <span class="value">${selectedTxn.sales?.full_name || '-'}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Pembayaran</span>
-            <span class="value">${selectedTxn.payment_method}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Status</span>
-            <span class="value"><span class="status ${selectedTxn.status.toLowerCase()}">${statusLabel}</span></span>
+          <div class="info-block">
+            <label>Sales</label>
+            <span>${selectedTxn.sales?.full_name || '-'}</span>
           </div>
         </div>
 
@@ -159,8 +163,8 @@ export default function SalesHistoryPage() {
             <tr>
               <th>Produk</th>
               <th style="text-align: center;">Qty</th>
-              <th style="text-align: right;">Harga</th>
-              <th style="text-align: right;">Subtotal</th>
+              <th style="text-align: right;">Unit</th>
+              <th style="text-align: right;">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -175,21 +179,21 @@ export default function SalesHistoryPage() {
           </div>
           ${
             selectedTxn.discount > 0
-              ? `<div class="total-row">
+              ? `<div class="total-row" style="color: #dc2626;">
                   <span>Diskon</span>
                   <span>-Rp ${selectedTxn.discount.toLocaleString('id-ID')}</span>
                 </div>`
               : ''
           }
           <div class="total-row grand">
-            <span>TOTAL</span>
+            <span>TOTAL TAGIHAN</span>
             <span>Rp ${selectedTxn.total_price.toLocaleString('id-ID')}</span>
           </div>
         </div>
 
         <div class="footer">
-          <p>Terima kasih atas transaksi Anda!</p>
-          <p style="margin-top: 4px;">YOSMA POS © ${new Date().getFullYear()}</p>
+          <p>Invoice ini sah dan diproses secara elektronik.</p>
+          <p style="margin-top: 4px;">Terima kasih telah berlangganan di YOSMA POS.</p>
         </div>
 
         <script>window.onload = function() { window.print(); }</script>
@@ -199,217 +203,252 @@ export default function SalesHistoryPage() {
     printWindow.document.close();
   }
 
-  const statusColor = (status: string) => {
+  const statusStyle = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return 'bg-green-500/10 text-green-400 border-green-500/20';
+        return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'CANCELLED':
-        return 'bg-red-500/10 text-red-400 border-red-500/20';
+        return 'bg-red-50 text-red-600 border-red-100';
       default:
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+        return 'bg-amber-50 text-amber-600 border-amber-100';
     }
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-white">Riwayat Transaksi</h1>
-        <p className="text-sm text-slate-400 mt-0.5">
-          Daftar semua transaksi Anda
-        </p>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-5 py-6 shadow-sm sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <History className="h-5 w-5 text-blue-600" />
+              RIWAYAT <span className="text-blue-600">SALES</span>
+            </h1>
+            <p className="text-xs font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
+              50 Transaksi Terakhir Anda
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shadow-blue-50">
+             <Receipt className="h-5 w-5" />
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="p-4 rounded-xl bg-white/5 space-y-2">
-              <Skeleton className="h-4 w-1/3 bg-white/10" />
-              <Skeleton className="h-3 w-1/2 bg-white/10" />
-              <Skeleton className="h-3 w-1/4 bg-white/10" />
+      <div className="p-5 space-y-3">
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="p-5 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-3">
+                <div className="flex justify-between">
+                  <Skeleton className="h-5 w-1/2 bg-slate-50" />
+                  <Skeleton className="h-5 w-1/4 bg-slate-50" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-3/4 bg-slate-50" />
+                  <Skeleton className="h-3 w-1/2 bg-slate-50" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm">
+            <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-6">
+              <Receipt className="h-10 w-10 text-slate-200" />
             </div>
-          ))}
-        </div>
-      ) : transactions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-          <Receipt className="h-12 w-12 mb-3 opacity-40" />
-          <p className="text-sm font-medium">Belum ada transaksi</p>
-          <p className="text-xs mt-1">
-            Transaksi akan muncul setelah Anda menyelesaikan pesanan
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {transactions.map((txn) => (
-            <button
-              key={txn.id}
-              onClick={() => handleViewDetail(txn)}
-              className="w-full text-left"
-            >
-              <Card className="border-white/5 bg-white/5 hover:bg-white/[0.08] transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-white">
-                          {txn.invoice_number}
-                        </p>
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] px-1.5 py-0 ${statusColor(txn.status)}`}
-                        >
-                          {txn.status === 'COMPLETED'
-                            ? 'Lunas'
-                            : txn.status === 'CANCELLED'
-                            ? 'Batal'
-                            : 'Pending'}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Store className="h-3 w-3" />
-                          {txn.outlet?.name || '-'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {format(
-                            new Date(txn.created_at),
-                            'dd MMM yyyy',
-                            { locale: idLocale }
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-blue-400">
-                        Rp {txn.total_price.toLocaleString('id-ID')}
-                      </p>
-                      <ChevronRight className="h-4 w-4 text-slate-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </button>
-          ))}
-        </div>
-      )}
+            <h3 className="text-lg font-black text-slate-800">Belum Ada Transaksi</h3>
+            <p className="text-sm text-slate-400 mt-2 leading-relaxed max-w-[240px] font-medium">
+              Selesaikan kunjungan dan buat pesanan untuk melihat riwayat di sini.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {transactions.map((txn) => (
+              <button
+                key={txn.id}
+                onClick={() => handleViewDetail(txn)}
+                className="w-full text-left transition-all active:scale-[0.98] focus:outline-none"
+              >
+                <Card className="border-slate-100 bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50 transition-all rounded-[28px] overflow-hidden group">
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                              <Receipt className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-900 tracking-tight">
+                                {txn.invoice_number}
+                              </p>
+                              <Badge
+                                variant="outline"
+                                className={`text-[9px] font-black px-2 py-0 h-4 border-none uppercase tracking-tighter mt-0.5 ${statusStyle(txn.status)}`}
+                              >
+                                {txn.status === 'COMPLETED' ? 'LUNAS' : txn.status === 'CANCELLED' ? 'BATAL' : 'PENDING'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                              <Store className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-xs font-bold text-slate-600 truncate">
+                              {txn.outlet?.name || '-'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                              <Calendar className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-xs font-bold text-slate-600 truncate">
+                              {format(new Date(txn.created_at), 'dd MMM yyyy', { locale: idLocale })}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TOTAL TRANSAKSI</p>
+                           <p className="text-base font-black text-blue-600">
+                            Rp {txn.total_price.toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Transaction Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent
-          showCloseButton={true}
-          className="max-w-lg w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto bg-slate-900 border-white/10 p-0"
+          className="max-w-[420px] w-[calc(100%-2rem)] max-h-[90vh] overflow-hidden flex flex-col bg-white border-slate-200 p-0 rounded-[40px] shadow-2xl"
         >
           {selectedTxn && (
             <>
-              <DialogHeader className="p-4 border-b border-white/5">
-                <DialogTitle className="text-lg font-semibold text-white">
-                  {selectedTxn.invoice_number}
-                </DialogTitle>
-                <DialogDescription className="text-sm text-slate-400 mt-0.5">
-                  Detail transaksi
-                </DialogDescription>
+              <DialogHeader className="p-8 pb-4 bg-slate-50/50 border-b border-slate-100">
+                <div className="flex justify-between items-start">
+                   <div>
+                    <div className="flex items-center gap-2 mb-1">
+                       <Badge className="bg-blue-600 text-white border-none font-black text-[10px] px-2 py-0.5 rounded-lg">INV</Badge>
+                       <DialogTitle className="text-xl font-black text-slate-900 tracking-tighter">
+                        {selectedTxn.invoice_number}
+                      </DialogTitle>
+                    </div>
+                    <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" /> {format(new Date(selectedTxn.created_at), 'dd MMMM yyyy, HH:mm', { locale: idLocale })}
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
 
-              <div className="p-4 space-y-4">
-                {/* Info */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Outlet</span>
-                    <span className="text-white font-medium">
-                      {selectedTxn.outlet?.name}
-                    </span>
+              <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                {/* Meta Info */}
+                <div className="grid grid-cols-2 gap-6 bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">OUTLET</label>
+                    <div className="flex items-center gap-1.5">
+                       <Store className="h-3.5 w-3.5 text-blue-500" />
+                       <span className="text-sm font-black text-slate-800 leading-tight">{selectedTxn.outlet?.name}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Tanggal</span>
-                    <span className="text-white">
-                      {format(
-                        new Date(selectedTxn.created_at),
-                        'dd MMMM yyyy, HH:mm',
-                        { locale: idLocale }
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Pembayaran</span>
-                    <span className="text-white">
-                      {selectedTxn.payment_method}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Status</span>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${statusColor(selectedTxn.status)}`}
-                    >
-                      {selectedTxn.status === 'COMPLETED'
-                        ? 'Lunas'
-                        : selectedTxn.status === 'CANCELLED'
-                        ? 'Batal'
-                        : 'Pending'}
-                    </Badge>
+                  <div className="space-y-1 text-right">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">PEMBAYARAN</label>
+                    <div className="flex items-center gap-1.5 justify-end">
+                       <span className="text-sm font-black text-slate-800">{selectedTxn.payment_method}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Items */}
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Item Pesanan
-                  </p>
-                  {txnItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-white/5"
+                {/* Status & Printer */}
+                <div className="flex items-center justify-between px-2">
+                   <Badge
+                      variant="outline"
+                      className={`font-black text-[10px] border-none uppercase px-3 py-1 rounded-full ${statusStyle(selectedTxn.status)}`}
                     >
-                      <div>
-                        <p className="text-sm text-white">
-                          {item.product?.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {item.quantity} × Rp{' '}
-                          {item.price_at_sale.toLocaleString('id-ID')}
+                      {selectedTxn.status === 'COMPLETED' ? 'LUNAS' : selectedTxn.status === 'CANCELLED' ? 'BATAL' : 'PENDING'}
+                    </Badge>
+                    <Button
+                      onClick={handlePrint}
+                      className="bg-white border-2 border-slate-100 text-slate-900 hover:bg-slate-50 hover:border-blue-600 h-9 px-4 rounded-xl font-black text-xs transition-all active:scale-95 shadow-sm"
+                      variant="outline"
+                    >
+                      <Printer className="mr-2 h-4 w-4" />
+                      CETAK STRUK
+                    </Button>
+                </div>
+
+                {/* Items List */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-2">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PESANAN BARANG</p>
+                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{txnItems.length} ITEM</p>
+                  </div>
+                  <div className="space-y-2.5">
+                    {txnItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 rounded-[20px] bg-slate-50 border border-slate-100 group hover:bg-white hover:border-blue-200 transition-all shadow-sm"
+                      >
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="text-sm font-black text-slate-900 leading-tight">
+                            {item.product?.name}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1.5 uppercase">
+                            {item.quantity} Unit <span className="text-slate-200">|</span> Rp {item.price_at_sale.toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                        <p className="text-sm font-black text-blue-600 whitespace-nowrap">
+                          Rp {item.subtotal.toLocaleString('id-ID')}
                         </p>
                       </div>
-                      <p className="text-sm font-semibold text-white">
-                        Rp {item.subtotal.toLocaleString('id-ID')}
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+              </div>
 
-                {/* Totals */}
-                <div className="border-t border-white/5 pt-3 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Subtotal</span>
-                    <span className="text-white">
+              {/* Bottom Totals */}
+              <div className="p-8 bg-slate-50 border-t border-slate-100 rounded-t-[40px] shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 px-1">
+                    <span>SUBTOTAL</span>
+                    <span className="text-slate-600 font-black">
                       Rp {selectedTxn.subtotal.toLocaleString('id-ID')}
                     </span>
                   </div>
                   {selectedTxn.discount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Diskon</span>
-                      <span className="text-red-400">
-                        - Rp{' '}
-                        {selectedTxn.discount.toLocaleString('id-ID')}
+                    <div className="flex justify-between items-center text-xs font-bold text-red-500 px-1">
+                      <span>DISCOUNT</span>
+                      <span className="font-black">
+                        - Rp {selectedTxn.discount.toLocaleString('id-ID')}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between text-base font-bold">
-                    <span className="text-white">Total</span>
-                    <span className="text-blue-400">
-                      Rp {selectedTxn.total_price.toLocaleString('id-ID')}
-                    </span>
+                  <Separator className="bg-slate-200 my-4" />
+                  <div className="flex justify-between items-center">
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">TOTAL AKHIR</p>
+                        <p className="text-2xl font-black text-blue-600 tracking-tighter leading-none">
+                          Rp {selectedTxn.total_price.toLocaleString('id-ID')}
+                        </p>
+                    </div>
+                    {/* View Photo if exists */}
+                    {selectedTxn.photo_url && (
+                       <a 
+                        href={selectedTxn.photo_url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all shadow-sm active:scale-95"
+                       >
+                         <ExternalLink className="h-5 w-5" />
+                       </a>
+                    )}
                   </div>
                 </div>
-
-                {/* Print Button */}
-                <Button
-                  onClick={handlePrint}
-                  className="w-full bg-white/5 border border-white/10 text-white hover:bg-white/10"
-                  variant="outline"
-                >
-                  <Printer className="mr-2 h-4 w-4" />
-                  Cetak Invoice
-                </Button>
               </div>
             </>
           )}
