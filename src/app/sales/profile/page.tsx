@@ -21,13 +21,15 @@ export default async function SalesProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl p-4 sm:p-6 pb-24">
-      <div>
-        <h1 className="text-2xl font-bold text-blue-700">Profil Saya</h1>
-        <p className="text-sm text-slate-500 mt-1">Kelola data diri dan perbarui nomor kontak Anda agar mudah dihubungi.</p>
+    <div className="space-y-4 p-4 sm:p-6 pb-24">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Profil Saya</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Kelola data diri dan perbarui nomor kontak Anda agar mudah dihubungi.</p>
+        </div>
       </div>
       
-      <ProfileForm profile={profile} />
+      <ProfileForm profile={profile} email={user.email} />
     </div>
   );
 }

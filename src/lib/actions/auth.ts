@@ -140,3 +140,30 @@ export async function getSession() {
 
   return profile;
 }
+
+export async function updateMyPassword(currentPassword: string, newPassword: string) {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !user.email) {
+    return { error: 'Sesi tidak valid.' };
+  }
+
+  // Verifikasi password lama dengan otentikasi ulang diam-diam
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (signInError) {
+    return { error: 'Password saat ini yang Anda masukkan salah.' };
+  }
+
+  // Jika berhasil diverifikasi, perbarui ke password baru
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    return { error: error.message };
+  }
+  
+  return { success: true };
+}
