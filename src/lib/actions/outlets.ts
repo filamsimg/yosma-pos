@@ -36,6 +36,10 @@ export async function upsertOutlet(values: OutletFormValues, id?: string) {
     name: values.name,
     address: values.address || null,
     phone: values.phone || null,
+    visit_day: values.visit_day || null,
+    visit_frequency: values.visit_frequency || 'WEEKLY',
+    assigned_sales: values.assigned_sales || null,
+    updated_at: new Date().toISOString(),
   };
 
   let error;

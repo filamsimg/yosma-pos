@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useGeolocation } from '@/hooks/use-geolocation';
 import { useImageCapture } from '@/hooks/use-image-capture';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -30,6 +31,8 @@ import {
   X,
   AlertCircle,
   Map,
+  Calendar,
+  Star
 } from 'lucide-react';
 import type { Outlet } from '@/types';
 
@@ -55,7 +58,7 @@ export function OutletCheckin({
   checkinData,
 }: OutletCheckinProps) {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [filteredOutlets, setFilteredOutlets] = useState<Outlet[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -65,10 +68,27 @@ export function OutletCheckin({
   const geo = useGeolocation();
   const img = useImageCapture();
 
-  // Fetch outlets
+  // Get today's day name to match database (e.g., 'MONDAY')
+  const todayDayName = useMemo(() => {
+    return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date()).toUpperCase();
+  }, []);
+
+  // Fetch outlets & profile
   useEffect(() => {
-    async function fetchOutlets() {
+    async function fetchData() {
       const supabase = createClient();
+      
+      // Get Profile for role & sales_code
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setUserProfile(profile);
+      }
+
       const { data } = await supabase
         .from('outlets')
         .select('*')
@@ -77,27 +97,48 @@ export function OutletCheckin({
 
       if (data) {
         setOutlets(data);
-        setFilteredOutlets(data);
       }
     }
-    fetchOutlets();
+    fetchData();
   }, []);
 
-  // Filter outlets by search
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredOutlets(outlets);
-    } else {
+  // Filter & Sort outlets logic
+  const filteredOutlets = useMemo(() => {
+    let result = [...outlets];
+    
+    // 1. Role-based assignment filter
+    if (userProfile && userProfile.role === 'SALES') {
+      const code = userProfile.sales_code;
+      result = result.filter(o => {
+        // If assigned_sales is empty, it's a global outlet (everyone sees it)
+        if (!o.assigned_sales) return true;
+        // If it's filled, check if current sales code is in the string (comma separated support)
+        if (!code) return false;
+        
+        const assignments = o.assigned_sales.split(',').map(s => s.trim().toUpperCase());
+        return assignments.includes(code.toUpperCase());
+      });
+    }
+
+    // 2. Filter by search
+    if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      setFilteredOutlets(
-        outlets.filter(
-          (o) =>
-            o.name.toLowerCase().includes(q) ||
-            o.address?.toLowerCase().includes(q)
-        )
+      result = result.filter(
+        (o) =>
+          o.name.toLowerCase().includes(q) ||
+          o.address?.toLowerCase().includes(q)
       );
     }
-  }, [searchQuery, outlets]);
+
+    // 3. Sort: Today's schedule first
+    return result.sort((a, b) => {
+      const isAToday = a.visit_day === todayDayName;
+      const isBToday = b.visit_day === todayDayName;
+      if (isAToday && !isBToday) return -1;
+      if (!isAToday && isBToday) return 1;
+      return 0;
+    });
+  }, [outlets, searchQuery, todayDayName, userProfile]);
 
   // Handle photo capture
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -279,7 +320,8 @@ export function OutletCheckin({
                 className="pl-10 h-12 bg-slate-50 border-slate-200 text-slate-900 rounded-xl font-medium focus-visible:bg-white transition-all shadow-inner"
               />
             </div>
-            <ScrollArea className="h-44 rounded-2xl border border-slate-100 bg-slate-50/30 p-2 shadow-inner">
+            
+            <ScrollArea className="h-56 rounded-2xl border border-slate-100 bg-slate-50/30 p-2 shadow-inner">
               <div className="space-y-1.5">
                 {filteredOutlets.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 opacity-30 text-slate-400">
@@ -287,32 +329,53 @@ export function OutletCheckin({
                     <p className="text-xs font-bold">Apotik tidak ditemukan</p>
                   </div>
                 ) : (
-                  filteredOutlets.map((outlet) => (
-                    <button
-                      key={outlet.id}
-                      onClick={() => setSelectedOutlet(outlet)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all relative overflow-hidden ${
-                        selectedOutlet?.id === outlet.id
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-100'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedOutlet?.id === outlet.id ? 'bg-white/20' : 'bg-slate-100 text-slate-400'}`}>
-                        <Store className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-black truncate ${selectedOutlet?.id === outlet.id ? 'text-white' : 'text-slate-900'}`}>
-                          {outlet.name}
-                        </p>
-                        {outlet.address && (
-                          <div className="flex items-center gap-1 mt-0.5 opacity-70">
-                            <MapPin className="h-2.5 w-2.5" />
-                            <p className="text-[10px] font-bold truncate tracking-tight">{outlet.address}</p>
+                  filteredOutlets.map((outlet) => {
+                    const isToday = outlet.visit_day === todayDayName;
+                    const isLoyal = outlet.visit_frequency === 'WEEKLY';
+
+                    return (
+                      <button
+                        key={outlet.id}
+                        onClick={() => setSelectedOutlet(outlet)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all relative overflow-hidden group ${
+                          selectedOutlet?.id === outlet.id
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                            : isToday 
+                            ? 'bg-white border-blue-100 border-[1.5px] hover:border-blue-300'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-100'
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          selectedOutlet?.id === outlet.id 
+                          ? 'bg-white/20' 
+                          : isToday 
+                          ? 'bg-blue-50 text-blue-600' 
+                          : 'bg-slate-100 text-slate-400'
+                        }`}>
+                          <Store className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                             <p className={`text-sm font-black truncate lowercase first-letter:uppercase ${selectedOutlet?.id === outlet.id ? 'text-white' : 'text-slate-900'}`}>
+                              {outlet.name}
+                            </p>
+                            {isToday && selectedOutlet?.id !== outlet.id && (
+                              <Badge className="bg-blue-600 text-[8px] h-4 px-1.5 font-black uppercase tracking-tighter">HARI INI</Badge>
+                            )}
                           </div>
+                          <div className="flex items-center gap-1.5 mt-0.5 opacity-70">
+                            <MapPin className="h-2.5 w-2.5 shrink-0" />
+                            <p className="text-[10px] font-bold truncate tracking-tight lowercase">
+                              {outlet.address || 'Alamat tidak tersedia'}
+                            </p>
+                          </div>
+                        </div>
+                        {isLoyal && (
+                           <Star className={`h-3.5 w-3.5 ${selectedOutlet?.id === outlet.id ? 'text-white/60' : 'text-amber-400'} fill-current`} />
                         )}
-                      </div>
-                    </button>
-                  ))
+                      </button>
+                    );
+                  })
                 )}
               </div>
             </ScrollArea>

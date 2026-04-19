@@ -10,7 +10,9 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, Store, MapPin, Phone } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Edit, Trash2, Store, MapPin, Phone, Calendar, Briefcase } from 'lucide-react';
+import { VISIT_DAYS, VISIT_FREQUENCIES } from '@/lib/constants';
 import type { Outlet } from '@/types';
 
 interface OutletTableProps {
@@ -62,6 +64,14 @@ export function OutletTable({
     }
   };
 
+  const getDayLabel = (value: string | null) => {
+    return VISIT_DAYS.find(d => d.value === value)?.label || '-';
+  };
+
+  const getFreqLabel = (value: string | null) => {
+    return VISIT_FREQUENCIES.find(f => f.value === value)?.label || '-';
+  };
+
   return (
     <div className="overflow-x-auto relative">
       <Table className="w-full text-left whitespace-nowrap">
@@ -77,6 +87,7 @@ export function OutletTable({
             </TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Outlet</TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Alamat</TableHead>
+            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Jadwal</TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Kontak</TableHead>
             <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-right">Aksi</TableHead>
           </TableRow>
@@ -101,7 +112,15 @@ export function OutletTable({
                     <Store className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900 text-sm">{o.name}</div>
+                    <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                      {o.name}
+                      {o.assigned_sales && (
+                        <Badge variant="outline" className="text-[9px] font-black border-blue-100 text-blue-600 bg-blue-50 py-0 px-1.5 h-4">
+                          <Briefcase className="h-2 w-2 mr-1" />
+                          {o.assigned_sales}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-[10px] text-slate-400 font-mono uppercase tracking-tighter">ID: {o.id.split('-')[0]}</div>
                   </div>
                 </div>
@@ -115,6 +134,17 @@ export function OutletTable({
                 ) : (
                   <span className="text-xs text-slate-300 italic">Tidak ada alamat</span>
                 )}
+              </TableCell>
+              <TableCell className="py-4 px-5">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 text-slate-700 font-bold text-xs uppercase tracking-tight">
+                    <Calendar className="h-3 w-3 text-blue-500" />
+                    {getDayLabel(o.visit_day)}
+                  </div>
+                  <Badge variant="outline" className="text-[9px] w-fit font-bold border-slate-200 text-slate-400 bg-slate-50 py-0 px-2 rounded-lg">
+                    {getFreqLabel(o.visit_frequency)}
+                  </Badge>
+                </div>
               </TableCell>
               <TableCell className="py-4 px-5">
                 {o.phone ? (
@@ -152,7 +182,7 @@ export function OutletTable({
           ))}
           {outlets.length === 0 && !loading && (
             <TableRow>
-              <TableCell colSpan={5} className="py-12 text-center">
+              <TableCell colSpan={6} className="py-12 text-center">
                 <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
                   <Store className="h-10 w-10 opacity-20" />
                   <p className="text-sm font-medium">Belum ada data outlet</p>

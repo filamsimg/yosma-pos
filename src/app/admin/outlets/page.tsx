@@ -292,7 +292,7 @@ export default function AdminOutletsPage() {
       </Card>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden shadow-2xl rounded-xl">
+        <DialogContent className="max-w-xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden max-h-[96vh] flex flex-col shadow-2xl rounded-xl">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="text-xl font-bold text-slate-900">
               {selectedOutlet ? 'Edit Outlet' : 'Tambah Outlet Baru'}
@@ -302,7 +302,7 @@ export default function AdminOutletsPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="p-6 pt-4">
+          <div className="flex-1 overflow-y-auto p-6 pt-4 min-h-0">
             <OutletForm 
               initialData={selectedOutlet}
               loading={isSubmitting}

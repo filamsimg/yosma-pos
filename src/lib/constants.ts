@@ -34,3 +34,17 @@ export const TRANSACTION_STATUSES = [
   { value: 'COMPLETED', label: 'Selesai', color: 'bg-green-500' },
   { value: 'CANCELLED', label: 'Batal', color: 'bg-red-500' },
 ] as const;
+
+// Visit Schedule constants
+export const VISIT_DAYS = [
+  { value: 'Senin', label: 'Senin' },
+  { value: 'Selasa', label: 'Selasa' },
+  { value: 'Rabu', label: 'Rabu' },
+  { value: 'Kamis', label: 'Kamis' },
+  { value: 'Jumat', label: 'Jumat' },
+] as const;
+
+export const VISIT_FREQUENCIES = [
+  { value: 'Seminggu Sekali', label: 'Seminggu Sekali' },
+  { value: '2 Minggu Sekali', label: '2 Minggu Sekali' },
+] as const;

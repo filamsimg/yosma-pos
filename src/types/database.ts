@@ -5,6 +5,8 @@
 export type UserRole = 'ADMIN' | 'SALES';
 export type PaymentMethod = 'CASH' | 'TRANSFER' | 'QRIS' | 'CREDIT';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+export type VisitDay = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+export type VisitFrequency = 'WEEKLY' | 'BIWEEKLY';
 
 // ----- Profiles -----
 export interface Profile {
@@ -13,6 +15,7 @@ export interface Profile {
   role: UserRole;
   avatar_url: string | null;
   phone: string | null;
+  sales_code: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -71,6 +74,9 @@ export interface Outlet {
   lng: number | null;
   phone: string | null;
   owner_name: string | null;
+  visit_day: string | null;
+  visit_frequency: string | null;
+  assigned_sales: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
