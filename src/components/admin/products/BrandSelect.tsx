@@ -15,6 +15,7 @@ import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
 import { createBrand, deleteBrand } from '@/lib/actions/products';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { normalizeTypeName } from '@/lib/utils/string-utils';
 import type { Brand } from '@/types';
 
 interface BrandSelectProps {
@@ -44,9 +45,10 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
   }
 
   async function handleAddBrand() {
-    if (!newBrandName.trim()) return;
+    const normalizedName = normalizeTypeName(newBrandName.trim().toUpperCase());
+    if (!normalizedName) return;
     setSubmitting(true);
-    const result = await createBrand(newBrandName.trim());
+    const result = await createBrand(normalizedName);
     if (result.error) {
       toast.error('Gagal menambah merk', { description: result.error });
     } else if (result.data) {

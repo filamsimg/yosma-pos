@@ -15,6 +15,7 @@ import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
 import { createUnit, deleteUnit } from '@/lib/actions/products';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { normalizeTypeName } from '@/lib/utils/string-utils';
 import type { Unit } from '@/types';
 
 interface UnitSelectProps {
@@ -44,9 +45,10 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
   }
 
   async function handleAddUnit() {
-    if (!newUnitName.trim()) return;
+    const normalizedName = normalizeTypeName(newUnitName.trim().toUpperCase());
+    if (!normalizedName) return;
     setSubmitting(true);
-    const result = await createUnit(newUnitName.trim().toUpperCase());
+    const result = await createUnit(normalizedName);
     if (result.error) {
       toast.error('Gagal menambah satuan', { description: result.error });
     } else if (result.data) {

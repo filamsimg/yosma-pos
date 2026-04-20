@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { normalizeTypeName } from '@/lib/utils/string-utils';
 import type { Outlet, Profile, OutletType } from '@/types';
 
 interface OutletFormProps {
@@ -100,9 +101,10 @@ export function OutletForm({
   }, []);
 
   async function handleAddType() {
-    if (!newTypeName.trim()) return;
+    const normalizedName = normalizeTypeName(newTypeName.trim().toUpperCase());
+    if (!normalizedName) return;
     setSubmittingType(true);
-    const result = await createOutletType(newTypeName.trim());
+    const result = await createOutletType(normalizedName);
     if (result.error) {
       toast.error('Gagal menambah tipe', { description: result.error });
     } else if (result.data) {

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { normalizeTypeName } from '@/lib/utils/string-utils';
 import type { Category, Product } from '@/types';
 
 interface ProductFormProps {
@@ -87,9 +88,10 @@ export function ProductForm({
   }, [categories]);
 
   async function handleAddCategory() {
-    if (!newCategoryName.trim()) return;
+    const normalizedName = normalizeTypeName(newCategoryName.trim().toUpperCase());
+    if (!normalizedName) return;
     setSubmittingCategory(true);
-    const result = await createCategory(newCategoryName.trim());
+    const result = await createCategory(normalizedName);
     if (result.error) {
       toast.error('Gagal menambah kategori', { description: result.error });
     } else if (result.data) {
