@@ -30,7 +30,9 @@ import {
   X,
   Loader2,
   Wallet,
+  Calendar,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { PAYMENT_METHODS } from '@/lib/constants';
 import type { PaymentMethod } from '@/types';
 
@@ -184,42 +186,92 @@ export function CartSheet({
 
             {/* Checkout Section */}
             <div className="bg-slate-50 border-t border-slate-200 p-6 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px]">
-              <div className="flex flex-col gap-4">
-                {/* Payment Method */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
-                    <Wallet className="h-3 w-3" /> METODE PEMBAYARAN
-                  </Label>
-                  <Select
-                    value={paymentMethod}
-                    onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+            <div className="flex flex-col gap-5">
+              {/* Step 1: Payment Type (Lunas vs Tempo) */}
+              <div className="space-y-2.5">
+                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
+                  <Receipt className="h-3 w-3 text-blue-600" /> TIPE TRANSAKSI
+                </Label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-[18px] border border-slate-200">
+                  <button
+                    onClick={() => setPaymentMethod('CASH')}
+                    className={cn(
+                      "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                      paymentMethod !== 'CREDIT'
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-slate-400 hover:text-slate-600"
+                    )}
                   >
-                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-11 rounded-xl font-bold text-sm shadow-sm focus:ring-blue-600">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 rounded-xl overflow-hidden shadow-2xl">
-                      {PAYMENT_METHODS.map((pm) => (
-                        <SelectItem key={pm.value} value={pm.value} className="font-bold text-xs">
-                          {pm.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full transition-all",
+                      paymentMethod !== 'CREDIT' ? "bg-blue-600" : "bg-slate-300"
+                    )} />
+                    LUNAS
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod('CREDIT')}
+                    className={cn(
+                      "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                      paymentMethod === 'CREDIT'
+                        ? "bg-white text-orange-600 shadow-sm"
+                        : "text-slate-400 hover:text-slate-600"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full transition-all",
+                      paymentMethod === 'CREDIT' ? "bg-orange-600" : "bg-slate-300"
+                    )} />
+                    TEMPO
+                  </button>
                 </div>
-
-                {/* Tempo Info Alert */}
-                {paymentMethod === 'KREDIT' && (
-                  <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                      <Receipt className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest leading-none mb-1">SYARAT PEMBAYARAN</p>
-                      <p className="text-xs font-bold text-blue-600">Terhitung Tempo <span className="underline decoration-blue-300 underline-offset-2">{tempoDays} Hari</span></p>
-                    </div>
-                  </div>
-                )}
               </div>
+
+              {/* Step 2: Payment Channel (Only if Lunas) */}
+              {paymentMethod !== 'CREDIT' ? (
+                <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
+                    <Wallet className="h-3 w-3 text-emerald-600" /> CARA BAYAR (LUNAS)
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-[18px] border border-slate-200">
+                    <button
+                      onClick={() => setPaymentMethod('CASH')}
+                      className={cn(
+                        "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                        paymentMethod === 'CASH'
+                          ? "bg-white text-emerald-600 shadow-sm"
+                          : "text-slate-400 hover:text-slate-600"
+                      )}
+                    >
+                      TUNAI
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('TRANSFER')}
+                      className={cn(
+                        "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                        paymentMethod === 'TRANSFER' || paymentMethod === 'QRIS'
+                          ? "bg-white text-emerald-600 shadow-sm"
+                          : "text-slate-400 hover:text-slate-600"
+                      )}
+                    >
+                      TRANSFER
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Tempo Info Alert */
+                <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm shadow-orange-50">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest leading-none mb-1">SYARAT PEMBAYARAN</p>
+                    <p className="text-xs font-bold text-orange-600">
+                      Jatuh Tempo <span className="underline decoration-orange-300 underline-offset-2">{tempoDays} Hari</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
               {/* Summary Totals */}
               <div className="p-4 bg-white/50 border border-slate-200/50 rounded-2xl space-y-2">

@@ -149,7 +149,7 @@ export function ProductForm({
                 {...register('name')}
                 onChange={(e) => setValue('name', e.target.value.toUpperCase())}
                 className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl uppercase font-semibold text-base"
-                placeholder="CONTOH: ABARTUS TANG 100MG"
+                placeholder="CONTOH: ABARTUS TANG"
               />
               {errors.name && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.name.message}</p>}
             </div>
