@@ -5,6 +5,7 @@
 export type UserRole = 'ADMIN' | 'SALES';
 export type PaymentMethod = 'CASH' | 'TRANSFER' | 'QRIS' | 'CREDIT';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID';
 export type VisitDay = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 export type VisitFrequency = 'WEEKLY' | 'BIWEEKLY';
 
@@ -106,12 +107,30 @@ export interface Transaction {
   lat: number | null;
   lng: number | null;
   photo_url: string | null;
+  due_date: string | null;
+  payment_status: PaymentStatus;
+  paid_amount: number;
   notes: string | null;
   created_at: string;
   // Joined fields
   sales?: Profile;
   outlet?: Outlet;
   items?: TransactionItem[];
+  payments?: TransactionPayment[];
+}
+
+// ----- Transaction Payments (Installments) -----
+export interface TransactionPayment {
+  id: string;
+  transaction_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  payment_date: string;
+  notes: string | null;
+  recorded_by: string;
+  created_at: string;
+  // Joined fields
+  recorder?: Profile;
 }
 
 // ----- Transaction Items -----

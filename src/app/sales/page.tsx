@@ -9,6 +9,7 @@ import { ProductCatalog } from '@/components/sales/product-catalog';
 import { CartSheet } from '@/components/sales/cart-sheet';
 import { toast } from 'sonner';
 import { Terminal, ShoppingBag } from 'lucide-react';
+import { addDays } from 'date-fns';
 import type { Outlet } from '@/types';
 
 interface CheckinData {
@@ -51,6 +52,13 @@ export default function SalesPOSPage() {
       const subtotal = getSubtotal();
       const totalPrice = getTotalPrice();
 
+      // Calculate Due Date and Payment status
+      const isCredit = paymentMethod === 'CREDIT';
+      const tempoDays = totalPrice >= 100000 ? 30 : 14;
+      const dueDate = isCredit ? addDays(new Date(), tempoDays).toISOString() : null;
+      const paymentStatus = isCredit ? 'UNPAID' : 'PAID';
+      const paidAmount = isCredit ? 0 : totalPrice;
+
       // 1. Create transaction
       const { data: transaction, error: txnError } = await supabase
         .from('transactions')
@@ -62,6 +70,9 @@ export default function SalesPOSPage() {
           total_price: totalPrice,
           payment_method: paymentMethod,
           status: 'COMPLETED',
+          payment_status: paymentStatus,
+          paid_amount: paidAmount,
+          due_date: dueDate,
           lat: checkinData.lat,
           lng: checkinData.lng,
           photo_url: checkinData.photoUrl,

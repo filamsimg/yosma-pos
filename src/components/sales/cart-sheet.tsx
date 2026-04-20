@@ -56,19 +56,23 @@ export function CartSheet({
     clearCart,
     getSubtotal,
     getTotalPrice,
+    getTotalDiscount,
     getItemCount,
   } = useCartStore();
 
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
+  const totalDiscount = getTotalDiscount();
   const totalPrice = getTotalPrice();
+
+  const tempoDays = totalPrice >= 100000 ? 30 : 14;
 
   return (
     <Sheet>
       <SheetTrigger
         render={
           <button
-            className="fixed bottom-6 right-6 z-30 flex items-center gap-3 px-6 py-4 rounded-[28px] bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
+            className="fixed bottom-20 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-[28px] bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
             style={{ display: itemCount > 0 ? 'flex' : 'none' }}
           >
             <div className="relative">
@@ -114,7 +118,7 @@ export function CartSheet({
                 className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 rounded-xl font-bold text-xs"
               >
                 <Trash2 className="h-4 w-4 mr-1.5" />
-                DENGOSKAN
+                KOSONGKAN
               </Button>
             )}
           </div>
@@ -180,30 +184,11 @@ export function CartSheet({
 
             {/* Checkout Section */}
             <div className="bg-slate-50 border-t border-slate-200 p-6 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px]">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Discount */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
-                    <Receipt className="h-3 w-3" /> POTONGAN (Rp)
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={subtotal}
-                      value={discount || ''}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
-                      className="bg-white border-slate-200 text-slate-900 h-11 rounded-xl font-black text-sm pl-4 shadow-sm focus-visible:ring-blue-600"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
+              <div className="flex flex-col gap-4">
                 {/* Payment Method */}
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
-                    <Wallet className="h-3 w-3" /> PEMBAYARAN
+                    <Wallet className="h-3 w-3" /> METODE PEMBAYARAN
                   </Label>
                   <Select
                     value={paymentMethod}
@@ -221,6 +206,19 @@ export function CartSheet({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Tempo Info Alert */}
+                {paymentMethod === 'KREDIT' && (
+                  <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Receipt className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest leading-none mb-1">SYARAT PEMBAYARAN</p>
+                      <p className="text-xs font-bold text-blue-600">Terhitung Tempo <span className="underline decoration-blue-300 underline-offset-2">{tempoDays} Hari</span></p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Summary Totals */}
@@ -229,10 +227,10 @@ export function CartSheet({
                   <span className="text-slate-400">SUBTOTAL</span>
                   <span className="text-slate-600">Rp {subtotal.toLocaleString('id-ID')}</span>
                 </div>
-                {discount > 0 && (
+                {totalDiscount > 0 && (
                   <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-slate-400">TOTAL DISKON</span>
-                    <span className="text-red-500">- Rp {discount.toLocaleString('id-ID')}</span>
+                    <span className="text-slate-400">DISKON REGULER</span>
+                    <span className="text-emerald-500">- Rp {totalDiscount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-1">

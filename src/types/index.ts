@@ -14,4 +14,5 @@ export type {
   CartItem,
   PaginatedResponse,
   OutletType,
+  PaymentStatus,
 } from './database';

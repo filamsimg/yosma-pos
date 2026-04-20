@@ -35,6 +35,13 @@ export const TRANSACTION_STATUSES = [
   { value: 'CANCELLED', label: 'Batal', color: 'bg-red-500' },
 ] as const;
 
+// Payment statuses for UI
+export const PAYMENT_STATUSES = [
+  { value: 'UNPAID', label: 'Belum Bayar', color: 'bg-red-500 text-white' },
+  { value: 'PARTIAL', label: 'Cicil', color: 'bg-orange-500 text-white' },
+  { value: 'PAID', label: 'Lunas', color: 'bg-emerald-500 text-white' },
+] as const;
+
 // Visit Schedule constants
 export const VISIT_DAYS = [
   { value: 'Senin', label: 'Senin' },

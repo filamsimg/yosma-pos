@@ -10,6 +10,7 @@ import {
   ClipboardList, 
   UserCog,
   ShoppingCart,
+  Wallet,
   LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,6 +30,7 @@ const navGroups = [
     items: [
       { href: '/admin/transactions', icon: ClipboardList, label: 'Transaksi', exact: false },
       { href: '/admin/products', icon: Package, label: 'Produk', exact: false },
+      { href: '/admin/receivables', icon: Wallet, label: 'Daftar Piutang', exact: false },
       { href: '/admin/outlets', icon: Store, label: 'Outlet', exact: false },
     ]
   },

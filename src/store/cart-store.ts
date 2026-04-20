@@ -17,6 +17,7 @@ interface CartStore {
   // Computed
   getSubtotal: () => number;
   getTotalPrice: () => number;
+  getTotalDiscount: () => number;
   getItemCount: () => number;
 }
 
@@ -108,8 +109,26 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   getTotalPrice: () => {
     const subtotal = get().getSubtotal();
-    const discount = get().discount;
-    return Math.max(0, subtotal - discount);
+    const totalDiscount = get().items.reduce(
+      (total, item) => {
+        const discountPercentage = item.product.discount_regular || 0;
+        const discountAmount = (item.price_at_sale * (discountPercentage / 100)) * item.quantity;
+        return total + discountAmount;
+      },
+      0
+    );
+    return Math.max(0, subtotal - totalDiscount);
+  },
+
+  getTotalDiscount: () => {
+    return get().items.reduce(
+      (total, item) => {
+        const discountPercentage = item.product.discount_regular || 0;
+        const discountAmount = (item.price_at_sale * (discountPercentage / 100)) * item.quantity;
+        return total + discountAmount;
+      },
+      0
+    );
   },
 
   getItemCount: () => {
