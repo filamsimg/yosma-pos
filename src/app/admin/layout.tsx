@@ -45,7 +45,7 @@ export default function AdminLayout({
   };
 
   const currentPageLabel = navItems.find((item) =>
-    item.exact ? pathname === item.href : pathname.startsWith(item.href)
+    item.exact ? (pathname || '') === item.href : (pathname || '').startsWith(item.href)
   )?.label ?? 'Admin';
 
   return (

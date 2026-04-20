@@ -43,6 +43,12 @@ const navGroups = [
     items: [
       { href: '/admin/profiles', icon: UserCog, label: 'Karyawan', exact: false },
     ]
+  },
+  {
+    title: 'Akses Cepat',
+    items: [
+      { href: '/sales', icon: ShoppingCart, label: 'Mode POS Mobile', exact: false },
+    ]
   }
 ];
 
@@ -102,7 +108,7 @@ export function AdminSidebar({ mode, onModeChange, onNavigate, hideControls }: A
               <SidebarItem
                 key={item.href}
                 {...item}
-                isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+                isActive={item.exact ? (pathname || '') === item.href : (pathname || '').startsWith(item.href)}
                 isCollapsed={isEffectivelyCollapsed}
                 onClick={onNavigate}
               />

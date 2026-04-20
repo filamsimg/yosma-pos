@@ -11,7 +11,7 @@ export async function getSalesProfiles() {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('role', 'SALES')
+    .in('role', ['SALES', 'ADMIN'])
     .eq('is_active', true)
     .order('full_name');
 

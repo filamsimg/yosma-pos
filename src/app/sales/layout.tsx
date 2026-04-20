@@ -42,8 +42,8 @@ export default function SalesLayout({
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
+              ? (pathname || '') === item.href
+              : (pathname || '').startsWith(item.href);
             const Icon = item.icon;
 
             return (

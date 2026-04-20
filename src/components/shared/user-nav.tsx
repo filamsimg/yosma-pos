@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
 import { logout } from '@/lib/actions/auth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -12,12 +13,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Shield, Briefcase, User } from 'lucide-react';
+import { LogOut, Shield, Briefcase, User, Store } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
 export function UserNav() {
   const { user } = useAuth();
+  const pathname = usePathname();
 
   if (!user) return null;
 
@@ -62,6 +64,23 @@ export function UserNav() {
             <span>Profil Saya</span>
           </DropdownMenuItem>
         </Link>
+        {user.role === 'ADMIN' && (
+          <Link href={(pathname || '').startsWith('/admin') ? '/sales' : '/admin'}>
+            <DropdownMenuItem className="cursor-pointer text-blue-600 font-medium focus:bg-blue-50 focus:text-blue-700">
+              {(pathname || '').startsWith('/admin') ? (
+                <>
+                  <Store className="mr-2 h-4 w-4" />
+                  <span>Buka Mode Sales (POS)</span>
+                </>
+              ) : (
+                <>
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Panel Manajemen Admin</span>
+                </>
+              )}
+            </DropdownMenuItem>
+          </Link>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
