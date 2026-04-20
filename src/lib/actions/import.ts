@@ -17,6 +17,17 @@ export interface ProductImportItem {
   min_stock?: number;
 }
 
+export interface OutletImportItem {
+  name: string;
+  type?: string;
+  address?: string;
+  phone?: string;
+  owner_name?: string;
+  visit_day?: string;
+  visit_frequency?: string;
+  assigned_sales?: string;
+}
+
 export async function bulkImportProducts(items: ProductImportItem[]) {
   const supabase = await createClient();
 
@@ -110,5 +121,61 @@ export async function bulkImportProducts(items: ProductImportItem[]) {
   }
 
   revalidatePath('/admin/products');
+  return { success: true, count: items.length };
+}
+
+export async function bulkImportOutlets(items: OutletImportItem[]) {
+  const supabase = await createClient();
+
+  // 1. Fetch current outlet types
+  const { data: outletTypes } = await supabase.from('outlet_types').select('id, name');
+  const typeMap = new Map(outletTypes?.map((t) => [t.name.toUpperCase(), t.id]));
+
+  // 2. Identify missing types
+  const newTypes = new Set<string>();
+
+  for (const item of items) {
+    // Basic normalization
+    item.name = item.name.toUpperCase();
+    if (item.type) {
+      item.type = item.type.toUpperCase();
+      if (!typeMap.has(item.type)) newTypes.add(item.type);
+    }
+  }
+
+  // 3. Create missing types
+  if (newTypes.size > 0) {
+    const { data } = await supabase
+      .from('outlet_types')
+      .insert(Array.from(newTypes).map(name => ({ name })))
+      .select();
+    data?.forEach(t => typeMap.set(t.name.toUpperCase(), t.id));
+  }
+
+  // 4. Prepare outlet data
+  const outletsToUpsert = items.map((item) => ({
+    name: item.name,
+    type: item.type ? (typeMap.get(item.type) ? item.type : null) : null, // Store as string if that's how it's in DB, but wait.
+    // Check database.ts again: Outlet.type is string | null. So we just need the string.
+    // But usually we map it to the name.
+    address: item.address || null,
+    phone: item.phone || null,
+    owner_name: item.owner_name || null,
+    visit_day: item.visit_day || null,
+    visit_frequency: item.visit_frequency || null,
+    assigned_sales: item.assigned_sales || null,
+    is_active: true,
+  }));
+
+  // 5. Upsert outlets by Name (simplified conflict target, usually name + address is better but name is common)
+  const { error } = await supabase
+    .from('outlets')
+    .upsert(outletsToUpsert, { onConflict: 'name' }); // Assuming name is unique or we just want to update by name
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/admin/outlets');
   return { success: true, count: items.length };
 }

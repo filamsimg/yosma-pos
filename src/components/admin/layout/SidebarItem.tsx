@@ -40,9 +40,7 @@ export function SidebarItem({ href, icon: Icon, label, isActive, isCollapsed, on
     return (
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
-            {content}
-          </TooltipTrigger>
+          <TooltipTrigger render={content} />
           <TooltipContent side="right" className="bg-[#0f172a] border-[#1e293b] text-white text-xs">
             {label}
           </TooltipContent>

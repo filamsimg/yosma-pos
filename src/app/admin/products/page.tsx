@@ -33,8 +33,10 @@ import {
   softDeleteProduct, 
   adjustStock,
   getPaginatedProducts,
-  bulkDeleteProducts
+  bulkDeleteProducts,
+  getAllProducts
 } from '@/lib/actions/products';
+import { ExportButton } from '@/components/admin/shared/ExportButton';
 import { type Product, type Category } from '@/types';
 import { type ProductFormValues } from '@/lib/validations/product';
 
@@ -229,6 +231,21 @@ export default function AdminProductsPage() {
           />
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <ExportButton 
+            fetcher={getAllProducts}
+            filename="Daftar_Produk"
+            mapper={(p) => ({
+              'Nama': p.name,
+              'SKU': p.sku,
+              'Merk': p.brand?.name || '-',
+              'Kategori': p.category?.name || '-',
+              'Satuan': p.unit?.name || '-',
+              'Harga': p.price,
+              'Stok': p.stock,
+              'Min Stok': p.min_stock,
+              'Deskripsi': p.description || '-'
+            })}
+          />
           <ImportDialog onSuccess={fetchData} />
           <Button
             onClick={() => handleOpenForm()}

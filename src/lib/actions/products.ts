@@ -285,3 +285,15 @@ export async function bulkDeleteProducts(ids: string[]) {
   revalidatePath('/admin/products');
   return { success: true };
 }
+
+export async function getAllProducts() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*, category:categories(name), brand:brands(name), unit:units(name)')
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+
+  if (error) return { error: error.message };
+  return { data };
+}

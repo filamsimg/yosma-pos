@@ -43,45 +43,47 @@ export function DataTableFacetedFilter({
 
   return (
     <Popover>
-      <PopoverTrigger>
-        <Button variant="ghost" size="sm" className="h-7 border-none bg-transparent hover:bg-blue-50 text-blue-600 px-2 flex items-center gap-2 font-bold transition-all">
-          <PlusCircle className="mr-0.5 h-3 w-3" />
-          <span className="text-[10px] uppercase">{title}</span>
-          {selectedValues.length > 0 && (
-            <>
-              <Separator orientation="vertical" className="mx-1 h-3 bg-blue-200" />
-              <Badge
-                variant="secondary"
-                className="rounded-sm px-1 font-normal lg:hidden"
-              >
-                {selectedValues.length}
-              </Badge>
-              <div className="hidden space-x-1 lg:flex">
-                {selectedValues.length > 2 ? (
-                  <Badge
-                    variant="secondary"
-                    className="rounded-sm px-1 font-normal bg-blue-100 text-blue-700"
-                  >
-                    {selectedValues.length} selected
-                  </Badge>
-                ) : (
-                  options
-                    .filter((option) => selectedSet.has(option.value))
-                    .map((option) => (
-                      <Badge
-                        variant="secondary"
-                        key={option.value}
-                        className="rounded-sm px-1 font-normal bg-blue-100 text-blue-700 text-[9px]"
-                      >
-                        {option.label}
-                      </Badge>
-                    ))
-                )}
-              </div>
-            </>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button variant="ghost" size="sm" className="h-7 border-none bg-transparent hover:bg-blue-50 text-blue-600 px-2 flex items-center gap-2 font-bold transition-all">
+            <PlusCircle className="mr-0.5 h-3 w-3" />
+            <span className="text-[10px] uppercase">{title}</span>
+            {selectedValues.length > 0 && (
+              <>
+                <Separator orientation="vertical" className="mx-1 h-3 bg-blue-200" />
+                <Badge
+                  variant="secondary"
+                  className="rounded-sm px-1 font-normal lg:hidden"
+                >
+                  {selectedValues.length}
+                </Badge>
+                <div className="hidden space-x-1 lg:flex">
+                  {selectedValues.length > 2 ? (
+                    <Badge
+                      variant="secondary"
+                      className="rounded-sm px-1 font-normal bg-blue-100 text-blue-700"
+                    >
+                      {selectedValues.length} selected
+                    </Badge>
+                  ) : (
+                    options
+                      .filter((option) => selectedSet.has(option.value))
+                      .map((option) => (
+                        <Badge
+                          variant="secondary"
+                          key={option.value}
+                          className="rounded-sm px-1 font-normal bg-blue-100 text-blue-700 text-[9px]"
+                        >
+                          {option.label}
+                        </Badge>
+                      ))
+                  )}
+                </div>
+              </>
+            )}
+          </Button>
+        }
+      />
       <PopoverContent className="w-[200px] p-0 bg-white" align="start">
         <Command className="bg-white">
           <CommandInput placeholder={title} />

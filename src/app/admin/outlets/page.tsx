@@ -23,14 +23,17 @@ import { toast } from 'sonner';
 
 import { OutletTable } from '@/components/admin/outlets/OutletTable';
 import { OutletForm } from '@/components/admin/outlets/OutletForm';
+import { ImportDialog } from '@/components/admin/outlets/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { 
   upsertOutlet, 
   softDeleteOutlet, 
   getPaginatedOutlets,
   bulkDeleteOutlets,
-  getOutletTypes
+  getOutletTypes,
+  getAllOutlets
 } from '@/lib/actions/outlets';
+import { ExportButton } from '@/components/admin/shared/ExportButton';
 import { VISIT_DAYS } from '@/lib/constants';
 import { type Outlet } from '@/types';
 import { type OutletFormValues } from '@/lib/validations/outlet';
@@ -190,13 +193,30 @@ export default function AdminOutletsPage() {
             className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
           />
         </div>
-        <Button
-          onClick={() => handleOpenForm()}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          <span>Outlet Baru</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <ExportButton 
+            fetcher={getAllOutlets}
+            filename="Daftar_Outlet"
+            mapper={(o) => ({
+              'Nama': o.name,
+              'Tipe': o.type || '-',
+              'Alamat': o.address || '-',
+              'Telepon': o.phone || '-',
+              'Pemilik': o.owner_name || '-',
+              'Hari Kunjungan': o.visit_day || '-',
+              'Frekuensi': o.visit_frequency || '-',
+              'Sales': o.assigned_sales || '-'
+            })}
+          />
+          <ImportDialog onSuccess={fetchData} />
+          <Button
+            onClick={() => handleOpenForm()}
+            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            <span>Outlet Baru</span>
+          </Button>
+        </div>
       </div>
 
       {/* Bulk Actions Toolbar */}

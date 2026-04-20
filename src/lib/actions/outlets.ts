@@ -126,3 +126,15 @@ export async function deleteOutletType(id: string) {
   if (error) return { error: error.message };
   return { success: true };
 }
+
+export async function getAllOutlets() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('outlets')
+    .select('*')
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+
+  if (error) return { error: error.message };
+  return { data };
+}
