@@ -30,7 +30,7 @@ export default function SalesPOSPage() {
   function handleCheckin(data: CheckinData) {
     setCheckinData(data);
     setCheckedIn(true);
-    toast.success(`Check-in berhasil di ${data.outlet.name}`, {
+    toast.success(`Check-in berhasil di ${data.outlet.type ? `${data.outlet.type} ${data.outlet.name}` : data.outlet.name}`, {
       description: 'Silakan mulai melayani pesanan.',
       icon: <CheckCircleIcon className="h-4 w-4 text-emerald-500" />
     });

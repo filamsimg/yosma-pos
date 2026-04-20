@@ -53,7 +53,7 @@ export default function AdminTransactionsPage() {
       const supabase = createClient();
       const { data } = await supabase
         .from('transactions')
-        .select('*, outlet:outlets(name, address), sales:profiles(full_name)')
+        .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -73,7 +73,7 @@ export default function AdminTransactionsPage() {
           // Fetch the complete transaction with joins
           const { data } = await supabase
             .from('transactions')
-            .select('*, outlet:outlets(name, address), sales:profiles(full_name)')
+            .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)')
             .eq('id', payload.new.id)
             .single();
 
@@ -131,7 +131,7 @@ export default function AdminTransactionsPage() {
     <div class="info">
       <div class="info-row"><span class="label">Invoice</span><span class="value">${txn.invoice_number}</span></div>
       <div class="info-row"><span class="label">Tanggal</span><span class="value">${format(new Date(txn.created_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}</span></div>
-      <div class="info-row"><span class="label">Outlet</span><span class="value">${txn.outlet?.name || '-'}</span></div>
+      <div class="info-row"><span class="label">Outlet</span><span class="value">${txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || '-'}</span></div>
       <div class="info-row"><span class="label">Sales</span><span class="value">${txn.sales?.full_name || '-'}</span></div>
       <div class="info-row"><span class="label">Pembayaran</span><span class="value">${txn.payment_method}</span></div>
     </div>
@@ -163,6 +163,7 @@ export default function AdminTransactionsPage() {
       !searchQuery.trim() ||
       txn.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      txn.outlet?.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.sales?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -228,8 +229,8 @@ export default function AdminTransactionsPage() {
                     <TableCell className="text-slate-300 text-sm">
                       {txn.sales?.full_name || '-'}
                     </TableCell>
-                    <TableCell className="text-slate-300 text-sm">
-                      {txn.outlet?.name || '-'}
+                    <TableCell className="text-slate-300 text-sm uppercase font-bold">
+                      {txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || '-'}
                     </TableCell>
                     <TableCell className="text-blue-400 font-semibold text-sm">
                       Rp {txn.total_price.toLocaleString('id-ID')}
@@ -290,8 +291,8 @@ export default function AdminTransactionsPage() {
                             {txn.status === 'COMPLETED' ? 'Lunas' : txn.status === 'CANCELLED' ? 'Batal' : 'Pending'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-500">
-                          {txn.sales?.full_name} • {txn.outlet?.name} • {format(new Date(txn.created_at), 'dd MMM HH:mm', { locale: idLocale })}
+                        <p className="text-xs text-slate-500 uppercase font-bold">
+                          {txn.sales?.full_name} • {txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name} • {format(new Date(txn.created_at), 'dd MMM HH:mm', { locale: idLocale })}
                         </p>
                       </div>
                       <p className="text-sm font-bold text-blue-400 shrink-0 ml-2">
@@ -313,8 +314,8 @@ export default function AdminTransactionsPage() {
                 <DialogTitle className="text-lg font-semibold text-white">
                   {selectedTxn.invoice_number}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-slate-400">
-                  {selectedTxn.sales?.full_name} • {selectedTxn.outlet?.name}
+                <DialogDescription className="text-sm text-slate-400 font-bold uppercase">
+                  {selectedTxn.sales?.full_name} • {selectedTxn.outlet?.type ? `${selectedTxn.outlet.type} ${selectedTxn.outlet.name}` : selectedTxn.outlet?.name}
                 </DialogDescription>
               </DialogHeader>
               <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">

@@ -127,6 +127,7 @@ export function OutletCheckin({
       result = result.filter(
         (o) =>
           o.name.toLowerCase().includes(q) ||
+          (o.type && o.type.toLowerCase().includes(q)) ||
           o.address?.toLowerCase().includes(q)
       );
     }
@@ -202,7 +203,7 @@ export function OutletCheckin({
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">TER-CHECKIN</p>
             <p className="text-sm font-black text-slate-900 truncate">
-              {checkinData.outlet.name}
+              {checkinData.outlet.type ? `${checkinData.outlet.type} ${checkinData.outlet.name}` : checkinData.outlet.name}
             </p>
             <div className="flex items-center gap-1.5 mt-1">
               <MapPin className="h-3 w-3 text-slate-300" />
@@ -357,8 +358,8 @@ export function OutletCheckin({
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                             <p className={`text-sm font-black truncate lowercase first-letter:uppercase ${selectedOutlet?.id === outlet.id ? 'text-white' : 'text-slate-900'}`}>
-                              {outlet.name}
+                             <p className={`text-sm font-black truncate uppercase ${selectedOutlet?.id === outlet.id ? 'text-white' : 'text-slate-900'}`}>
+                              {outlet.type ? `${outlet.type} ${outlet.name}` : outlet.name}
                             </p>
                             {isToday && selectedOutlet?.id !== outlet.id && (
                               <Badge className="bg-blue-600 text-[8px] h-4 px-1.5 font-black uppercase tracking-tighter">HARI INI</Badge>

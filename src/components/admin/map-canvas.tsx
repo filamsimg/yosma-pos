@@ -57,8 +57,10 @@ export default function MapCanvas({ locations }: MapCanvasProps) {
           return (
             <Marker key={txn.id} position={[txn.lat, txn.lng]} icon={icon}>
               <Popup>
-                <div className="p-1 min-w-[200px]">
-                  <h3 className="font-bold text-sm mb-1">{txn.outlet?.name || 'Outlet Tidak Diketahui'}</h3>
+                <div className="p-1 min-w-[200px] font-sans">
+                  <h3 className="font-black text-xs mb-1 uppercase text-slate-800">
+                    {txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || 'Outlet Tidak Diketahui'}
+                  </h3>
                   <p className="text-xs text-gray-600 mb-2">
                     {txn.outlet?.address || 'Alamat tidak tersedia'}
                   </p>

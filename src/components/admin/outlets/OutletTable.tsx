@@ -170,13 +170,8 @@ export function OutletTable({
                     <Store className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                      {o.name}
-                      {o.type && (
-                        <Badge variant="outline" className="text-[9px] font-black border-slate-200 text-slate-600 bg-slate-50 py-0 px-1.5 h-4">
-                          {o.type}
-                        </Badge>
-                      )}
+                    <div className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                      <span className="uppercase">{o.type ? `${o.type} ${o.name}` : o.name}</span>
                       {o.assigned_sales && (
                         <Badge variant="outline" className="text-[9px] font-black border-blue-100 text-blue-600 bg-blue-50 py-0 px-1.5 h-4">
                           <Briefcase className="h-2 w-2 mr-1" />

@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
           // Recent transactions
           supabase
             .from('transactions')
-            .select('*, outlet:outlets(name), sales:profiles(full_name)')
+            .select('*, outlet:outlets(name, type), sales:profiles(full_name)')
             .order('created_at', { ascending: false })
             .limit(10),
         ]);
@@ -258,7 +258,9 @@ export default function AdminDashboardPage() {
                         </p>
                       </td>
                       <td className="py-4 px-5 align-middle">
-                        <p className="text-sm font-medium text-slate-900">{txn.outlet?.name || '-'}</p>
+                        <p className="text-sm font-black text-slate-900 uppercase">
+                          {txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || '-'}
+                        </p>
                         <p className="text-xs text-slate-500 mt-0.5">{txn.sales?.full_name || '-'}</p>
                       </td>
                       <td className="py-4 px-5 align-middle">
