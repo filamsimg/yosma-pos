@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { PAYMENT_STATUSES } from '@/lib/constants';
 import type { Transaction } from '@/types';
 
 interface DashboardStats {
@@ -267,12 +268,17 @@ export default function AdminDashboardPage() {
                         <p className="text-sm font-bold text-indigo-600">Rp {txn.total_price.toLocaleString('id-ID')}</p>
                       </td>
                       <td className="py-4 px-5 align-middle">
-                        <Badge
-                          variant="outline"
-                          className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${statusColor(txn.status)}`}
-                        >
-                          {txn.status === 'COMPLETED' ? 'Lunas' : txn.status === 'CANCELLED' ? 'Batal' : 'Pending'}
-                        </Badge>
+                        {(() => {
+                           const s = PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'));
+                           return (
+                             <Badge
+                                variant="outline"
+                                className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${s?.color}`}
+                              >
+                                {s?.label}
+                              </Badge>
+                           );
+                        })()}
                       </td>
                     </tr>
                   ))}

@@ -25,7 +25,7 @@ export const PAYMENT_METHODS = [
   { value: 'CASH', label: 'Tunai' },
   { value: 'TRANSFER', label: 'Transfer Bank' },
   { value: 'QRIS', label: 'QRIS' },
-  { value: 'CREDIT', label: 'Kredit' },
+  { value: 'CREDIT', label: 'Tempo' },
 ] as const;
 
 // Transaction statuses for UI

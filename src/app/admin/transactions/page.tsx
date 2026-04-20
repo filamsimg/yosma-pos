@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import type { Transaction, TransactionItem } from '@/types';
 
 export default function AdminTransactionsPage() {
@@ -133,13 +134,14 @@ export default function AdminTransactionsPage() {
       <div class="info-row"><span class="label">Tanggal</span><span class="value">${format(new Date(txn.created_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}</span></div>
       <div class="info-row"><span class="label">Outlet</span><span class="value">${txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || '-'}</span></div>
       <div class="info-row"><span class="label">Sales</span><span class="value">${txn.sales?.full_name || '-'}</span></div>
-      <div class="info-row"><span class="label">Pembayaran</span><span class="value">${txn.payment_method}</span></div>
+      <div class="info-row"><span class="label">Pembayaran</span><span class="value">${PAYMENT_METHODS.find(m => m.value === txn.payment_method)?.label || txn.payment_method}</span></div>
     </div>
     <table><thead><tr><th>Produk</th><th style="text-align:center">Qty</th><th style="text-align:right">Harga</th><th style="text-align:right">Subtotal</th></tr></thead>
     <tbody>${itemRows}</tbody></table>
     <div class="totals">
       <div class="total-row"><span>Subtotal</span><span>Rp ${txn.subtotal.toLocaleString('id-ID')}</span></div>
       ${txn.discount > 0 ? `<div class="total-row"><span>Diskon</span><span>-Rp ${txn.discount.toLocaleString('id-ID')}</span></div>` : ''}
+      <div class="total-row"><span>Status</span><span style="color: ${txn.payment_status === 'PAID' ? '#10b981' : '#ef4444'}">${PAYMENT_STATUSES.find(s => s.value === (txn.payment_status || 'UNPAID'))?.label}</span></div>
       <div class="total-row grand"><span>TOTAL</span><span>Rp ${txn.total_price.toLocaleString('id-ID')}</span></div>
     </div>
     <div class="footer"><p>Terima kasih!</p><p style="margin-top:4px">YOSMA POS © ${new Date().getFullYear()}</p></div>
@@ -236,12 +238,17 @@ export default function AdminTransactionsPage() {
                       Rp {txn.total_price.toLocaleString('id-ID')}
                     </TableCell>
                     <TableCell className="text-slate-300 text-sm">
-                      {txn.payment_method}
+                      {PAYMENT_METHODS.find(m => m.value === txn.payment_method)?.label || txn.payment_method}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`text-[10px] ${statusColor(txn.status)}`}>
-                        {txn.status === 'COMPLETED' ? 'Lunas' : txn.status === 'CANCELLED' ? 'Batal' : 'Pending'}
-                      </Badge>
+                      {(() => {
+                        const s = PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'));
+                        return (
+                          <Badge variant="outline" className={`text-[10px] border-0 ${s?.color}`}>
+                            {s?.label}
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-slate-400 text-xs">
                       {format(new Date(txn.created_at), 'dd MMM HH:mm', { locale: idLocale })}
@@ -287,8 +294,8 @@ export default function AdminTransactionsPage() {
                           <p className="text-sm font-semibold text-white">
                             {txn.invoice_number}
                           </p>
-                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusColor(txn.status)}`}>
-                            {txn.status === 'COMPLETED' ? 'Lunas' : txn.status === 'CANCELLED' ? 'Batal' : 'Pending'}
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border-0 ${PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'))?.color}`}>
+                            {PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'))?.label}
                           </Badge>
                         </div>
                         <p className="text-xs text-slate-500 uppercase font-bold">
@@ -321,8 +328,13 @@ export default function AdminTransactionsPage() {
               <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-slate-400">Tanggal</span><span className="text-white">{format(new Date(selectedTxn.created_at), 'dd MMMM yyyy, HH:mm', { locale: idLocale })}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pembayaran</span><span className="text-white">{selectedTxn.payment_method}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Status</span><Badge variant="outline" className={`text-xs ${statusColor(selectedTxn.status)}`}>{selectedTxn.status === 'COMPLETED' ? 'Lunas' : selectedTxn.status === 'CANCELLED' ? 'Batal' : 'Pending'}</Badge></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Pembayaran</span><span className="text-white">{PAYMENT_METHODS.find(m => m.value === selectedTxn.payment_method)?.label || selectedTxn.payment_method}</span></div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Status</span>
+                    <Badge variant="outline" className={`text-xs border-0 ${PAYMENT_STATUSES.find(ps => ps.value === (selectedTxn.payment_status || 'UNPAID'))?.color}`}>
+                      {PAYMENT_STATUSES.find(ps => ps.value === (selectedTxn.payment_status || 'UNPAID'))?.label}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Item Pesanan</p>
