@@ -48,7 +48,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
         owner_name: row['Pemilik'] || row['pemilik'] || row['Owner'] || '',
         visit_day: row['Hari Kunjungan'] || row['hari'] || row['Visit Day'] || '',
         visit_frequency: row['Frekuensi'] || row['frekuensi'] || row['Visit Frequency'] || '',
-        assigned_sales: row['Sales'] || row['sales'] || row['Sales Code'] || '',
+        assigned_sales: row['NIK Sales'] || row['NIK'] || row['Sales'] || row['sales'] || row['Sales Code'] || '',
       })).filter(item => item.name);
 
       setPreview(mappedData);
@@ -88,7 +88,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
         'Pemilik': 'BUDI SANTOSO',
         'Hari Kunjungan': 'Senin',
         'Frekuensi': 'Seminggu Sekali',
-        'Sales': 'JY.01.YAP.06'
+        'NIK Sales': 'JY.01.YAP.06'
       }
     ];
 

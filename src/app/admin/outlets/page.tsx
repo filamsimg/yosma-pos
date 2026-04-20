@@ -205,7 +205,7 @@ export default function AdminOutletsPage() {
               'Pemilik': o.owner_name || '-',
               'Hari Kunjungan': o.visit_day || '-',
               'Frekuensi': o.visit_frequency || '-',
-              'Sales': o.assigned_sales || '-'
+              'NIK Sales': o.assigned_sales || '-'
             })}
           />
           <ImportDialog onSuccess={fetchData} />

@@ -107,12 +107,13 @@ export function OutletCheckin({
     let result = [...outlets];
     
     // 1. Role-based assignment filter
+    // 1. Role-based assignment filter
     if (userProfile && userProfile.role === 'SALES') {
-      const code = userProfile.sales_code;
+      const code = userProfile.nik;
       result = result.filter(o => {
         // If assigned_sales is empty, it's a global outlet (everyone sees it)
         if (!o.assigned_sales) return true;
-        // If it's filled, check if current sales code is in the string (comma separated support)
+        // If it's filled, check if current NIK is in the string (comma separated support)
         if (!code) return false;
         
         const assignments = o.assigned_sales.split(',').map(s => s.trim().toUpperCase());

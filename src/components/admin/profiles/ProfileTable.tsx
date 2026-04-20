@@ -127,14 +127,24 @@ export function ProfileTable({
                     <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                       {profile.full_name}
                     </div>
-                    {profile.sales_code && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Briefcase className="h-3 w-3 text-slate-400" />
-                        <span className="text-xs font-bold text-emerald-600 uppercase bg-emerald-50 px-1.5 py-0.5 rounded">
-                          {profile.sales_code}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-1 mt-1">
+                      {profile.nik && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">NIK:</span>
+                          <span className="text-[10px] font-black text-blue-600 font-mono bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                            {profile.nik}
+                          </span>
+                        </div>
+                      )}
+                      {profile.npwp && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">NPWP:</span>
+                          <span className="text-[10px] font-medium text-slate-600 font-mono">
+                            {profile.npwp}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </TableCell>

@@ -292,33 +292,33 @@ export function OutletForm({
         <div className="space-y-3">
           <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Penugasan Sales</Label>
           <div className="space-y-4">
-            <Select onValueChange={(val: any) => { if (typeof val === 'string') addSales(val); }}>
-              <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus:ring-blue-600">
-                <SelectValue placeholder={fetchingProfiles ? "MEMUAT..." : "TAMBAH SALES KE OUTLET"} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
-                {salesProfiles.filter(p => p.sales_code && !selectedCodes.includes(p.sales_code.toUpperCase())).length === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">Semua sales sudah terpilih</div>
-                ) : (
-                  salesProfiles
-                    .filter(p => p.sales_code && !selectedCodes.includes(p.sales_code.toUpperCase()))
-                    .map((profile) => (
-                      <SelectItem key={profile.id} value={profile.sales_code || ''} className="focus:bg-slate-50 focus:text-blue-600 py-2.5">
-                        <div className="flex items-center gap-2">
-                           <span className="font-bold">{profile.full_name}</span>
-                           <span className="text-[10px] opacity-50">({profile.sales_code})</span>
-                        </div>
-                      </SelectItem>
-                    ))
-                )}
-              </SelectContent>
-            </Select>
+          <Select onValueChange={(val: any) => { if (typeof val === 'string') addSales(val); }}>
+            <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus:ring-blue-600">
+              <SelectValue placeholder={fetchingProfiles ? "MEMUAT..." : "TAMBAH SALES KE OUTLET"} />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
+              {salesProfiles.filter(p => p.nik && !selectedCodes.includes(p.nik.toUpperCase())).length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">Semua sales sudah terpilih</div>
+              ) : (
+                salesProfiles
+                  .filter(p => p.nik && !selectedCodes.includes(p.nik.toUpperCase()))
+                  .map((profile) => (
+                    <SelectItem key={profile.id} value={profile.nik || ''} className="focus:bg-slate-50 focus:text-blue-600 py-2.5">
+                      <div className="flex items-center gap-2">
+                         <span className="font-bold">{profile.full_name}</span>
+                         <span className="text-[10px] opacity-50">({profile.nik})</span>
+                      </div>
+                    </SelectItem>
+                  ))
+              )}
+            </SelectContent>
+          </Select>
 
-            {/* List Selected Items */}
-            <div className={`p-4 rounded-lg border border-slate-200 flex flex-wrap gap-2 ${selectedCodes.length === 0 ? 'bg-slate-50/50' : 'bg-white'}`}>
-              {selectedCodes.length > 0 ? (
-                selectedCodes.map(code => {
-                  const profile = salesProfiles.find(p => p.sales_code?.toUpperCase() === code);
+          {/* List Selected Items */}
+          <div className={`p-4 rounded-lg border border-slate-200 flex flex-wrap gap-2 ${selectedCodes.length === 0 ? 'bg-slate-50/50' : 'bg-white'}`}>
+            {selectedCodes.length > 0 ? (
+              selectedCodes.map(code => {
+                const profile = salesProfiles.find(p => p.nik?.toUpperCase() === code);
                   return (
                     <div key={code} className="flex items-center gap-2 bg-slate-100 border border-slate-200 pl-3 pr-1.5 py-1.5 rounded-lg transition-all hover:bg-slate-200">
                        <span className="text-xs font-bold text-slate-700">{profile?.full_name || code}</span>

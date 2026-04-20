@@ -36,7 +36,7 @@ export async function getPaginatedProfiles(
   let query = supabase.from('profiles').select('*', { count: 'exact' });
 
   if (search) {
-    query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,sales_code.ilike.%${search}%`);
+    query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,nik.ilike.%${search}%`);
   }
 
   if (filters?.role && filters.role.length > 0) {
@@ -73,7 +73,8 @@ export async function updateProfile(id: string, values: Partial<Profile>) {
     .update({
       full_name: values.full_name,
       role: values.role,
-      sales_code: values.sales_code,
+      nik: values.nik,
+      npwp: values.npwp,
       phone: values.phone,
       is_active: values.is_active !== undefined ? values.is_active : true,
       updated_at: new Date().toISOString(),

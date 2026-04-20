@@ -16,6 +16,8 @@ import type { Profile } from '@/types';
 const profileSchema = z.object({
   full_name: z.string().min(3, 'Nama minimal 3 karakter'),
   phone: z.string().optional(),
+  nik: z.string().optional(),
+  npwp: z.string().optional(),
 });
 
 const passwordSchema = z.object({
@@ -35,8 +37,12 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
   const [loadingPassword, setLoadingPassword] = useState(false);
 
   const { register: registerProfile, handleSubmit: handleSubmitProfile, formState: { errors: errorsProfile } } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: { full_name: profile.full_name, phone: profile.phone || '' },
+    defaultValues: { 
+      full_name: profile.full_name, 
+      phone: profile.phone || '',
+      nik: profile.nik || '',
+      npwp: profile.npwp || '',
+    },
   });
 
   const { register: registerPassword, handleSubmit: handleSubmitPassword, reset: resetPassword, formState: { errors: errorsPassword } } = useForm<PasswordFormValues>({
@@ -79,9 +85,9 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
                    {profile.role === 'ADMIN' ? <Shield className="h-3 w-3"/> : <Briefcase className="h-3 w-3"/>}
                    {profile.role}
                  </span>
-                 {profile.sales_code && (
+                 {profile.nik && (
                    <span className="text-xs font-black font-mono bg-blue-50 text-blue-600 px-3 py-1 rounded-md border border-blue-200/50 shadow-sm">
-                     {profile.sales_code}
+                     {profile.nik}
                    </span>
                  )}
               </div>
@@ -101,16 +107,37 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
               {errorsProfile.full_name && <p className="text-xs text-red-600 font-medium">{errorsProfile.full_name.message}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Nomor Telepon</Label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                <Input
-                  {...registerProfile('phone')}
-                  className="pl-11 bg-slate-50/50 border-slate-200 h-12 focus-visible:ring-blue-600 font-medium text-slate-900"
-                  placeholder="Contoh: 08123456789"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Nomor Telepon</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    {...registerProfile('phone')}
+                    className="pl-11 bg-slate-50/50 border-slate-200 h-12 focus-visible:ring-blue-600 font-medium text-slate-900"
+                    placeholder="0812..."
+                  />
+                </div>
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">NIK</Label>
+                <Input
+                  {...registerProfile('nik')}
+                  disabled
+                  className="bg-slate-100 border-slate-200 h-12 font-mono font-bold text-slate-500 cursor-not-allowed"
+                />
+                <p className="text-[10px] text-slate-400">NIK hanya dapat diubah oleh Admin</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">NPWP</Label>
+              <Input
+                {...registerProfile('npwp')}
+                className="bg-slate-50/50 border-slate-200 h-12 focus-visible:ring-blue-600 font-medium text-slate-900 font-mono"
+                placeholder="80.678..."
+              />
             </div>
             
             <div className="pt-6 border-t border-slate-100 mt-8">

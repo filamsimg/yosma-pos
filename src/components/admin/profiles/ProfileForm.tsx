@@ -47,7 +47,8 @@ export function ProfileForm({
     defaultValues: {
       full_name: initialData?.full_name || '',
       role: initialData?.role || 'SALES',
-      sales_code: initialData?.sales_code || '',
+      nik: initialData?.nik || '',
+      npwp: initialData?.npwp || '',
       phone: initialData?.phone || '',
       is_active: initialData?.is_active !== undefined ? initialData.is_active : true,
     },
@@ -122,19 +123,33 @@ export function ProfileForm({
           </div>
         </div>
 
-        {/* Sales Code */}
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider flex items-center justify-between">
-            <span>Sales Code (Identitas Rute)</span>
-            <span className="text-[10px] text-slate-400 font-normal normal-case">Contoh: JY.05.14</span>
-          </Label>
-          <Input
-            {...register('sales_code')}
-            onChange={(e) => setValue('sales_code', e.target.value.toUpperCase())}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 px-4 font-mono font-bold uppercase"
-            placeholder="JY.XX.XX Atau KOSONGKAN JIKA ADMIN"
-          />
-          {errors.sales_code && <p className="text-xs text-red-600 mt-1 font-medium">{errors.sales_code.message}</p>}
+        {/* NIK & NPWP */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider flex items-center justify-between">
+              <span>NIK (Nomor Induk Karyawan) *</span>
+              <span className="text-[10px] text-slate-400 font-normal normal-case">Contoh: JY.01.YAP.06</span>
+            </Label>
+            <Input
+              {...register('nik')}
+              onChange={(e) => setValue('nik', e.target.value.toUpperCase())}
+              className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 px-4 font-mono font-bold uppercase"
+              placeholder="CONTOH: JY.01.YAP.06"
+            />
+            {errors.nik && <p className="text-xs text-red-600 mt-1 font-medium">{errors.nik.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider flex items-center justify-between">
+              <span>NPWP</span>
+              <span className="text-[10px] text-slate-400 font-normal normal-case">Contoh: 80.678.564...</span>
+            </Label>
+            <Input
+              {...register('npwp')}
+              className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 px-4 font-mono"
+              placeholder="MASUKKAN NOMOR NPWP"
+            />
+          </div>
         </div>
 
         {/* Telepon */}

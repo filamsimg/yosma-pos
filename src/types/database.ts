@@ -15,7 +15,8 @@ export interface Profile {
   role: UserRole;
   avatar_url: string | null;
   phone: string | null;
-  sales_code: string | null;
+  nik: string | null;
+  npwp: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
