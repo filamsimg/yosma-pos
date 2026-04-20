@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, FileUp, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { bulkImportOutlets, type OutletImportItem } from '@/lib/actions/import';
 import { toast } from 'sonner';
-import { normalizeTypeName } from '@/lib/utils/string-utils';
+import { normalizeTypeName, normalizePhoneNumber } from '@/lib/utils/string-utils';
 
 interface ImportDialogProps {
   onSuccess: () => void;
@@ -45,7 +45,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
         name: row['Nama'] || row['nama'] || row['Outlet'] || '',
         type: normalizeTypeName(row['Tipe'] || row['tipe'] || row['Kategori'] || ''),
         address: row['Alamat'] || row['alamat'] || '',
-        phone: String(row['Telepon'] || row['telepon'] || row['WhatsApp'] || row['phone'] || ''),
+        phone: normalizePhoneNumber(String(row['Telepon'] || row['telepon'] || row['WhatsApp'] || row['phone'] || '')),
         owner_name: row['Pemilik'] || row['pemilik'] || row['Owner'] || '',
         visit_day: row['Hari Kunjungan'] || row['hari'] || row['Visit Day'] || '',
         visit_frequency: row['Frekuensi'] || row['frekuensi'] || row['Visit Frequency'] || '',

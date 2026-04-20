@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { normalizeTypeName } from '@/lib/utils/string-utils';
+import { normalizeTypeName, normalizePhoneNumber } from '@/lib/utils/string-utils';
 import type { Outlet, Profile, OutletType } from '@/types';
 
 interface OutletFormProps {
@@ -74,7 +74,7 @@ export function OutletForm({
       name: initialData?.name || '',
       type: initialData?.type || '',
       address: initialData?.address || '',
-      phone: initialData?.phone || '',
+      phone: normalizePhoneNumber(initialData?.phone || ''),
       visit_day: initialData?.visit_day || '',
       visit_frequency: initialData?.visit_frequency === 'WEEKLY' ? 'Seminggu Sekali' : (initialData?.visit_frequency || 'Seminggu Sekali'),
       assigned_sales: initialData?.assigned_sales || '',
@@ -176,7 +176,7 @@ export function OutletForm({
                   {...register('name')}
                   onChange={(e) => setValue('name', e.target.value.toUpperCase())}
                   className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl uppercase font-semibold text-base"
-                  placeholder="CONTOH: APOTEK SEHAT JAYA"
+                  placeholder="CONTOH: SEHAT JAYA"
                 />
                 {errors.name && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.name.message}</p>}
               </div>
@@ -257,7 +257,7 @@ export function OutletForm({
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
                   {...register('address')}
-                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl"
+                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-10 shadow-sm rounded-xl"
                   placeholder="Gunakan nama jalan, nomor, dan kecamatan..."
                 />
               </div>
@@ -396,6 +396,7 @@ export function OutletForm({
                 </div>
                 <Input
                   {...register('phone')}
+                  onChange={(e) => setValue('phone', normalizePhoneNumber(e.target.value))}
                   className="pl-16 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 text-base font-semibold rounded-xl"
                   placeholder="812xxxxxx"
                 />

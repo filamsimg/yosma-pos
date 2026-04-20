@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { adminResetPassword } from '@/lib/actions/profiles';
+import { normalizePhoneNumber } from '@/lib/utils/string-utils';
 import type { Profile } from '@/types';
 import { useState } from 'react';
 
@@ -58,7 +59,7 @@ export function ProfileForm({
       role: initialData?.role || 'SALES',
       nik: initialData?.nik || '',
       npwp: initialData?.npwp || '',
-      phone: initialData?.phone || '',
+      phone: normalizePhoneNumber(initialData?.phone || ''),
       is_active: initialData?.is_active !== undefined ? initialData.is_active : true,
     },
   });
@@ -189,6 +190,7 @@ export function ProfileForm({
                 </div>
                 <Input
                   {...register('phone')}
+                  onChange={(e) => setValue('phone', normalizePhoneNumber(e.target.value))}
                   className="pl-16 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 text-base font-semibold rounded-xl"
                   placeholder="812xxxxxx"
                 />
