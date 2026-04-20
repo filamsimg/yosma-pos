@@ -128,6 +128,7 @@ export interface TransactionPayment {
   payment_date: string;
   notes: string | null;
   recorded_by: string;
+  proof_url: string | null;
   created_at: string;
   // Joined fields
   recorder?: Profile;

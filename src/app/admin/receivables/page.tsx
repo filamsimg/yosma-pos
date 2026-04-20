@@ -38,11 +38,15 @@ import {
   TrendingUp, 
   AlertCircle, 
   CheckCircle2, 
-  Plus
+  Plus,
+  Camera,
+  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { useImageCapture } from '@/hooks/use-image-capture';
 import { PAYMENT_METHODS, PAYMENT_STATUSES } from '@/lib/constants';
 import type { PaymentMethod } from '@/types';
 
@@ -52,6 +56,9 @@ export default function ReceivablesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState<any>(null);
+  
+  // Hooks
+  const img = useImageCapture();
   
   // Payment Form States
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -89,12 +96,21 @@ export default function ReceivablesPage() {
       const balance = selectedTxn.total_price - selectedTxn.paid_amount;
       if (amount > balance) throw new Error('Jumlah bayar melebihi sisa piutang');
 
-      await addPayment({
-        transactionId: selectedTxn.id,
-        amount,
-        paymentMethod,
-        notes: paymentNotes
-      });
+      // Requirement: Proof of transfer if method is TRANSFER
+      if (paymentMethod === 'TRANSFER' && !img.compressedFile) {
+        throw new Error('Mohon unggah bukti transfer');
+      }
+
+      const formData = new FormData();
+      formData.append('transactionId', selectedTxn.id);
+      formData.append('amount', amount.toString());
+      formData.append('paymentMethod', paymentMethod);
+      formData.append('notes', paymentNotes);
+      if (img.compressedFile) {
+        formData.append('proofFile', img.compressedFile);
+      }
+
+      await addPayment(formData);
 
       toast.success('Pembayaran berhasil dicatat');
       setIsPaymentDialogOpen(false);
@@ -112,6 +128,7 @@ export default function ReceivablesPage() {
     setPaymentMethod('CASH');
     setPaymentNotes('');
     setSelectedTxn(null);
+    img.clearImage();
   }
 
   return (
@@ -303,19 +320,85 @@ export default function ReceivablesPage() {
 
                                 <div className="space-y-1.5">
                                   <Label className="text-xs font-bold text-slate-700">Metode Bayar</Label>
-                                  <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                    <SelectTrigger className="h-11 bg-white border-slate-200 font-medium">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white border-slate-200 shadow-xl">
-                                      {PAYMENT_METHODS.filter(m => m.value !== 'CREDIT').map(m => (
-                                        <SelectItem key={m.value} value={m.value} className="font-medium cursor-pointer">
-                                          {m.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                                    <button
+                                      type="button"
+                                      onClick={() => setPaymentMethod('CASH')}
+                                      className={cn(
+                                        "h-10 rounded-lg text-sm font-bold transition-all",
+                                        paymentMethod === 'CASH'
+                                          ? "bg-white text-blue-600 shadow-sm"
+                                          : "text-slate-400 hover:text-slate-600"
+                                      )}
+                                    >
+                                      Tunai
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setPaymentMethod('TRANSFER')}
+                                      className={cn(
+                                        "h-10 rounded-lg text-sm font-bold transition-all",
+                                        paymentMethod === 'TRANSFER'
+                                          ? "bg-white text-blue-600 shadow-sm"
+                                          : "text-slate-400 hover:text-slate-600"
+                                      )}
+                                    >
+                                      Transfer
+                                    </button>
+                                  </div>
                                 </div>
+
+                                {/* Proof of Transfer Upload */}
+                                {paymentMethod === 'TRANSFER' && (
+                                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300 px-1">
+                                    <Label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                      <Camera className="h-3 w-3 text-blue-600" /> UNGGAH BUKTI TRANSFER
+                                    </Label>
+                                    
+                                    {img.preview ? (
+                                      <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm group aspect-[4/3]">
+                                        <img
+                                          src={img.preview}
+                                          alt="Bukti transfer"
+                                          className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            onClick={() => img.clearImage()}
+                                            className="rounded-full w-10 h-10"
+                                          >
+                                            <X className="h-5 w-5" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <label className="flex flex-col items-center justify-center w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-white hover:border-blue-400 transition-all group">
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                            <Camera className="h-5 w-5" />
+                                          </div>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Klik untuk pilih foto</p>
+                                        </div>
+                                        <input 
+                                          type="file" 
+                                          className="hidden" 
+                                          accept="image/*"
+                                          capture="environment"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) img.processImage(file);
+                                          }}
+                                        />
+                                      </label>
+                                    )}
+                                    {img.loading && (
+                                      <p className="text-[10px] text-blue-600 animate-pulse font-bold">Sedang memproses gambar...</p>
+                                    )}
+                                  </div>
+                                )}
 
                                 <div className="space-y-1.5">
                                   <Label className="text-xs font-bold text-slate-700">Catatan Tambahan</Label>
