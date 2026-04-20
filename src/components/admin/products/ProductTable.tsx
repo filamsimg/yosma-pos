@@ -181,7 +181,7 @@ export function ProductTable({
                   <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
                     <SelectItem value="ALL" className="text-xs">SEMUA STOK</SelectItem>
                     <SelectItem value="OUT_OF_STOCK" className="text-xs">HABIS (0)</SelectItem>
-                    <SelectItem value="LOW_STOCK" className="text-xs">MENIPIS (≤10)</SelectItem>
+                    <SelectItem value="LOW_STOCK" className="text-xs">MENIPIS ({"<="}10)</SelectItem>
                     <SelectItem value="IN_STOCK" className="text-xs">TERSEDIA ({'>'}10)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -225,13 +225,18 @@ export function ProductTable({
                   className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${
                     p.stock <= 0
                       ? 'bg-red-50 text-red-600'
-                      : p.stock < 10
+                      : p.stock <= (p.min_stock ?? 10)
                       ? 'bg-amber-50 text-amber-600'
                       : 'bg-emerald-50 text-emerald-600'
                   }`}
                 >
                   {p.stock} {p.unit?.name}
                 </Badge>
+                {p.stock > 0 && p.stock <= (p.min_stock ?? 10) && (
+                  <div className="text-[10px] text-amber-600 mt-1 font-semibold uppercase" title={`Batas: ${p.min_stock ?? 10}`}>
+                    Segera Restock!
+                  </div>
+                )}
               </TableCell>
               <TableCell className="py-3 px-6 text-center whitespace-nowrap">
                 <div className="flex items-center justify-center">

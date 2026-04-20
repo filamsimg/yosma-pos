@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { productSchema, type ProductFormValues } from '@/lib/validations/product';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +44,7 @@ export function ProductForm({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<ProductFormValues>({
+  } = useForm<z.input<typeof productSchema>, any, ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || '',
@@ -54,7 +55,8 @@ export function ProductForm({
       category_id: initialData?.category_id || (categories[0]?.id || ''),
       brand_id: initialData?.brand_id || '',
       unit_id: initialData?.unit_id || '',
-    } as ProductFormValues,
+      min_stock: initialData?.min_stock ?? 10,
+    },
   });
 
   const categoryId = watch('category_id') || '';
@@ -257,6 +259,18 @@ export function ProductForm({
             placeholder="0"
           />
           {errors.discount_regular && <p className="text-xs text-red-600 mt-1 font-medium">{errors.discount_regular.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Batas Stok (Warning)</Label>
+          <Input
+            type="number"
+            {...register('min_stock', { valueAsNumber: true })}
+            onFocus={(e) => e.target.select()}
+            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 font-semibold text-lg"
+            placeholder="10"
+          />
+          {errors.min_stock && <p className="text-xs text-red-600 mt-1 font-medium">{errors.min_stock.message}</p>}
         </div>
       </div>
 

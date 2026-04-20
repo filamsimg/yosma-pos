@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, PanelLeft, Check, ChevronRight } from 'lucide-react';
+import { PanelLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -15,13 +15,6 @@ export function SidebarControl({ mode, isCollapsed, onModeChange }: SidebarContr
 
   return (
     <div className="mt-auto border-t border-[#1e293b] p-2 space-y-1">
-      <LinkItem 
-        href="/admin/settings" 
-        icon={Settings} 
-        label="Project Settings" 
-        isCollapsed={isCollapsed} 
-      />
-      
       <Popover>
         <PopoverTrigger className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-[#1e293b]/50 transition-all group cursor-pointer text-left focus:outline-none">
           <PanelLeft className="h-4.5 w-4.5 shrink-0" />
@@ -72,17 +65,4 @@ export function SidebarControl({ mode, isCollapsed, onModeChange }: SidebarContr
   );
 }
 
-// Internal helper for settings link
-import Link from 'next/link';
 
-function LinkItem({ href, icon: Icon, label, isCollapsed }: { href: string; icon: any; label: string; isCollapsed: boolean }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-[#2b2b2b]/50 transition-all group"
-    >
-      <Icon className="h-4.5 w-4.5 shrink-0" />
-      {!isCollapsed && <span>{label}</span>}
-    </Link>
-  );
-}

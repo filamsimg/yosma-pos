@@ -56,6 +56,7 @@ export interface Product {
   unit_id: string | null;
   discount_regular: number;
   image_url: string | null;
+  min_stock: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

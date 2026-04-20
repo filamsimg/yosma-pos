@@ -14,6 +14,7 @@ export interface ProductImportItem {
   stok?: number;
   deskripsi?: string;
   diskon_reguler?: number;
+  min_stock?: number;
 }
 
 export async function bulkImportProducts(items: ProductImportItem[]) {
@@ -95,6 +96,7 @@ export async function bulkImportProducts(items: ProductImportItem[]) {
     category_id: item.kategori ? (catMap.get(item.kategori) || null) : null,
     brand_id: item.merk ? (brandMap.get(item.merk) || null) : null,
     unit_id: item.satuan ? (unitMap.get(item.satuan) || null) : null,
+    min_stock: item.min_stock ?? 10,
     is_active: true,
   }));
 

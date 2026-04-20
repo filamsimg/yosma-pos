@@ -6,6 +6,7 @@ export const productSchema = z.object({
   description: z.string().min(0),
   price: z.number().min(0, 'Harga tidak boleh negatif'),
   discount_regular: z.number().min(0).max(100),
+  min_stock: z.number().min(0, 'Batas minimal stok tidak boleh negatif').default(10),
   category_id: z.string().uuid('Kategori harus dipilih'),
   brand_id: z.string().uuid('Merk harus dipilih'),
   unit_id: z.string().uuid('Satuan harus dipilih'),

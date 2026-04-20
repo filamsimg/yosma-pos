@@ -47,6 +47,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
         satuan: row['Satuan'] || row['satuan'] || '',
         harga: Number(row['Harga'] || row['harga'] || 0),
         stok: Number(row['Stok'] || row['stok'] || row['Stok Awal'] || 0),
+        min_stock: Number(row['Min Stok'] || row['Batas Minimal Stok'] || 10),
         deskripsi: row['Deskripsi'] || row['deskripsi'] || '',
         diskon_reguler: Number(row['Diskon'] || row['diskon'] || 0),
       })).filter(item => item.nama); // Allow empty SKU for auto-generation
@@ -88,6 +89,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
         'Satuan': 'PCS',
         'Harga': 15000,
         'Stok': 100,
+        'Min Stok': 10,
         'Deskripsi': 'Deskripsi produk'
       }
     ];
@@ -172,6 +174,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
                   <th className="px-3 py-2">SKU</th>
                   <th className="px-3 py-2">Merk</th>
                   <th className="px-3 py-2">Harga</th>
+                  <th className="px-3 py-2">Min Stok</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -183,6 +186,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
                     </td>
                     <td className="px-3 py-2 text-slate-600">{row.merk}</td>
                     <td className="px-3 py-2 font-semibold text-blue-600">Rp {row.harga.toLocaleString()}</td>
+                    <td className="px-3 py-2 text-amber-600 font-semibold">{row.min_stock}</td>
                   </tr>
                 ))}
               </tbody>
