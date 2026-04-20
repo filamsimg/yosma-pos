@@ -228,6 +228,7 @@ export function OutletCheckin({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger 
+        nativeButton={false}
         render={
           <Card className="border-blue-200 bg-white shadow-xl shadow-blue-100/50 rounded-[24px] overflow-hidden hover:scale-[1.02] transition-all cursor-pointer group active:scale-95">
             <CardContent className="flex items-center gap-4 p-5">
