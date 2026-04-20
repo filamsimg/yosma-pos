@@ -4,7 +4,9 @@ export const outletSchema = z.object({
   name: z.string().min(3, 'Nama outlet minimal 3 karakter'),
   type: z.string().nullable().optional(),
   address: z.string().min(5, 'Alamat minimal 5 karakter').nullable().optional(),
-  phone: z.string().min(10, 'Nomor telepon minimal 10 digit').nullable().optional(),
+  phone: z.string().refine((val) => !val || val.length >= 10, {
+    message: 'Nomor telepon minimal 10 digit',
+  }).nullable().optional(),
   visit_day: z.string().nullable().optional(),
   visit_frequency: z.string().nullable().optional(),
   assigned_sales: z.string().nullable().optional(),
