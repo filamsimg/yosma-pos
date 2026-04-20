@@ -116,36 +116,27 @@ export default function AdminProfilesPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header section with Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Profil & Karyawan</h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Kelola data dan kode rute sales karyawan Anda.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Cari nama atau kode sales..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full sm:w-64"
-            />
-          </div>
+      {/* Header section */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Profil & Karyawan</h1>
+        <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          Kelola data dan kode rute sales karyawan Anda.
+        </p>
+      </div>
 
-          <Button
-            onClick={() => handleOpenForm()} // Opens info toast since creation is separate
-            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
-          >
-            <UserCog className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Kelola User</span>
-            <span className="sm:hidden">Kelola</span>
-          </Button>
+      {/* Actions section (Search) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Cari nama atau kode sales..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
+          />
         </div>
       </div>
 

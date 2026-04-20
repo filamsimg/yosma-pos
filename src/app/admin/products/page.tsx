@@ -206,32 +206,36 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header section with Search & Create */}
+      {/* Header section */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Produk & Stok</h1>
+        <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          Kelola katalog produk dengan Merk, Satuan, dan Harga Diskon.
+        </p>
+      </div>
+
+      {/* Actions section (Search, Import, Create) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Produk & Stok</h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Kelola katalog produk dengan Merk, Satuan, dan Harga Diskon.
-          </p>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Cari produk, SKU, atau merk..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Cari produk, SKU, atau merk..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full sm:w-64"
-            />
-          </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <ImportDialog onSuccess={fetchData} />
           <Button
             onClick={() => handleOpenForm()}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
+            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Produk Baru</span>
-            <span className="sm:hidden">Baru</span>
+            <span>Produk Baru</span>
           </Button>
         </div>
       </div>

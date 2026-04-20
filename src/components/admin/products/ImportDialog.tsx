@@ -102,7 +102,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2 h-10 px-4">
+          <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2 h-10 px-4 w-full sm:w-auto">
             <FileUp className="h-4 w-4" />
             Import Excel
           </Button>
