@@ -50,17 +50,17 @@ export function ProfileTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
-            <TableHead className="font-bold text-slate-700 h-12">KARYAWAN</TableHead>
-            <TableHead className="font-bold text-slate-700 h-12">ROLE / AKSES</TableHead>
-            <TableHead className="font-bold text-slate-700 h-12">KONTAK</TableHead>
-            <TableHead className="font-bold text-slate-700 h-12">STATUS</TableHead>
-            <TableHead className="font-bold text-slate-700 h-12 text-right">AKSI</TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs px-6">KARYAWAN</TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs">ROLE / AKSES</TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs">KONTAK</TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs">STATUS</TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs text-center px-6">AKSI</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {profiles.map((profile) => (
             <TableRow key={profile.id} className="hover:bg-slate-50/80 transition-colors group">
-              <TableCell className="py-4">
+              <TableCell className="py-4 px-6">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${profile.role === 'ADMIN' ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
                     {profile.full_name.charAt(0).toUpperCase()}
@@ -122,8 +122,8 @@ export function ProfileTable({
                 )}
               </TableCell>
 
-              <TableCell className="py-4 text-right">
-                <div className="flex items-center justify-end gap-2">
+              <TableCell className="py-4 text-center px-6">
+                <div className="flex items-center justify-center gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 

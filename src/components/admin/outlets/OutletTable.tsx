@@ -77,7 +77,7 @@ export function OutletTable({
       <Table className="w-full text-left whitespace-nowrap">
         <TableHeader>
           <TableRow className="bg-slate-50 border-b border-slate-200">
-            <TableHead className="py-4 px-5 w-10">
+            <TableHead className="py-4 px-6 w-10">
               <input 
                 type="checkbox" 
                 checked={outlets.length > 0 && selectedIds.length === outlets.length}
@@ -85,11 +85,11 @@ export function OutletTable({
                 className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Outlet</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Alamat</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Jadwal</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Kontak</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-right">Aksi</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Outlet</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Alamat</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Jadwal</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Kontak</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-slate-100">
@@ -163,8 +163,8 @@ export function OutletTable({
                   <span className="text-xs text-slate-300 italic">Tidak ada kontak</span>
                 )}
               </TableCell>
-              <TableCell className="py-4 px-5 text-right">
-                <div className="flex items-center justify-end gap-1">
+              <TableCell className="py-4 px-6 text-center">
+                <div className="flex items-center justify-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"

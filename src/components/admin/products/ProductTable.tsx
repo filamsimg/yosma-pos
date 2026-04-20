@@ -69,7 +69,7 @@ export function ProductTable({
       <Table className="w-full text-left whitespace-nowrap">
         <TableHeader>
           <TableRow className="bg-slate-50 border-b border-slate-200">
-            <TableHead className="py-4 px-5 w-10">
+            <TableHead className="py-4 px-6 w-10">
               <input 
                 type="checkbox" 
                 checked={products.length > 0 && selectedIds.length === products.length}
@@ -77,14 +77,14 @@ export function ProductTable({
                 className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">SKU</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Nama Produk</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Merk</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase">Satuan</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-right">Harga</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-center">Diskon</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-center">Stok</TableHead>
-            <TableHead className="py-4 px-5 font-semibold text-slate-500 text-xs uppercase text-right">Aksi</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">SKU</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Nama Produk</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Merk</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Satuan</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-right">Harga</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Diskon</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Stok</TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-slate-100">
@@ -93,7 +93,7 @@ export function ProductTable({
               key={p.id} 
               className={`hover:bg-slate-50/50 transition-colors ${selectedIds.includes(p.id) ? 'bg-blue-50/30' : ''}`}
             >
-              <TableCell className="py-4 px-5">
+              <TableCell className="py-4 px-6">
                 <input 
                   type="checkbox" 
                   checked={selectedIds.includes(p.id)}
@@ -130,7 +130,8 @@ export function ProductTable({
                   {p.stock} {p.unit?.name}
                 </Badge>
               </TableCell>
-              <TableCell className="py-3 px-5 text-right whitespace-nowrap">
+              <TableCell className="py-3 px-6 text-center whitespace-nowrap">
+                <div className="flex items-center justify-center">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -158,6 +159,7 @@ export function ProductTable({
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
