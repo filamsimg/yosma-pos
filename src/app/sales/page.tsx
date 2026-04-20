@@ -30,9 +30,11 @@ export default function SalesPOSPage() {
   function handleCheckin(data: CheckinData) {
     setCheckinData(data);
     setCheckedIn(true);
-    toast.success(`Check-in berhasil di ${data.outlet.type ? `${data.outlet.type} ${data.outlet.name}` : data.outlet.name}`, {
-      description: 'Silakan mulai melayani pesanan.',
-      icon: <CheckCircleIcon className="h-4 w-4 text-emerald-500" />
+    const isRemote = data.photoUrl === 'REMOTE_ORDER';
+    
+    toast.success(`${isRemote ? 'Remote Order' : 'Check-in'} berhasil di ${data.outlet.type ? `${data.outlet.type} ${data.outlet.name}` : data.outlet.name}`, {
+      description: isRemote ? 'Mode pesanan jarak jauh aktif.' : 'Silakan mulai melayani pesanan.',
+      icon: isRemote ? <ShoppingBag className="h-4 w-4 text-orange-500" /> : <CheckCircleIcon className="h-4 w-4 text-emerald-500" />
     });
   }
 
@@ -137,6 +139,17 @@ export default function SalesPOSPage() {
         {/* Product Catalog Section */}
         {checkedIn ? (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {checkinData?.photoUrl === 'REMOTE_ORDER' && (
+              <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 shadow-sm shadow-orange-50/50">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+                  <Terminal className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest">MODE PESANAN JARAK JAUH</p>
+                  <p className="text-xs font-bold text-orange-600/80">Lokasi GPS & Foto dinonaktifkan untuk transaksi ini.</p>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-blue-600 rounded-full" />

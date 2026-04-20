@@ -62,6 +62,7 @@ export function OutletCheckin({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isRemote, setIsRemote] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -152,8 +153,12 @@ export function OutletCheckin({
 
   // Handle check-in submission
   async function handleCheckin() {
-    if (!selectedOutlet || !geo.latitude || !geo.longitude || !img.compressedFile)
+    if (!selectedOutlet) return;
+    
+    // Physical validation requirement
+    if (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) {
       return;
+    }
 
     setUploading(true);
     try {
@@ -163,25 +168,33 @@ export function OutletCheckin({
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const fileName = `${user.id}/${Date.now()}_checkin.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from('transaction-photos')
-        .upload(fileName, img.compressedFile, {
-          contentType: 'image/jpeg',
-          upsert: false,
-        });
+      let lat = geo.latitude || 0;
+      let lng = geo.longitude || 0;
+      let photoUrl = 'REMOTE_ORDER';
 
-      if (uploadError) throw uploadError;
+      if (!isRemote && img.compressedFile) {
+        const fileName = `${user.id}/${Date.now()}_checkin.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('transaction-photos')
+          .upload(fileName, img.compressedFile, {
+            contentType: 'image/jpeg',
+            upsert: false,
+          });
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('transaction-photos').getPublicUrl(fileName);
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('transaction-photos').getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+      }
 
       onCheckin({
         outlet: selectedOutlet,
-        lat: geo.latitude,
-        lng: geo.longitude,
-        photoUrl: publicUrl,
+        lat: lat,
+        lng: lng,
+        photoUrl: photoUrl,
       });
 
       setDialogOpen(false);
@@ -259,58 +272,80 @@ export function OutletCheckin({
             CHECK-IN OUTLET
           </DialogTitle>
           <DialogDescription className="text-sm font-bold text-slate-400 mt-1">
-            Validasi lokasi dan foto untuk mulai jualan
+            Pilih metode kunjungan Anda hari ini
           </DialogDescription>
+          
+          {/* Mode Switcher */}
+          <div className="flex p-1 bg-slate-100 rounded-xl mt-4 w-fit border border-slate-200">
+            <button
+              onClick={() => setIsRemote(false)}
+              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                !isRemote ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Kunjungan Fisik
+            </button>
+            <button
+              onClick={() => setIsRemote(true)}
+              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                isRemote ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Pesanan WA (Remote)
+            </button>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Step 1: Location */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
-              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
-                01
-              </span>
-              Validasi Lokasi GPS
+          {/* Step 1: Location - Only in Physical mode */}
+          {!isRemote && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
+                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                  01
+                </span>
+                Validasi Lokasi GPS
+              </div>
+              {geo.latitude && geo.longitude ? (
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm shadow-emerald-50/50">
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm">
+                    <Navigation className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">LOKASI TERDETEKSI</p>
+                    <span className="text-sm font-bold text-emerald-600 font-mono">
+                      {geo.latitude.toFixed(6)}, {geo.longitude.toFixed(6)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  onClick={geo.getCurrentPosition}
+                  disabled={geo.loading}
+                  className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-blue-200 transition-all font-bold shadow-sm"
+                >
+                  {geo.loading ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin text-blue-600" />
+                  ) : (
+                    <Navigation className="mr-2 h-5 w-5 text-blue-500" />
+                  )}
+                  {geo.loading ? 'Sedang Melacak...' : 'Aktifkan GPS Sekarang'}
+                </Button>
+              )}
+              {geo.error && (
+                <div className="p-3 bg-red-50 rounded-xl border border-red-100 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <p className="text-xs text-red-600 font-bold tracking-tight"> {geo.error}</p>
+                </div>
+              )}
             </div>
-            {geo.latitude && geo.longitude ? (
-              <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm shadow-emerald-50/50 animate-in zoom-in-95 duration-300">
-                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm">
-                  <Navigation className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">LOKASI TERDETEKSI</p>
-                  <span className="text-sm font-bold text-emerald-600 font-mono">
-                    {geo.latitude.toFixed(6)}, {geo.longitude.toFixed(6)}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <Button
-                onClick={geo.getCurrentPosition}
-                disabled={geo.loading}
-                className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-blue-200 transition-all font-bold shadow-sm"
-              >
-                {geo.loading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin text-blue-600" />
-                ) : (
-                  <Navigation className="mr-2 h-5 w-5 text-blue-500" />
-                )}
-                {geo.loading ? 'Sedang Melacak...' : 'Aktifkan GPS Sekarang'}
-              </Button>
-            )}
-            {geo.error && (
-              <div className="p-3 bg-red-50 rounded-xl border border-red-100 flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <p className="text-xs text-red-600 font-bold tracking-tight"> {geo.error}</p>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Step 2: Select Outlet */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
               <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
-                02
+                {isRemote ? '01' : '02'}
               </span>
               Pilih Outlet Kunjungan
             </div>
@@ -384,60 +419,61 @@ export function OutletCheckin({
             </ScrollArea>
           </div>
 
-          {/* Step 3: Photo */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
-              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
-                03
-              </span>
-              Foto Bukti Kunjungan
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhotoChange}
-              className="hidden"
-            />
-
-            {img.preview ? (
-              <div className="relative rounded-2xl overflow-hidden border-2 border-blue-500/20 shadow-xl group">
-                <img
-                  src={img.preview}
-                  alt="Preview outlet"
-                  className="w-full h-44 object-cover"
-                />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                   <button
-                    onClick={() => {
-                      img.clearImage();
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                    className="p-3 rounded-full bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                {img.loading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-                    <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
-                  </div>
-                )}
+          {!isRemote && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
+                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                  03
+                </span>
+                Foto Bukti Kunjungan
               </div>
-            ) : (
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-32 rounded-2xl bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
-              >
-                <div className="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white shadow-inner">
-                  <Camera className="h-6 w-6" />
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePhotoChange}
+                className="hidden"
+              />
+
+              {img.preview ? (
+                <div className="relative rounded-2xl overflow-hidden border-2 border-blue-500/20 shadow-xl group">
+                  <img
+                    src={img.preview}
+                    alt="Preview outlet"
+                    className="w-full h-44 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <button
+                      onClick={() => {
+                        img.clearImage();
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="p-3 rounded-full bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  {img.loading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+                      <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+                    </div>
+                  )}
                 </div>
-                <span className="text-xs font-black uppercase tracking-widest">Buka Kamera</span>
-              </Button>
-            )}
-          </div>
+              ) : (
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-32 rounded-2xl bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
+                >
+                  <div className="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white shadow-inner">
+                    <Camera className="h-6 w-6" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-widest">Buka Kamera</span>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -446,9 +482,7 @@ export function OutletCheckin({
             onClick={handleCheckin}
             disabled={
               !selectedOutlet ||
-              !geo.latitude ||
-              !geo.longitude ||
-              !img.compressedFile ||
+              (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
               uploading
             }
             className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-xl shadow-blue-200 active:scale-95 transition-all"
