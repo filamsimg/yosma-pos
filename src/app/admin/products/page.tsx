@@ -43,6 +43,11 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
+  const [stockFilter, setStockFilter] = useState('ALL');
+  const [sorting, setSorting] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'name', dir: 'asc' });
+  const [brands, setBrands] = useState<any[]>([]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,11 +76,23 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, searchQuery, pageSize]);
+  }, [currentPage, searchQuery, pageSize, categoryFilter, brandFilter, stockFilter, sorting]);
 
   async function fetchData() {
     setLoading(true);
-    const result = await getPaginatedProducts(currentPage, pageSize, searchQuery);
+    const filters = {
+      category_id: categoryFilter,
+      brand_id: brandFilter,
+      stock_status: stockFilter
+    };
+    const result = await getPaginatedProducts(
+      currentPage, 
+      pageSize, 
+      searchQuery, 
+      filters,
+      sorting.field,
+      sorting.dir
+    );
     
     if (result.data) {
       setProducts(result.data);
@@ -88,6 +105,9 @@ export default function AdminProductsPage() {
     const supabase = createClient();
     const { data: cData } = await supabase.from('categories').select('*').order('name');
     if (cData) setCategories(cData);
+
+    const { data: bData } = await supabase.from('brands').select('*').order('name');
+    if (bData) setBrands(bData);
     
     setLoading(false);
   }
@@ -246,6 +266,22 @@ export default function AdminProductsPage() {
             onAdjustStock={handleOpenStockAdjust}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={(val) => { setCategoryFilter(val); setCurrentPage(1); }}
+            brandFilter={brandFilter}
+            setBrandFilter={(val) => { setBrandFilter(val); setCurrentPage(1); }}
+            stockFilter={stockFilter}
+            setStockFilter={(val) => { setStockFilter(val); setCurrentPage(1); }}
+            categories={categories}
+            brands={brands}
+            sorting={sorting}
+            onSort={(field) => {
+              setSorting(prev => ({
+                field,
+                dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+              }));
+              setCurrentPage(1);
+            }}
           />
         </div>
 

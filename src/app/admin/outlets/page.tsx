@@ -28,8 +28,10 @@ import {
   upsertOutlet, 
   softDeleteOutlet, 
   getPaginatedOutlets,
-  bulkDeleteOutlets 
+  bulkDeleteOutlets,
+  getOutletTypes
 } from '@/lib/actions/outlets';
+import { VISIT_DAYS } from '@/lib/constants';
 import { type Outlet } from '@/types';
 import { type OutletFormValues } from '@/lib/validations/outlet';
 
@@ -37,6 +39,10 @@ export default function AdminOutletsPage() {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [dayFilter, setDayFilter] = useState<string[]>([]);
+  const [sorting, setSorting] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'name', dir: 'asc' });
+  const [outletTypes, setOutletTypes] = useState<any[]>([]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,12 +63,31 @@ export default function AdminOutletsPage() {
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
+    async function loadLookup() {
+      const types = await getOutletTypes();
+      setOutletTypes(types);
+    }
+    loadLookup();
+  }, []);
+
+  useEffect(() => {
     fetchData();
-  }, [currentPage, searchQuery, pageSize]);
+  }, [currentPage, searchQuery, pageSize, typeFilter, dayFilter, sorting]);
 
   async function fetchData() {
     setLoading(true);
-    const result = await getPaginatedOutlets(currentPage, pageSize, searchQuery);
+    const filters = {
+      type: typeFilter,
+      visit_day: dayFilter
+    };
+    const result = await getPaginatedOutlets(
+      currentPage, 
+      pageSize, 
+      searchQuery, 
+      filters,
+      sorting.field,
+      sorting.dir
+    );
     
     if (result.data) {
       setOutlets(result.data);
@@ -204,6 +229,19 @@ export default function AdminOutletsPage() {
             onDelete={handleDelete}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
+            typeFilter={typeFilter}
+            setTypeFilter={(val) => { setTypeFilter(val); setCurrentPage(1); }}
+            dayFilter={dayFilter}
+            setDayFilter={(val) => { setDayFilter(val); setCurrentPage(1); }}
+            outletTypes={outletTypes}
+            sorting={sorting}
+            onSort={(field) => {
+              setSorting(prev => ({
+                field,
+                dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+              }));
+              setCurrentPage(1);
+            }}
           />
         </div>
 

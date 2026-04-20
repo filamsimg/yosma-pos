@@ -8,21 +8,41 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, User, UserCheck, UserX, UserCog, Briefcase, Mail, Calendar, Phone } from 'lucide-react';
+import { Edit, UserCog, Mail, Phone, ArrowUpDown, ArrowUp, ArrowDown, User, Briefcase, UserCheck } from 'lucide-react';
 import type { Profile } from '@/types';
+import { DataTableFacetedFilter } from "../shared/DataTableFacetedFilter";
 
 interface ProfileTableProps {
   profiles: Profile[];
   loading: boolean;
   onEdit: (profile: Profile) => void;
+  roleFilter: string[];
+  setRoleFilter: (val: string[]) => void;
+  statusFilter: string[];
+  setStatusFilter: (val: string[]) => void;
+  sorting: { field: string; dir: 'asc' | 'desc' };
+  onSort: (field: string) => void;
 }
 
 export function ProfileTable({ 
   profiles, 
   loading, 
-  onEdit
+  onEdit,
+  roleFilter,
+  setRoleFilter,
+  statusFilter,
+  setStatusFilter,
+  sorting,
+  onSort,
 }: ProfileTableProps) {
   if (loading) {
     return (
@@ -50,11 +70,49 @@ export function ProfileTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50 border-b border-slate-100 hover:bg-slate-50">
-            <TableHead className="font-semibold text-slate-500 text-xs px-6">KARYAWAN</TableHead>
-            <TableHead className="font-semibold text-slate-500 text-xs">ROLE / AKSES</TableHead>
-            <TableHead className="font-semibold text-slate-500 text-xs">KONTAK</TableHead>
-            <TableHead className="font-semibold text-slate-500 text-xs">STATUS</TableHead>
-            <TableHead className="font-semibold text-slate-500 text-xs text-center px-6">AKSI</TableHead>
+            <TableHead 
+              className="font-semibold text-slate-500 text-xs px-6 py-3 cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => onSort('full_name')}
+            >
+              <div className="flex items-center">
+                KARYAWAN
+                {sorting.field === 'full_name' ? (
+                  sorting.dir === 'asc' ? <ArrowUp className="ml-2 h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="ml-2 h-3.5 w-3.5 text-blue-600" />
+                ) : (
+                  <ArrowUpDown className="ml-2 h-3.5 w-3.5 opacity-50" />
+                )}
+              </div>
+            </TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs py-3">
+              <div className="flex items-center gap-2">
+                ROLE / AKSES
+                <DataTableFacetedFilter
+                  title="Role"
+                  options={[
+                    { label: "Admin", value: "ADMIN" },
+                    { label: "Sales", value: "SALES" },
+                  ]}
+                  selectedValues={roleFilter}
+                  onSelect={setRoleFilter}
+                />
+              </div>
+            </TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs py-3">KONTAK</TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs py-3">
+              <div className="flex items-center gap-2">
+                STATUS
+                <DataTableFacetedFilter
+                  title="Status"
+                  options={[
+                    { label: "Aktif", value: "ACTIVE" },
+                    { label: "Nonaktif", value: "INACTIVE" },
+                  ]}
+                  selectedValues={statusFilter}
+                  onSelect={setStatusFilter}
+                />
+              </div>
+            </TableHead>
+            <TableHead className="font-semibold text-slate-500 text-xs text-center px-6 py-3">AKSI</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

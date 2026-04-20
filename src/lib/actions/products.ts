@@ -211,7 +211,14 @@ export async function deleteUnit(id: string) {
   return { success: true };
 }
 
-export async function getPaginatedProducts(page: number, pageSize: number, search: string = '') {
+export async function getPaginatedProducts(
+  page: number, 
+  pageSize: number, 
+  search: string = '',
+  filters?: { category_id?: string[]; brand_id?: string[]; stock_status?: string },
+  orderBy: string = 'name',
+  orderDir: 'asc' | 'desc' = 'asc'
+) {
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -219,12 +226,40 @@ export async function getPaginatedProducts(page: number, pageSize: number, searc
   let query = supabase
     .from('products')
     .select('*, category:categories(*), brand:brands(*), unit:units(*)', { count: 'exact' })
-    .eq('is_active', true)
-    .order('name');
+    .eq('is_active', true);
+
+  // Apply sorting
+  if (orderBy === 'category') {
+    // Sorting by joined table name is tricky in some Supabase versions without a view,
+    // so we'll fallback to category_id or keep it simple
+    query = query.order('category_id', { ascending: orderDir === 'asc' });
+  } else if (orderBy === 'brand') {
+    query = query.order('brand_id', { ascending: orderDir === 'asc' });
+  } else {
+    query = query.order(orderBy, { ascending: orderDir === 'asc' });
+  }
 
   if (search.trim()) {
     // Note: for simpler code, we search by name or SKU
     query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+  }
+
+  if (filters?.category_id && filters.category_id.length > 0) {
+    query = query.in('category_id', filters.category_id);
+  }
+
+  if (filters?.brand_id && filters.brand_id.length > 0) {
+    query = query.in('brand_id', filters.brand_id);
+  }
+
+  if (filters?.stock_status && filters.stock_status !== 'ALL') {
+    if (filters.stock_status === 'OUT_OF_STOCK') {
+      query = query.eq('stock', 0);
+    } else if (filters.stock_status === 'LOW_STOCK') {
+      query = query.gt('stock', 0).lte('stock', 10);
+    } else if (filters.stock_status === 'IN_STOCK') {
+      query = query.gt('stock', 10);
+    }
   }
 
   const { data, count, error } = await query.range(from, to);

@@ -8,9 +8,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DataTableFacetedFilter } from "../shared/DataTableFacetedFilter";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, PackagePlus } from 'lucide-react';
+import { Edit, Trash2, PackagePlus, Filter, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { Product } from '@/types';
 
 interface ProductTableProps {
@@ -21,6 +29,16 @@ interface ProductTableProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   loading?: boolean;
+  categoryFilter: string[];
+  setCategoryFilter: (val: string[]) => void;
+  brandFilter: string[];
+  setBrandFilter: (val: string[]) => void;
+  stockFilter: string;
+  setStockFilter: (val: string) => void;
+  categories: any[];
+  brands: any[];
+  sorting: { field: string; dir: 'asc' | 'desc' };
+  onSort: (field: string) => void;
 }
 
 export function ProductTable({
@@ -31,6 +49,16 @@ export function ProductTable({
   selectedIds,
   onSelectionChange,
   loading,
+  categoryFilter,
+  setCategoryFilter,
+  brandFilter,
+  setBrandFilter,
+  stockFilter,
+  setStockFilter,
+  categories,
+  brands,
+  sorting,
+  onSort,
 }: ProductTableProps) {
   if (loading) {
     return (
@@ -77,13 +105,88 @@ export function ProductTable({
                 className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </TableHead>
-            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">SKU</TableHead>
-            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Nama Produk</TableHead>
-            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Merk</TableHead>
+            <TableHead 
+              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => onSort('sku')}
+            >
+              <div className="flex items-center gap-1">
+                SKU
+                {sorting.field === 'sku' ? (
+                  sorting.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
+                ) : (
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => onSort('name')}
+            >
+              <div className="flex items-center gap-2">
+                Nama Produk
+                {sorting.field === 'name' ? (
+                  sorting.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
+                ) : (
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                )}
+                <DataTableFacetedFilter
+                  title="Kategori"
+                  options={categories.map(c => ({ label: c.name, value: c.id }))}
+                  selectedValues={categoryFilter}
+                  onSelect={setCategoryFilter}
+                />
+              </div>
+            </TableHead>
+            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">
+              <div className="flex items-center gap-2">
+                Merk
+                <DataTableFacetedFilter
+                  title="Merk"
+                  options={brands.map(b => ({ label: b.name, value: b.id }))}
+                  selectedValues={brandFilter}
+                  onSelect={setBrandFilter}
+                />
+              </div>
+            </TableHead>
             <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Satuan</TableHead>
-            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-right">Harga</TableHead>
+            <TableHead 
+              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-right cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => onSort('price')}
+            >
+              <div className="flex items-center justify-end gap-1">
+                Harga
+                {sorting.field === 'price' ? (
+                  sorting.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
+                ) : (
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                )}
+              </div>
+            </TableHead>
             <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Diskon</TableHead>
-            <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Stok</TableHead>
+            <TableHead 
+              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => onSort('stock')}
+            >
+              <div className="flex items-center justify-center gap-2">
+                Stok
+                {sorting.field === 'stock' ? (
+                  sorting.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
+                ) : (
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                )}
+                <Select value={stockFilter} onValueChange={(val) => { if (val) setStockFilter(val); }}>
+                  <SelectTrigger className="h-7 w-fit min-w-[70px] bg-transparent border-none text-[10px] font-bold text-blue-600 hover:bg-blue-50 focus:ring-0 px-2 p-0">
+                    <Filter className="h-3 w-3" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
+                    <SelectItem value="ALL" className="text-xs">SEMUA STOK</SelectItem>
+                    <SelectItem value="OUT_OF_STOCK" className="text-xs">HABIS (0)</SelectItem>
+                    <SelectItem value="LOW_STOCK" className="text-xs">MENIPIS (≤10)</SelectItem>
+                    <SelectItem value="IN_STOCK" className="text-xs">TERSEDIA ({'>'}10)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </TableHead>
             <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase text-center">Aksi</TableHead>
           </TableRow>
         </TableHeader>

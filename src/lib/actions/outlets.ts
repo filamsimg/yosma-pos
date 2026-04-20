@@ -4,7 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { type OutletFormValues } from '@/lib/validations/outlet';
 
-export async function getPaginatedOutlets(page: number, pageSize: number, search: string = '') {
+export async function getPaginatedOutlets(
+  page: number, 
+  pageSize: number, 
+  search: string = '',
+  filters?: { type?: string[]; visit_day?: string[]; assigned_sales?: string[] },
+  orderBy: string = 'name',
+  orderDir: 'asc' | 'desc' = 'asc'
+) {
   const supabase = await createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -13,10 +20,25 @@ export async function getPaginatedOutlets(page: number, pageSize: number, search
     .from('outlets')
     .select('*', { count: 'exact' })
     .eq('is_active', true)
-    .order('name');
+    .order(orderBy, { ascending: orderDir === 'asc' });
 
   if (search.trim()) {
     query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%`);
+  }
+
+  if (filters?.type && filters.type.length > 0) {
+    query = query.in('type', filters.type);
+  }
+
+  if (filters?.visit_day && filters.visit_day.length > 0) {
+    query = query.in('visit_day', filters.visit_day);
+  }
+
+  if (filters?.assigned_sales && filters.assigned_sales.length > 0) {
+    // For assigned_sales, since it was previously ilike, 
+    // if it's multiple we might need a different approach, 
+    // but usually it's one sales name. Using .in() for consistency.
+    query = query.in('assigned_sales', filters.assigned_sales);
   }
 
   const { data, count, error } = await query.range(from, to);

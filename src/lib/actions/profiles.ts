@@ -23,7 +23,14 @@ export async function getSalesProfiles() {
   return data as Profile[];
 }
 
-export async function getPaginatedProfiles(page = 1, pageSize = 10, search = '') {
+export async function getPaginatedProfiles(
+  page = 1, 
+  pageSize = 10, 
+  search = '',
+  filters?: { role?: string[]; is_active?: boolean },
+  orderBy: string = 'created_at',
+  orderDir: 'asc' | 'desc' = 'desc'
+) {
   const supabase = await createClient();
   
   let query = supabase.from('profiles').select('*', { count: 'exact' });
@@ -32,11 +39,19 @@ export async function getPaginatedProfiles(page = 1, pageSize = 10, search = '')
     query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,sales_code.ilike.%${search}%`);
   }
 
+  if (filters?.role && filters.role.length > 0) {
+    query = query.in('role', filters.role);
+  }
+
+  if (filters?.is_active !== undefined) {
+    query = query.eq('is_active', filters.is_active);
+  }
+
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
   const { data, count, error } = await query
-    .order('created_at', { ascending: false })
+    .order(orderBy, { ascending: orderDir === 'asc' })
     .range(from, to);
 
   if (error) {

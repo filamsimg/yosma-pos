@@ -31,6 +31,9 @@ export default function AdminProfilesPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [sorting, setSorting] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'created_at', dir: 'desc' });
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,11 +48,30 @@ export default function AdminProfilesPage() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, searchQuery, pageSize]);
+  }, [currentPage, searchQuery, pageSize, roleFilter, statusFilter, sorting]);
 
   async function fetchData() {
     setLoading(true);
-    const result = await getPaginatedProfiles(currentPage, pageSize, searchQuery);
+    
+    // Status filter mapping: ACTIVE -> true, INACTIVE -> false, ALL -> undefined
+    let isActive: boolean | undefined = undefined;
+    if (statusFilter.length === 1) {
+      if (statusFilter.includes('ACTIVE')) isActive = true;
+      if (statusFilter.includes('INACTIVE')) isActive = false;
+    }
+
+    const filters = {
+      role: roleFilter,
+      is_active: isActive
+    };
+    const result = await getPaginatedProfiles(
+      currentPage, 
+      pageSize, 
+      searchQuery, 
+      filters,
+      sorting.field,
+      sorting.dir
+    );
     
     if (result.data) {
       setProfiles(result.data);
@@ -115,6 +137,7 @@ export default function AdminProfilesPage() {
               className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full sm:w-64"
             />
           </div>
+
           <Button
             onClick={() => handleOpenForm()} // Opens info toast since creation is separate
             className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
@@ -133,6 +156,18 @@ export default function AdminProfilesPage() {
             profiles={profiles}
             loading={loading}
             onEdit={handleOpenForm}
+            roleFilter={roleFilter}
+            setRoleFilter={(val) => { setRoleFilter(val); setCurrentPage(1); }}
+            statusFilter={statusFilter}
+            setStatusFilter={(val) => { setStatusFilter(val); setCurrentPage(1); }}
+            sorting={sorting}
+            onSort={(field) => {
+              setSorting(prev => ({
+                field,
+                dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+              }));
+              setCurrentPage(1);
+            }}
           />
         </div>
 
