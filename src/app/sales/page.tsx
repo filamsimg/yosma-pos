@@ -24,6 +24,7 @@ export default function SalesPOSPage() {
   const [checkedIn, setCheckedIn] = useState(false);
   const [checkinData, setCheckinData] = useState<CheckinData | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const { items, discount, paymentMethod, getSubtotal, getTotalPrice, clearCart } =
     useCartStore();
@@ -105,7 +106,8 @@ export default function SalesPOSPage() {
         }
       );
 
-      // 4. Reset state
+      // 4. Reset state & close cart
+      setCartOpen(false);
       clearCart();
       setCheckedIn(false);
       setCheckinData(null);
@@ -205,6 +207,8 @@ export default function SalesPOSPage() {
         onCheckout={handleCheckout}
         checkoutLoading={checkoutLoading}
         disabled={!checkedIn}
+        open={cartOpen}
+        onOpenChange={setCartOpen}
       />
     </div>
   );

@@ -49,7 +49,7 @@ const navGroups = [
   {
     title: 'Akses Cepat',
     items: [
-      { href: '/sales', icon: ShoppingCart, label: 'Mode POS Mobile', exact: false },
+      { href: '/sales', icon: ShoppingCart, label: 'Mode Sales', exact: false },
     ]
   }
 ];

@@ -183,6 +183,18 @@ export default function AdminProductsPage() {
       notes: data.notes
     });
 
+    if (result?.error) {
+      const errorMsg = typeof result.error === 'string' ? result.error : 'Terjadi kesalahan validasi';
+      toast.error('Gagal mengupdate stok', { description: errorMsg });
+    } else {
+      toast.success('Stok berhasil diperbarui', {
+        description: `${productToAdjust.name} — ${data.reason === 'RESTOCK' ? '+' : '-'}${data.quantity} unit`,
+      });
+      setStockAdjustOpen(false);
+      setProductToAdjust(null);
+      fetchData();
+    }
+
     setIsAdjusting(false);
   }
 

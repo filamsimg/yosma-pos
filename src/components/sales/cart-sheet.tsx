@@ -40,12 +40,16 @@ interface CartSheetProps {
   onCheckout: () => Promise<void>;
   checkoutLoading: boolean;
   disabled: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CartSheet({
   onCheckout,
   checkoutLoading,
   disabled,
+  open,
+  onOpenChange,
 }: CartSheetProps) {
   const {
     items,
@@ -70,7 +74,7 @@ export function CartSheet({
   const tempoDays = totalPrice >= 100000 ? 30 : 14;
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger
         render={
           <button
