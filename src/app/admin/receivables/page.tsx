@@ -25,12 +25,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
 import { 
   Wallet, 
   Search, 
@@ -77,13 +76,22 @@ export default function ReceivablesPage() {
     loadData();
   }, []);
 
-  const totalOutstanding = receivables.reduce((sum, item) => sum + (item.total_price - item.paid_amount), 0);
-  const overdueCount = receivables.filter(item => item.due_date && new Date(item.due_date) < new Date()).length;
+  const activeReceivables = receivables.filter(r => r.payment_status !== 'PAID');
+  const completedReceivables = receivables.filter(r => r.payment_status === 'PAID');
 
-  const filteredData = receivables.filter(item => 
+  const totalOutstanding = activeReceivables.reduce((sum, item) => sum + (item.total_price - item.paid_amount), 0);
+  const totalBilled = activeReceivables.reduce((sum, item) => sum + item.total_price, 0);
+  const totalPaid = activeReceivables.reduce((sum, item) => sum + item.paid_amount, 0);
+  const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
+  
+  const overdueCount = activeReceivables.filter(item => item.due_date && new Date(item.due_date) < new Date()).length;
+
+  const filterFn = (item: any) => 
     item.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.invoice_number?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    item.invoice_number?.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const filteredActive = activeReceivables.filter(filterFn);
+  const filteredCompleted = completedReceivables.filter(filterFn);
 
   async function handleAddPayment() {
     if (!selectedTxn || !paymentAmount) return;
@@ -177,7 +185,7 @@ export default function ReceivablesPage() {
           </div>
           <div className="mt-4">
             <h4 className="text-2xl font-bold text-emerald-600">
-              85%
+              {collectionRate}%
             </h4>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Tingkat Penagihan
@@ -214,37 +222,54 @@ export default function ReceivablesPage() {
           </div>
         </div>
 
-        <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
-          <div className="flex-1 overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow className="border-slate-200 hover:bg-transparent">
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Outlet & Invoice</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Nilai</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Terbayar</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Sisa Hutang</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Jatuh Tempo</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Status</TableHead>
-                  <TableHead className="text-right"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i} className="border-slate-100">
-                      <TableCell colSpan={7} className="h-12 text-center text-slate-400 text-xs animate-pulse">Memuat data...</TableCell>
+        <Tabs defaultValue="aktif" className="w-full">
+          <TabsList className="bg-slate-200/50 p-0 mb-8 h-20 w-full sm:w-auto grid grid-cols-2 sm:flex rounded-2xl border border-slate-200 shadow-sm">
+            <TabsTrigger 
+              value="aktif" 
+              className="font-black text-xs uppercase tracking-widest data-active:bg-blue-700 data-active:text-white data-active:hover:text-white hover:text-blue-600 data-active:shadow-xl data-active:shadow-blue-200/50 rounded-xl px-10 h-full transition-all active:scale-95"
+            >
+              Tagihan Aktif ({activeReceivables.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="selesai" 
+              className="font-black text-xs uppercase tracking-widest data-active:bg-blue-700 data-active:text-white data-active:hover:text-white hover:text-blue-600 data-active:shadow-xl data-active:shadow-blue-200/50 rounded-xl px-10 h-full transition-all active:scale-95"
+            >
+              Riwayat Selesai ({completedReceivables.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="aktif" className="mt-0">
+            <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
+              <div className="flex-1 overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow className="border-slate-200 hover:bg-transparent">
+                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Outlet & Invoice</TableHead>
+                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Nilai</TableHead>
+                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Terbayar</TableHead>
+                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Sisa Hutang</TableHead>
+                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Jatuh Tempo</TableHead>
+                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Status</TableHead>
+                      <TableHead className="text-right"></TableHead>
                     </TableRow>
-                  ))
-                ) : filteredData.length === 0 ? (
-                   <TableRow className="border-slate-100 italic">
-                    <TableCell colSpan={7} className="h-24 text-center text-slate-400 font-medium">
-                      Tidak ada piutang aktif ditemukan
-                    </TableCell>
-                   </TableRow>
-                ) : filteredData.map((item) => {
-                  const balance = item.total_price - item.paid_amount;
-                  const isOverdue = item.due_date && new Date(item.due_date) < new Date();
-                  const statusInfo = PAYMENT_STATUSES.find(s => s.value === item.payment_status);
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i} className="border-slate-100">
+                          <TableCell colSpan={7} className="h-12 text-center text-slate-400 text-xs animate-pulse">Memuat data...</TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredActive.length === 0 ? (
+                       <TableRow className="border-slate-100 italic">
+                        <TableCell colSpan={7} className="h-24 text-center text-slate-400 font-medium">
+                          Tidak ada tagihan aktif ditemukan
+                        </TableCell>
+                       </TableRow>
+                    ) : filteredActive.map((item) => {
+                      const balance = item.total_price - item.paid_amount;
+                      const isOverdue = item.due_date && new Date(item.due_date) < new Date();
+                      const statusInfo = PAYMENT_STATUSES.find(s => s.value === item.payment_status);
 
                   return (
                     <TableRow key={item.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
@@ -431,7 +456,77 @@ export default function ReceivablesPage() {
             </Table>
           </div>
         </Card>
-      </div>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="selesai" className="mt-0">
+        <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
+          <div className="flex-1 overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow className="border-slate-200 hover:bg-transparent">
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Outlet & Invoice</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Nilai</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Terbayar</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Tanggal Lunas</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <TableRow key={i} className="border-slate-100">
+                      <TableCell colSpan={5} className="h-12 text-center text-slate-400 text-xs animate-pulse">Memuat riwayat...</TableCell>
+                    </TableRow>
+                  ))
+                ) : filteredCompleted.length === 0 ? (
+                   <TableRow className="border-slate-100 italic">
+                    <TableCell colSpan={5} className="h-24 text-center text-slate-400 font-medium">
+                      Belum ada riwayat pelunasan
+                    </TableCell>
+                   </TableRow>
+                ) : filteredCompleted.map((item) => {
+                  const statusInfo = PAYMENT_STATUSES.find(s => s.value === item.payment_status);
+                  
+                  // Sort payments to get the latest date for 'Tanggal Lunas'
+                  const lastPayment = item.payments && item.payments.length > 0
+                    ? [...item.payments].sort((a: any, b: any) => 
+                        new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+                      )[0]
+                    : null;
+
+                  return (
+                    <TableRow key={item.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-900 uppercase">
+                            {item.outlet?.type ? `${item.outlet.type} ${item.outlet.name}` : item.outlet?.name}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 mt-0.5">{item.invoice_number}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right text-sm">Rp {item.total_price.toLocaleString('id-ID')}</TableCell>
+                      <TableCell className="text-right text-sm text-emerald-600 font-medium font-black">Rp {item.paid_amount.toLocaleString('id-ID')}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {lastPayment?.payment_date ? format(new Date(lastPayment.payment_date), 'dd MMM yyyy') : '-'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`border-0 text-[10px] px-2 py-0.5 font-bold uppercase ${statusInfo?.color}`}>
+                          {statusInfo?.label}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  </div>
+</div>
   );
 }

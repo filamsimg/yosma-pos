@@ -18,7 +18,7 @@ export async function getReceivables() {
       sales:profiles!sales_id(id, full_name),
       payments:transaction_payments(*)
     `)
-    .in('payment_status', ['UNPAID', 'PARTIAL'])
+    .eq('payment_method', 'CREDIT')
     .order('due_date', { ascending: true });
 
   if (error) {
