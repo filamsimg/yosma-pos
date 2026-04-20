@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Dialog, 
   DialogContent, 
@@ -38,9 +38,6 @@ import {
   TrendingUp, 
   AlertCircle, 
   CheckCircle2, 
-  User, 
-  Store,
-  ArrowUpRight,
   Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -118,114 +115,113 @@ export default function ReceivablesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            MANAJEMEN PIUTANG
-          </h1>
-          <p className="text-sm font-bold text-slate-500 mt-1 uppercase tracking-wider">
-            Pantau dan Kelola Penagihan Outlet
-          </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-700 uppercase tracking-tight">Manajemen Piutang</h1>
+        <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          Pantau dan kelola penagihan outlet dengan tempo 14/30 hari.
+        </p>
+      </div>
+
+      {/* Summary Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+            <Wallet className="h-5 w-5" />
+          </div>
+          <div className="mt-4">
+            <h4 className="text-2xl font-bold text-slate-900">
+              Rp {totalOutstanding.toLocaleString('id-ID')}
+            </h4>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Total Piutang Berjalan
+            </span>
+          </div>
+        </Card>
+
+        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <AlertCircle className="h-5 w-5" />
+          </div>
+          <div className="mt-4">
+            <h4 className="text-2xl font-bold text-red-600">
+              {overdueCount} <span className="text-xs text-slate-400">Invoice</span>
+            </h4>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Lewat Jatuh Tempo
+            </span>
+          </div>
+        </Card>
+
+        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div className="mt-4">
+            <h4 className="text-2xl font-bold text-emerald-600">
+              85%
+            </h4>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Tingkat Penagihan
+            </span>
+          </div>
+        </Card>
+
+        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <div className="mt-4">
+            <h4 className="text-2xl font-bold text-slate-900">
+              {receivables.length}
+            </h4>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Invoice Aktif
+            </span>
+          </div>
+        </Card>
+      </div>
+
+      {/* Main Table section */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Cari apotek atau nomor invoice..." 
+              className="pl-10 h-10 bg-white border-slate-200 text-slate-900 w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-xl shadow-blue-100/50 bg-gradient-to-br from-blue-600 to-indigo-700 text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Wallet className="h-24 w-24" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">Total Piutang Berjalan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">Rp {totalOutstanding.toLocaleString('id-ID')}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="bg-white/20 text-white border-0 hover:bg-white/30 text-[10px]">
-                {receivables.length} INVOICE AKTIF
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-xl shadow-red-100/50 bg-white overflow-hidden border-l-4 border-l-red-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Jatuh Tempo (Overdue)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-black text-red-600">{overdueCount}</p>
-              <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-            </div>
-            <p className="text-[10px] font-bold text-slate-400 mt-2">HARUS SEGERA DITAGIH</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-xl shadow-emerald-100/50 bg-white overflow-hidden border-l-4 border-l-emerald-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Tingkat Penagihan</CardTitle>
-          </CardHeader>
-          <CardContent>
-             <div className="flex items-center justify-between">
-              <p className="text-3xl font-black text-emerald-600">85%</p>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-            </div>
-            <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase">Target: 90% Bulan Ini</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-slate-200 shadow-xl shadow-slate-100/50">
-        <CardHeader className="p-6 pb-0">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle className="text-base font-black text-slate-800 uppercase tracking-tight">Daftar Tagihan</CardTitle>
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Cari apotek / invoice..." 
-                className="pl-10 h-10 bg-slate-50 border-slate-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto p-6">
+        <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
+          <div className="flex-1 overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow>
-                  <TableHead className="font-black text-[10px] text-slate-500 uppercase tracking-widest">Outlet & Invoice</TableHead>
-                  <TableHead className="font-black text-[10px] text-slate-500 uppercase tracking-widest text-right">Nilai Transaksi</TableHead>
-                  <TableHead className="font-black text-[10px] text-slate-500 uppercase tracking-widest text-right">Telah Dibayar</TableHead>
-                  <TableHead className="font-black text-[10px] text-slate-500 uppercase tracking-widest text-right">Sisa Hutang</TableHead>
-                  <TableHead className="font-black text-[10px] text-slate-500 uppercase tracking-widest">Jatuh Tempo</TableHead>
-                  <TableHead className="font-black text-[10px] text-slate-500 uppercase tracking-widest">Status</TableHead>
+              <TableHeader className="bg-slate-50">
+                <TableRow className="border-slate-200 hover:bg-transparent">
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Outlet & Invoice</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Nilai</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Terbayar</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Sisa Hutang</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Jatuh Tempo</TableHead>
+                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Status</TableHead>
                   <TableHead className="text-right"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                     <TableCell colSpan={7} className="h-32 text-center">
-                        <div className="flex flex-col items-center gap-2 text-slate-400">
-                          <TrendingUp className="h-6 w-6 animate-pulse" />
-                          <span className="text-xs font-bold uppercase tracking-widest">Memuat data piutang...</span>
-                        </div>
-                     </TableCell>
-                  </TableRow>
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i} className="border-slate-100">
+                      <TableCell colSpan={7} className="h-12 text-center text-slate-400 text-xs animate-pulse">Memuat data...</TableCell>
+                    </TableRow>
+                  ))
                 ) : filteredData.length === 0 ? (
-                   <TableRow>
-                    <TableCell colSpan={7} className="h-32 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
-                      Tidak ada piutang aktif
+                   <TableRow className="border-slate-100 italic">
+                    <TableCell colSpan={7} className="h-24 text-center text-slate-400 font-medium">
+                      Tidak ada piutang aktif ditemukan
                     </TableCell>
                    </TableRow>
                 ) : filteredData.map((item) => {
@@ -234,30 +230,30 @@ export default function ReceivablesPage() {
                   const statusInfo = PAYMENT_STATUSES.find(s => s.value === item.payment_status);
 
                   return (
-                    <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <TableRow key={item.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-black text-slate-900 uppercase tracking-tighter">
+                          <span className="text-sm font-bold text-slate-900 uppercase">
                             {item.outlet?.type ? `${item.outlet.type} ${item.outlet.name}` : item.outlet?.name}
                           </span>
                           <span className="text-[10px] font-bold text-slate-400 mt-0.5">{item.invoice_number}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-bold text-sm">Rp {item.total_price.toLocaleString('id-ID')}</TableCell>
-                      <TableCell className="text-right font-bold text-sm text-emerald-600">Rp {item.paid_amount.toLocaleString('id-ID')}</TableCell>
+                      <TableCell className="text-right text-sm">Rp {item.total_price.toLocaleString('id-ID')}</TableCell>
+                      <TableCell className="text-right text-sm text-emerald-600 font-medium">Rp {item.paid_amount.toLocaleString('id-ID')}</TableCell>
                       <TableCell className="text-right">
-                        <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-sm font-black border border-red-100/50 shadow-sm">
+                        <span className="text-sm font-black text-red-600">
                           Rp {balance.toLocaleString('id-ID')}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className={`flex items-center gap-1.5 text-xs font-bold ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
+                        <div className={`flex items-center gap-1.5 text-xs font-bold ${isOverdue ? 'text-red-500 underline' : 'text-slate-500'}`}>
                           <Calendar className="h-3.5 w-3.5" />
                           {item.due_date ? format(new Date(item.due_date), 'dd MMM yyyy') : '-'}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${statusInfo?.color} border-0 shadow-sm px-2 text-[9px] font-black uppercase tracking-widest`}>
+                        <Badge variant="outline" className={`border-0 text-[10px] px-2 py-0.5 font-bold uppercase ${statusInfo?.color}`}>
                           {statusInfo?.label}
                         </Badge>
                       </TableCell>
@@ -268,57 +264,52 @@ export default function ReceivablesPage() {
                           else resetForm();
                         }}>
                           <DialogTrigger render={
-                            <Button size="sm" className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 font-bold text-xs gap-1.5 shadow-md shadow-emerald-100 active:scale-95 transition-all">
-                              <Plus className="h-3.5 w-3.5" />
+                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 transition-all active:scale-95">
+                              <Plus className="h-3.5 w-3.5 mr-1" />
                               CICIL
                             </Button>
                           } />
-                          <DialogContent className="max-w-md w-[calc(100%-2rem)] rounded-[32px] border-slate-200">
+                          <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white rounded-xl shadow-2xl border-slate-200">
                             <DialogHeader>
-                              <DialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white">
-                                  <Wallet className="h-4 w-4" />
-                                </div>
-                                CATAT CICILAN
-                              </DialogTitle>
-                              <DialogDescription className="font-bold text-xs uppercase tracking-wider text-slate-400 mt-1">
-                                {selectedTxn?.invoice_number} - {selectedTxn?.outlet?.name}
+                              <DialogTitle className="text-xl font-bold text-slate-900">Catat Pelunasan/Cicilan</DialogTitle>
+                              <DialogDescription className="text-slate-500">
+                                {selectedTxn?.invoice_number} • {selectedTxn?.outlet?.name}
                               </DialogDescription>
                             </DialogHeader>
 
-                            <div className="space-y-6 py-4">
-                              <div className="p-4 bg-slate-50 rounded-2xl space-y-2 border border-slate-100">
-                                <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <div className="space-y-5 py-4">
+                              <div className="p-4 bg-slate-50 border border-slate-100 rounded-lg space-y-2">
+                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                   <span>TAGIHAN</span>
                                   <span>SISA PIUTANG</span>
                                 </div>
-                                <div className="flex justify-between items-end">
-                                  <span className="text-sm font-bold text-slate-600">Rp {selectedTxn?.total_price.toLocaleString('id-ID')}</span>
-                                  <span className="text-xl font-black text-red-600">Rp {balance.toLocaleString('id-ID')}</span>
+                                <div className="flex justify-between items-baseline">
+                                  <span className="text-sm font-medium text-slate-600">Rp {selectedTxn?.total_price.toLocaleString('id-ID')}</span>
+                                  <span className="text-xl font-black text-red-600 underline">Rp {balance.toLocaleString('id-ID')}</span>
                                 </div>
                               </div>
 
                               <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">JUMLAH BAYAR (RP)</Label>
+                                  <Label className="text-xs font-bold text-slate-700">Jumlah Bayar (Rp)</Label>
                                   <Input 
                                     type="number" 
                                     placeholder="0"
-                                    className="h-12 bg-slate-50 border-slate-200 text-lg font-black rounded-xl"
+                                    className="h-11 bg-white border-slate-200 text-lg font-bold"
                                     value={paymentAmount}
                                     onChange={(e) => setPaymentAmount(e.target.value)}
                                   />
                                 </div>
 
                                 <div className="space-y-1.5">
-                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">METODE BAYAR</Label>
+                                  <Label className="text-xs font-bold text-slate-700">Metode Bayar</Label>
                                   <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                    <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold">
+                                    <SelectTrigger className="h-11 bg-white border-slate-200 font-medium">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white border-slate-200 shadow-xl">
                                       {PAYMENT_METHODS.filter(m => m.value !== 'CREDIT').map(m => (
-                                        <SelectItem key={m.value} value={m.value} className="font-bold text-xs">
+                                        <SelectItem key={m.value} value={m.value} className="font-medium cursor-pointer">
                                           {m.label}
                                         </SelectItem>
                                       ))}
@@ -327,10 +318,10 @@ export default function ReceivablesPage() {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">CATATAN (OPTIONAL)</Label>
+                                  <Label className="text-xs font-bold text-slate-700">Catatan Tambahan</Label>
                                   <Input 
-                                    placeholder="Keterangan tambahan..."
-                                    className="h-12 bg-slate-50 border-slate-200 text-sm font-bold rounded-xl"
+                                    placeholder="Opsional..."
+                                    className="h-11 bg-white border-slate-200 text-sm"
                                     value={paymentNotes}
                                     onChange={(e) => setPaymentNotes(e.target.value)}
                                   />
@@ -342,9 +333,9 @@ export default function ReceivablesPage() {
                               <Button 
                                 onClick={handleAddPayment}
                                 disabled={submitting || !paymentAmount}
-                                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-emerald-200 active:scale-95 transition-all"
+                                className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-100"
                               >
-                                {submitting ? 'SEDANG MENYIMPAN...' : 'KONFIRMASI PEMBAYARAN'}
+                                {submitting ? 'Sedang Menyimpan...' : 'Simpan Pembayaran'}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
@@ -356,8 +347,8 @@ export default function ReceivablesPage() {
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
