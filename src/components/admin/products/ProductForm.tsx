@@ -18,7 +18,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { createCategory, deleteCategory } from '@/lib/actions/products';
-import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
+import { 
+  Plus, 
+  Check, 
+  Loader2, 
+  Trash2, 
+  Package, 
+  Tag, 
+  Boxes, 
+  CircleDollarSign, 
+  CheckCircle2 
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Category, Product } from '@/types';
@@ -118,194 +128,231 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-2">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-        {/* Row 1: Nama Produk & SKU */}
-        <div className="space-y-2 md:col-span-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Nama Produk *</Label>
-          <Input
-            {...register('name')}
-            onChange={(e) => setValue('name', e.target.value.toUpperCase())}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 text-base uppercase"
-            placeholder="Masukkan nama lengkap produk (Contoh: ABARTUS TANG)"
-          />
-          {errors.name && <p className="text-xs text-red-600 mt-1 font-medium">{errors.name.message}</p>}
-        </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 px-2 max-w-4xl mx-auto">
+      <div className="space-y-10">
+        
+        {/* Section 1: Informasi Produk */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Package className="h-4 w-4" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Informasi Utama Produk</h3>
+          </div>
 
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">SKU / Kode Produk *</Label>
-          <Input
-            {...register('sku')}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4"
-            placeholder="KOSONGKAN UNTUK AUTO-SKU (YAP-####)"
-          />
-          {errors.sku && <p className="text-xs text-red-600 mt-1 font-medium">{errors.sku.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Kategori *</Label>
-          {isAddingCategory ? (
-            <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-200">
+          <div className="grid gap-8">
+            <div className="space-y-2.5">
+              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Nama Lengkap Produk *</Label>
               <Input
-                placeholder="Nama kategori baru..."
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value.toUpperCase())}
-                autoFocus
-                className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all uppercase"
+                {...register('name')}
+                onChange={(e) => setValue('name', e.target.value.toUpperCase())}
+                className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl uppercase font-semibold text-base"
+                placeholder="CONTOH: ABARTUS TANG 100MG"
               />
-              <Button 
-                type="button"
-                size="sm" 
-                onClick={handleAddCategory} 
-                disabled={submittingCategory}
-                className="bg-blue-600 hover:bg-blue-700 h-12 px-4 shrink-0 shadow-sm transition-all"
-              >
-                {submittingCategory ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-5 w-5 text-white" />}
-              </Button>
-              <Button 
-                type="button"
-                size="sm" 
-                variant="ghost" 
-                onClick={() => setIsAddingCategory(false)}
-                className="text-slate-500 hover:text-red-600 hover:bg-red-50 h-12 px-3 font-medium transition-all"
-              >
-                Batal
-              </Button>
+              {errors.name && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.name.message}</p>}
             </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Select
-                value={categoryId}
-                onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
-                disabled={localCategories.length === 0}
-              >
-                <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus:ring-blue-600 focus:ring-offset-2 transition-all px-4 flex-1">
-                  <SelectValue>
-                    {localCategories.find(c => c.id === categoryId)?.name || (localCategories.length === 0 ? "Memuat..." : "Pilih Kategori")}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
-                  {localCategories.map((c) => (
-                    <SelectItem 
-                      key={c.id} 
-                      value={c.id} 
-                      className="focus:bg-slate-50 focus:text-blue-600 py-2.5 px-4 flex items-center justify-between group/item"
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2.5">
+                <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">SKU / Kode Produk</Label>
+                <div className="relative">
+                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    {...register('sku')}
+                    className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 font-mono font-bold uppercase text-base rounded-xl"
+                    placeholder="AUTO-GENERATED (YAP-####)"
+                  />
+                </div>
+                {errors.sku && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.sku.message}</p>}
+              </div>
+
+              <div className="space-y-2.5">
+                <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Kategori Produk *</Label>
+                {isAddingCategory ? (
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                    <Input
+                      placeholder="NAMA BARU..."
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value.toUpperCase())}
+                      autoFocus
+                      className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 rounded-xl shadow-sm uppercase font-bold"
+                    />
+                    <Button 
+                      type="button"
+                      size="icon" 
+                      onClick={handleAddCategory} 
+                      disabled={submittingCategory}
+                      className="bg-blue-600 hover:bg-blue-700 h-12 w-12 shrink-0 rounded-xl shadow-sm"
                     >
-                      <span>{c.name}</span>
-                      <button
-                        onClick={(e) => handleDeleteCategory(e, c)}
-                        className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all"
-                        title="Hapus Kategori"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                type="button"
-                size="icon" 
-                onClick={() => setIsAddingCategory(true)}
-                className="h-12 w-12 shrink-0 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-lg"
-                title="Tambah Kategori Baru"
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
+                      {submittingCategory ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <Check className="h-5 w-5 text-white" />}
+                    </Button>
+                    <Button 
+                      type="button"
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => setIsAddingCategory(false)}
+                      className="text-slate-500 hover:text-red-600 h-12 px-2 font-bold"
+                    >
+                      BATAL
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Select
+                      value={categoryId}
+                      onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
+                      disabled={localCategories.length === 0}
+                    >
+                      <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 focus:ring-blue-600 px-5 flex-1 rounded-xl font-medium">
+                        <SelectValue>
+                          {localCategories.find(c => c.id === categoryId)?.name || (localCategories.length === 0 ? "Memuat..." : "Pilih Kategori")}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-xl">
+                        {localCategories.map((c) => (
+                          <SelectItem 
+                            key={c.id} 
+                            value={c.id} 
+                            className="focus:bg-slate-50 focus:text-blue-600 py-3 px-4 flex items-center justify-between group/item"
+                          >
+                            <span>{c.name}</span>
+                            <button
+                              onClick={(e) => handleDeleteCategory(e, c)}
+                              className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all ml-2"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      type="button"
+                      size="icon" 
+                      onClick={() => setIsAddingCategory(true)}
+                      className="h-12 w-12 shrink-0 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-xl"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+                {errors.category_id && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.category_id.message}</p>}
+              </div>
             </div>
-          )}
-          {errors.category_id && <p className="text-xs text-red-600 mt-1 font-medium">{errors.category_id.message}</p>}
-        </div>
 
-        {/* Row 2: Merk & Satuan */}
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Merk *</Label>
-          <BrandSelect 
-            value={brandId} 
-            onValueChange={(val: string | null) => setValue('brand_id', val || '', { shouldValidate: true })} 
-          />
-          {errors.brand_id && <p className="text-xs text-red-600 mt-1 font-medium">{errors.brand_id.message}</p>}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2.5">
+                <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Merk / Brand *</Label>
+                <BrandSelect 
+                  value={brandId} 
+                  onValueChange={(val: string | null) => setValue('brand_id', val || '', { shouldValidate: true })} 
+                />
+                {errors.brand_id && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.brand_id.message}</p>}
+              </div>
 
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Satuan *</Label>
-          <UnitSelect 
-            value={unitId} 
-            onValueChange={(val: string | null) => setValue('unit_id', val || '', { shouldValidate: true })} 
-          />
-          {errors.unit_id && <p className="text-xs text-red-600 mt-1 font-medium">{errors.unit_id.message}</p>}
-        </div>
+              <div className="space-y-2.5">
+                <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Satuan Produk *</Label>
+                <UnitSelect 
+                  value={unitId} 
+                  onValueChange={(val: string | null) => setValue('unit_id', val || '', { shouldValidate: true })} 
+                />
+                {errors.unit_id && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.unit_id.message}</p>}
+              </div>
+            </div>
 
-        {/* Row 3: Harga & Diskon */}
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Harga Satuan (Rp) *</Label>
-          <Input
-            type="number"
-            {...register('price', { valueAsNumber: true })}
-            onFocus={(e) => e.target.select()}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 font-semibold text-lg"
-            placeholder="0"
-          />
-          {errors.price && <p className="text-xs text-red-600 mt-1 font-medium">{errors.price.message}</p>}
-        </div>
+            <div className="space-y-2.5">
+              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Deskripsi / Keterangan</Label>
+              <Input
+                {...register('description')}
+                className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl"
+                placeholder="TAMBAHKAN INFORMASI TAMBAHAN PRODUK..."
+              />
+            </div>
+          </div>
+        </section>
 
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Diskon Reguler (%)</Label>
-          <Input
-            type="number"
-            {...register('discount_regular', { valueAsNumber: true })}
-            onFocus={(e) => e.target.select()}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4"
-            placeholder="0"
-          />
-          {errors.discount_regular && <p className="text-xs text-red-600 mt-1 font-medium">{errors.discount_regular.message}</p>}
-        </div>
+        {/* Section 2: Harga & Stok */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CircleDollarSign className="h-4 w-4" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Manajemen Harga & Stok</h3>
+          </div>
 
-        <div className="space-y-2">
-          <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Batas Stok (Warning)</Label>
-          <Input
-            type="number"
-            {...register('min_stock', { valueAsNumber: true })}
-            onFocus={(e) => e.target.select()}
-            className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4 font-semibold text-lg"
-            placeholder="10"
-          />
-          {errors.min_stock && <p className="text-xs text-red-600 mt-1 font-medium">{errors.min_stock.message}</p>}
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-2.5">
+              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Harga Satuan (Rp) *</Label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">Rp</div>
+                <Input
+                  type="number"
+                  {...register('price', { valueAsNumber: true })}
+                  onFocus={(e) => e.target.select()}
+                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 font-black text-lg rounded-xl shadow-sm"
+                  placeholder="0"
+                />
+              </div>
+              {errors.price && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.price.message}</p>}
+            </div>
+
+            <div className="space-y-2.5">
+              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Diskon Reguler (%)</Label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  {...register('discount_regular', { valueAsNumber: true })}
+                  onFocus={(e) => e.target.select()}
+                  className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 font-bold text-lg rounded-xl shadow-sm pr-12 text-center"
+                  placeholder="0"
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">%</div>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Minimum Stok (Warning)</Label>
+              <div className="relative">
+                <Boxes className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Input
+                  type="number"
+                  {...register('min_stock', { valueAsNumber: true })}
+                  onFocus={(e) => e.target.select()}
+                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-amber-500 font-bold text-lg rounded-xl shadow-sm"
+                  placeholder="10"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 ml-1">Peringatan saat stok di bawah angka ini.</p>
+            </div>
+          </div>
+        </section>
+
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-slate-700 font-bold text-[13px] uppercase tracking-wider">Keterangan / Deskripsi</Label>
-        <Input
-          {...register('description')}
-          className="bg-slate-50/50 border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:bg-white transition-all px-4"
-          placeholder="Tambahkan informasi tambahan produk..."
-        />
-      </div>
-
-      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-4">
+      <div className="flex items-center justify-end gap-4 pt-10 mt-6 border-t border-slate-100">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={onCancel}
-          className="border-slate-200 text-slate-600 hover:bg-slate-50 h-11 px-6 font-medium"
+          className="text-slate-500 hover:text-slate-800 hover:bg-slate-100 h-12 px-8 font-bold rounded-xl"
         >
           Batal
         </Button>
         <Button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-11 px-8 font-semibold shadow-md shadow-blue-100 transition-all active:scale-95"
+          className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-10 font-black text-sm shadow-xl shadow-blue-200 transition-all active:scale-95 rounded-xl flex items-center gap-2"
         >
-          {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Simpan Produk
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+          {initialData ? 'SIMPAN PERUBAHAN' : 'TAMBAH PRODUK BARU'}
         </Button>
       </div>
+
       <ConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Hapus Kategori?"
-        description={`Kategori "${itemToDelete?.name}" akan dihapus permanen. Produk yang menggunakannya akan menjadi tanpa kategori.`}
+        description={`Kategori "${itemToDelete?.name}" akan dihapus permanen. Produk yang menggunakan kategori ini akan tetap ada namun tanpa kategori.`}
         onConfirm={confirmDeleteCategory}
         loading={isDeleting}
       />
