@@ -60,7 +60,7 @@ export async function upsertOutlet(values: OutletFormValues, id?: string) {
     address: values.address || null,
     phone: values.phone || null,
     visit_day: values.visit_day || null,
-    visit_frequency: values.visit_frequency || 'WEEKLY',
+    visit_frequency: values.visit_frequency || 'Seminggu Sekali',
     assigned_sales: values.assigned_sales || null,
     updated_at: new Date().toISOString(),
   };

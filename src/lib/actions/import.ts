@@ -162,7 +162,7 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
     phone: item.phone || null,
     owner_name: item.owner_name || null,
     visit_day: item.visit_day || null,
-    visit_frequency: item.visit_frequency || null,
+    visit_frequency: item.visit_frequency || 'Seminggu Sekali',
     assigned_sales: item.assigned_sales || null,
     is_active: true,
   }));

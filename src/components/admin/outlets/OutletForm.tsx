@@ -76,7 +76,9 @@ export function OutletForm({
       address: initialData?.address || '',
       phone: normalizePhoneNumber(initialData?.phone || ''),
       visit_day: initialData?.visit_day || '',
-      visit_frequency: initialData?.visit_frequency === 'WEEKLY' ? 'Seminggu Sekali' : (initialData?.visit_frequency || 'Seminggu Sekali'),
+      visit_frequency: (initialData?.visit_frequency === 'WEEKLY' || !initialData?.visit_frequency) 
+        ? 'Seminggu Sekali' 
+        : initialData.visit_frequency,
       assigned_sales: initialData?.assigned_sales || '',
     },
   });
