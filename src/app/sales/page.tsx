@@ -70,7 +70,7 @@ export default function SalesPOSPage() {
           discount,
           total_price: totalPrice,
           payment_method: paymentMethod,
-          status: 'COMPLETED',
+          status: 'PENDING',
           payment_status: paymentStatus,
           paid_amount: paidAmount,
           due_date: dueDate,
@@ -98,13 +98,10 @@ export default function SalesPOSPage() {
       if (itemsError) throw itemsError;
 
       // 3. Success!
-      toast.success(
-        `Transaksi berhasil!`,
-        {
-          duration: 5000,
-          description: `Invoice: ${transaction.invoice_number} | Total: Rp ${totalPrice.toLocaleString('id-ID')}`,
-        }
-      );
+      toast.success(`Transaksi berhasil!`, {
+        duration: 4000,
+        description: `Invoice: ${transaction.invoice_number} | Total: Rp ${totalPrice.toLocaleString('id-ID')}`,
+      });
 
       // 4. Reset state & close cart
       setCartOpen(false);

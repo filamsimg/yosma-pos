@@ -19,7 +19,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import {
   ShoppingCart,
@@ -74,28 +73,29 @@ export function CartSheet({
   const tempoDays = totalPrice >= 100000 ? 30 : 14;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger
-        render={
-          <button
-            className="fixed bottom-20 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-[28px] bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
-            style={{ display: itemCount > 0 ? 'flex' : 'none' }}
-          >
-            <div className="relative">
-              <ShoppingCart className="h-6 w-6 group-hover:rotate-12 transition-transform" />
-              <span className="absolute -top-2 -right-2 bg-white text-blue-600 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md">
-                {itemCount}
-              </span>
-            </div>
-            <div className="text-left">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">TOTAL BAYAR</p>
-              <p className="text-sm font-black leading-none">
-                Rp {totalPrice.toLocaleString('id-ID')}
-              </p>
-            </div>
-          </button>
-        }
-      />
+    <>
+      {/* Floating Cart Button */}
+      {itemCount > 0 && (
+        <button
+          onClick={() => onOpenChange?.(true)}
+          className="fixed bottom-20 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-[28px] bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
+        >
+          <div className="relative">
+            <ShoppingCart className="h-6 w-6 group-hover:rotate-12 transition-transform" />
+            <span className="absolute -top-2 -right-2 bg-white text-blue-600 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+              {itemCount}
+            </span>
+          </div>
+          <div className="text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-70 leading-none mb-1">TOTAL BAYAR</p>
+            <p className="text-sm font-black leading-none">
+              Rp {totalPrice.toLocaleString('id-ID')}
+            </p>
+          </div>
+        </button>
+      )}
+
+      <Sheet open={open} onOpenChange={onOpenChange}>
 
       <SheetContent
         side="bottom"
@@ -252,7 +252,7 @@ export function CartSheet({
                       onClick={() => setPaymentMethod('TRANSFER')}
                       className={cn(
                         "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
-                        paymentMethod === 'TRANSFER' || paymentMethod === 'QRIS'
+                        paymentMethod === 'TRANSFER'
                           ? "bg-white text-emerald-600 shadow-sm"
                           : "text-slate-400 hover:text-slate-600"
                       )}
@@ -311,7 +311,7 @@ export function CartSheet({
                 ) : (
                   <div className="flex items-center gap-2">
                     <Receipt className="h-5 w-5" />
-                    <span>KONFIRMASI BAYAR</span>
+                    <span>KONFIRMASI PESANAN</span>
                   </div>
                 )}
               </Button>
@@ -320,5 +320,6 @@ export function CartSheet({
         )}
       </SheetContent>
     </Sheet>
+    </>
   );
 }

@@ -16,22 +16,26 @@ import {
   DialogDescription,
   DialogHeader,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
   Receipt,
   Calendar,
   Store,
   ChevronRight,
-  Printer,
   History,
   MapPin,
   Clock,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle,
+  Loader2,
+  Pencil
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Transaction, TransactionItem } from '@/types';
+import { cancelTransaction } from '@/lib/actions/transactions';
+import { toast } from 'sonner';
+import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
 
 export default function SalesHistoryPage() {
   const { user } = useAuth();
@@ -40,6 +44,8 @@ export default function SalesHistoryPage() {
   const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
   const [txnItems, setTxnItems] = useState<TransactionItem[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     async function fetchHistory() {
@@ -71,148 +77,61 @@ export default function SalesHistoryPage() {
     if (data) setTxnItems(data);
   }
 
-  function handlePrint() {
-    if (!selectedTxn) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const itemRows = txnItems
-      .map(
-        (item) => `
-      <tr>
-        <td style="padding: 10px 0; border-bottom: 1px solid #efefef;">
-          <div style="font-weight: 700; font-size: 13px;">${item.product?.name || '-'}</div>
-          <div style="font-size: 11px; color: #666;">SKU: ${item.product?.sku || '-'}</div>
-        </td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #efefef; text-align: center; font-weight: 600;">${item.quantity}</td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #efefef; text-align: right; font-weight: 500;">Rp ${item.price_at_sale.toLocaleString('id-ID')}</td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #efefef; text-align: right; font-weight: 700;">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
-      </tr>
-    `
-      )
-      .join('');
-
-    const statusLabel =
-      selectedTxn.status === 'COMPLETED'
-        ? 'LUNAS'
-        : selectedTxn.status === 'CANCELLED'
-        ? 'BATAL'
-        : 'PENDING';
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invoice ${selectedTxn.invoice_number}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-          * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-          body { padding: 30px; max-width: 500px; margin: 0 auto; color: #0f172a; line-height: 1.4; }
-          .logo { color: #2563eb; font-weight: 800; font-size: 24px; letter-spacing: -0.025em; margin-bottom: 4px; }
-          .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #f1f5f9; }
-          .header p { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-          .invoice-box { background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
-          .invoice-box b { font-size: 14px; color: #1e293b; }
-          .info { margin-bottom: 25px; display: grid; grid-template-cols: 1fr 1fr; gap: 15px; }
-          .info-block label { display: block; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-          .info-block span { font-size: 12px; font-weight: 600; color: #334155; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-          th { text-align: left; padding: 12px 0; border-bottom: 2px solid #0f172a; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; }
-          .totals { margin-top: 10px; }
-          .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 500; color: #64748b; }
-          .total-row.grand { padding-top: 15px; margin-top: 10px; border-top: 2px solid #f1f5f9; color: #0f172a; font-size: 18px; font-weight: 800; }
-          .total-row.grand span:last-child { color: #2563eb; }
-          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #cbd5e1; }
-          .footer p { font-size: 11px; color: #94a3b8; font-weight: 500; }
-          @media print { body { padding: 0; } .invoice-box { background: #f8fafc !important; -webkit-print-color-adjust: exact; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="logo">YOSMA <span style="color: #0f172a">POS</span></div>
-          <p>Electronic Sales Receipt</p>
-        </div>
-
-        <div class="invoice-box">
-          <b>${selectedTxn.invoice_number}</b>
-          <span style="font-size: 10px; font-weight: 800; background: #2563eb; color: #fff; padding: 4px 10px; border-radius: 6px;">${statusLabel}</span>
-        </div>
-
-        <div class="info">
-          <div class="info-block">
-            <label>Tanggal</label>
-            <span>${format(new Date(selectedTxn.created_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}</span>
-          </div>
-          <div class="info-block">
-            <label>Outlet</label>
-            <span>${selectedTxn.outlet?.name || '-'}</span>
-          </div>
-          <div class="info-block">
-            <label>Metode</label>
-            <span>${selectedTxn.payment_method}</span>
-          </div>
-          <div class="info-block">
-            <label>Sales</label>
-            <span>${selectedTxn.sales?.full_name || '-'}</span>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Produk</th>
-              <th style="text-align: center;">Qty</th>
-              <th style="text-align: right;">Unit</th>
-              <th style="text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemRows}
-          </tbody>
-        </table>
-
-        <div class="totals">
-          <div class="total-row">
-            <span>Subtotal</span>
-            <span>Rp ${selectedTxn.subtotal.toLocaleString('id-ID')}</span>
-          </div>
-          ${
-            selectedTxn.discount > 0
-              ? `<div class="total-row" style="color: #dc2626;">
-                  <span>Diskon</span>
-                  <span>-Rp ${selectedTxn.discount.toLocaleString('id-ID')}</span>
-                </div>`
-              : ''
-          }
-          <div class="total-row grand">
-            <span>TOTAL TAGIHAN</span>
-            <span>Rp ${selectedTxn.total_price.toLocaleString('id-ID')}</span>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Invoice ini sah dan diproses secara elektronik.</p>
-          <p style="margin-top: 4px;">Terima kasih telah berlangganan di YOSMA POS.</p>
-        </div>
-
-        <script>window.onload = function() { window.print(); }</script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+  function isWithin15Min(createdAt: string) {
+    const diffMinutes = (Date.now() - new Date(createdAt).getTime()) / 1000 / 60;
+    return diffMinutes <= 15;
   }
 
-  const statusStyle = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'CANCELLED':
-        return 'bg-red-50 text-red-600 border-red-100';
-      default:
-        return 'bg-amber-50 text-amber-600 border-amber-100';
+  async function handleCancelFromHistory(txnId: string, invoiceNumber: string) {
+    setCancelling(true);
+    try {
+      const result = await cancelTransaction(txnId);
+      if (result.error) {
+        toast.error('Gagal membatalkan transaksi', { description: result.error });
+      } else {
+        toast.success('Pesanan berhasil dibatalkan', {
+          description: `${invoiceNumber} — Stok produk telah dikembalikan.`,
+        });
+        setTransactions(prev =>
+          prev.map(t => t.id === txnId ? { ...t, status: 'CANCELLED' } : t)
+        );
+        setSelectedTxn(prev => prev ? { ...prev, status: 'CANCELLED' } : null);
+      }
+    } finally {
+      setCancelling(false);
     }
-  };
+  }
+
+  function handleEditSaved() {
+    // Refresh detail items setelah edit
+    if (selectedTxn) {
+      handleViewDetail(selectedTxn);
+    }
+  }
+
+  // Label & warna berdasarkan transaction status + payment_status
+  function getStatusInfo(txn: { status: string; payment_status: string }) {
+    if (txn.status === 'CANCELLED') {
+      return { label: 'BATAL', style: 'bg-red-50 text-red-600 border-red-100' };
+    }
+    if (txn.status === 'PENDING') {
+      return { label: 'MENUNGGU', style: 'bg-amber-50 text-amber-600 border-amber-100' };
+    }
+    if (txn.status === 'PROCESSING') {
+      return { label: 'DIPROSES', style: 'bg-blue-50 text-blue-600 border-blue-100' };
+    }
+    // COMPLETED — cek payment_status
+    switch (txn.payment_status) {
+      case 'PAID':
+        return { label: 'LUNAS', style: 'bg-emerald-50 text-emerald-600 border-emerald-100' };
+      case 'PARTIAL':
+        return { label: 'CICILAN', style: 'bg-blue-50 text-blue-600 border-blue-100' };
+      case 'UNPAID':
+        return { label: 'TEMPO', style: 'bg-amber-50 text-amber-600 border-amber-100' };
+      default:
+        return { label: 'SELESAI', style: 'bg-slate-50 text-slate-500 border-slate-100' };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -280,10 +199,9 @@ export default function SalesHistoryPage() {
                                 {txn.invoice_number}
                               </p>
                               <Badge
-                                variant="outline"
-                                className={`text-[9px] font-black px-2 py-0 h-4 border-none uppercase tracking-tighter mt-0.5 ${statusStyle(txn.status)}`}
+                                className={`text-[9px] font-black px-2 py-0 h-4 border-none uppercase tracking-tighter mt-0.5 ${getStatusInfo(txn).style}`}
                               >
-                                {txn.status === 'COMPLETED' ? 'LUNAS' : txn.status === 'CANCELLED' ? 'BATAL' : 'PENDING'}
+                                {getStatusInfo(txn).label}
                               </Badge>
                             </div>
                           </div>
@@ -364,22 +282,13 @@ export default function SalesHistoryPage() {
                   </div>
                 </div>
 
-                {/* Status & Printer */}
-                <div className="flex items-center justify-between px-2">
+                {/* Status */}
+                <div className="px-2">
                    <Badge
-                      variant="outline"
-                      className={`font-black text-[10px] border-none uppercase px-3 py-1 rounded-full ${statusStyle(selectedTxn.status)}`}
+                      className={`font-black text-[10px] border-none uppercase px-3 py-1 rounded-full ${getStatusInfo(selectedTxn).style}`}
                     >
-                      {selectedTxn.status === 'COMPLETED' ? 'LUNAS' : selectedTxn.status === 'CANCELLED' ? 'BATAL' : 'PENDING'}
+                      {getStatusInfo(selectedTxn).label}
                     </Badge>
-                    <Button
-                      onClick={handlePrint}
-                      className="bg-white border-2 border-slate-100 text-slate-900 hover:bg-slate-50 hover:border-blue-600 h-9 px-4 rounded-xl font-black text-xs transition-all active:scale-95 shadow-sm"
-                      variant="outline"
-                    >
-                      <Printer className="mr-2 h-4 w-4" />
-                      CETAK STRUK
-                    </Button>
                 </div>
 
                 {/* Items List */}
@@ -449,11 +358,51 @@ export default function SalesHistoryPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Tombol Edit & Batalkan — hanya jika status PENDING */}
+                {selectedTxn.status === 'PENDING' && (
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => setEditOpen(true)}
+                      className="flex-1 h-11 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit Pesanan
+                    </button>
+                    <button
+                      onClick={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)}
+                      disabled={cancelling}
+                      className="h-11 px-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 disabled:opacity-50"
+                    >
+                      {cancelling ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Order Dialog */}
+      {selectedTxn && (
+        <EditOrderDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          transactionId={selectedTxn.id}
+          invoiceNumber={selectedTxn.invoice_number}
+          discount={(selectedTxn as any).discount ?? 0}
+          paymentMethod={(selectedTxn as any).payment_method ?? 'CASH'}
+          initialItems={txnItems as any}
+          onSaved={handleEditSaved}
+        />
+      )}
     </div>
   );
 }
+
+
