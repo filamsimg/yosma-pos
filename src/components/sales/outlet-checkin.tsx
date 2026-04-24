@@ -43,6 +43,7 @@ interface OutletCheckinProps {
     lat: number;
     lng: number;
     photoUrl: string;
+    mode: 'ORDER' | 'VISIT_ONLY';
   }) => void;
   checkedIn: boolean;
   checkinData: {
@@ -166,7 +167,7 @@ export function OutletCheckin({
   }
 
   // Handle check-in submission
-  async function handleCheckin() {
+  async function handleCheckinSubmission(mode: 'ORDER' | 'VISIT_ONLY' = 'ORDER') {
     if (!selectedOutlet) return;
     
     // Physical validation requirement
@@ -210,6 +211,7 @@ export function OutletCheckin({
         lat: lat,
         lng: lng,
         photoUrl: photoUrl,
+        mode: mode,
       });
 
       setDialogOpen(false);
@@ -491,28 +493,35 @@ export function OutletCheckin({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-6 bg-slate-50 border-t border-slate-100">
+        <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-3">
           <Button
-            onClick={handleCheckin}
+            onClick={() => handleCheckinSubmission('ORDER')}
             disabled={
               !selectedOutlet ||
               (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
               uploading
             }
-            className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-xl shadow-blue-200 active:scale-95 transition-all"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg shadow-blue-200 active:scale-95 transition-all"
           >
             {uploading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                MENYIMPAN DATA...
-              </>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <>
-                <CheckCircle2 className="mr-2 h-5 w-5" />
-                KONFIRMASI CHECK-IN
-              </>
+              <CheckCircle2 className="mr-2 h-5 w-5" />
             )}
+            {uploading ? 'MENYIMPAN...' : 'KONFIRMASI & MULAI ORDER'}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => handleCheckinSubmission('VISIT_ONLY')}
+            disabled={
+              !selectedOutlet ||
+              (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
+              uploading
+            }
+            className="w-full h-12 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+          >
+            Hanya Catat Kunjungan
           </Button>
         </div>
       </DialogContent>

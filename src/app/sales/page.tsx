@@ -7,8 +7,9 @@ import { useAuth } from '@/components/providers/auth-provider';
 import { OutletCheckin } from '@/components/sales/outlet-checkin';
 import { ProductCatalog } from '@/components/sales/product-catalog';
 import { CartSheet } from '@/components/sales/cart-sheet';
+import { AddOutletDialog } from '@/components/sales/AddOutletDialog';
 import { toast } from 'sonner';
-import { Terminal, ShoppingBag, RefreshCw } from 'lucide-react';
+import { Terminal, ShoppingBag, RefreshCw, MapPin, Plus, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { addDays } from 'date-fns';
 import { useOfflineSync } from '@/hooks/use-offline-sync';
@@ -20,12 +21,14 @@ interface CheckinData {
   lat: number;
   lng: number;
   photoUrl: string;
+  mode: 'ORDER' | 'VISIT_ONLY';
 }
 
 export default function SalesPOSPage() {
   const { user } = useAuth();
   const [checkedIn, setCheckedIn] = useState(false);
   const [checkinData, setCheckinData] = useState<CheckinData | null>(null);
+  const [addOutletOpen, setAddOutletOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -100,7 +103,7 @@ export default function SalesPOSPage() {
         description: "Aplikasi siap digunakan dalam mode offline."
       });
       
-      // Refresh components by reloading (or we could use a state/event)
+      // Refresh components by reloading
       window.location.reload();
     } catch (error) {
       toast.error("Gagal sinkronisasi data.", { id: syncToastId });
@@ -109,7 +112,6 @@ export default function SalesPOSPage() {
     }
   };
 
-  // Load last sync time on mount
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   
   useEffect(() => {
@@ -117,16 +119,46 @@ export default function SalesPOSPage() {
     if (time) {
       setLastSyncTime(new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }
-  }, [isDataSyncing]); // Update when manual sync completes
+  }, [isDataSyncing]);
 
-  function handleCheckin(data: CheckinData) {
+  async function handleCheckin(data: CheckinData) {
+    if (data.mode === 'VISIT_ONLY') {
+      // 1. Record visit directly to Supabase
+      const supabase = createClient();
+      const { error } = await supabase.from('visits').insert({
+        sales_id: user?.id,
+        outlet_id: data.outlet.id,
+        lat: data.lat,
+        lng: data.lng,
+        photo_url: data.photoUrl,
+        notes: 'Kunjungan rutin (Tanpa Order)',
+        status: 'COMPLETED'
+      });
+
+      if (error) {
+        console.error('Gagal mencatat kunjungan:', error);
+        toast.error('Gagal mencatat kunjungan.');
+        return;
+      }
+
+      toast.success('Kunjungan berhasil dicatat', {
+        description: `Kunjungan ke ${data.outlet.name} telah disimpan.`
+      });
+      
+      // 2. Reset everything - don't enter transaction mode
+      setCheckedIn(false);
+      setCheckinData(null);
+      return;
+    }
+
+    // Normal Order flow
     setCheckinData(data);
     setCheckedIn(true);
     const isRemote = data.photoUrl === 'REMOTE_ORDER';
     
     toast.success(`${isRemote ? 'Remote Order' : 'Check-in'} berhasil di ${data.outlet.type ? `${data.outlet.type} ${data.outlet.name}` : data.outlet.name}`, {
       description: isRemote ? 'Mode pesanan jarak jauh aktif.' : 'Silakan mulai melayani pesanan.',
-      icon: isRemote ? <ShoppingBag className="h-4 w-4 text-orange-500" /> : <CheckCircleIcon className="h-4 w-4 text-emerald-500" />
+      icon: isRemote ? <ShoppingBag className="h-4 w-4 text-orange-500" /> : <CheckCircle2 className="h-4 w-4 text-emerald-500" />
     });
   }
 
@@ -141,15 +173,12 @@ export default function SalesPOSPage() {
     try {
       const subtotal = getSubtotal();
       const totalPrice = getTotalPrice();
-
-      // Calculate Due Date and Payment status
       const isCredit = paymentMethod === 'CREDIT';
       const tempoDays = totalPrice >= 100000 ? 30 : 14;
       const dueDate = isCredit ? addDays(new Date(), tempoDays).toISOString() : null;
       const paymentStatus = isCredit ? 'UNPAID' : 'PAID';
       const paidAmount = isCredit ? 0 : totalPrice;
 
-      // Prepare payload for offline sync
       const payload = {
         transactionData: {
           sales_id: user.id,
@@ -173,10 +202,20 @@ export default function SalesPOSPage() {
         }))
       };
 
-      // Add to local sync queue (Instant completion)
       addToQueue('ORDER', payload);
 
-      // Success Feedback (Instant)
+      // 4. Automatic Promotion to ACTIVE
+      if (checkinData.outlet.status === 'PROSPECT') {
+        const supabase = createClient();
+        supabase
+          .from('outlets')
+          .update({ status: 'ACTIVE' })
+          .eq('id', checkinData.outlet.id)
+          .then(({ error }) => {
+            if (error) console.error('Gagal update status outlet:', error);
+          });
+      }
+
       toast.success(`Pesanan Disimpan!`, {
         duration: 4000,
         description: !isOnline 
@@ -184,7 +223,6 @@ export default function SalesPOSPage() {
           : "Sedang mengirim ke server...",
       });
 
-      // Reset state & close cart immediately
       setCartOpen(false);
       clearCart();
       setCheckedIn(false);
@@ -199,12 +237,7 @@ export default function SalesPOSPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      {/* Offline/Sync Banner */}
-      <OfflineBanner 
-        isOnline={isOnline} 
-        pendingCount={pendingCount} 
-        isSyncing={isSyncing} 
-      />
+      <OfflineBanner isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} />
 
       {/* Sales Header */}
       <div className="bg-white border-b border-slate-200 px-5 py-5 shadow-sm sticky top-0 z-10">
@@ -248,15 +281,35 @@ export default function SalesPOSPage() {
       </div>
 
       <div className="p-5 space-y-6">
-        {/* Outlet Check-in Section */}
-        <OutletCheckin
-          onCheckin={handleCheckin}
-          checkedIn={checkedIn}
-          checkinData={checkinData}
-        />
-
-        {/* Product Catalog Section */}
-        {checkedIn ? (
+        {!checkedIn ? (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-sm border border-slate-100 p-6 shadow-sm flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-sm bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100">
+                <MapPin className="h-8 w-8" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900 uppercase">Mulai Check-in</h2>
+                <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-tight">Pilih outlet kunjungan Anda</p>
+              </div>
+              
+              <OutletCheckin onCheckin={handleCheckin} checkedIn={checkedIn} checkinData={checkinData} />
+              
+              <div className="pt-2 w-full">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100"></span></div>
+                  <div className="relative flex justify-center text-[8px] uppercase font-black text-slate-800 bg-white px-2 tracking-[0.3em]">ATAU</div>
+                </div>
+                
+                <button 
+                  onClick={() => setAddOutletOpen(true)}
+                  className="mt-4 w-full h-11 border-2 border-dashed border-slate-800 text-slate-800 rounded-sm font-black text-[10px] uppercase tracking-widest hover:border-blue-200 hover:text-blue-500 hover:bg-blue-50/30 transition-all flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Tambah Outlet Baru (Prospect)
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {checkinData?.photoUrl === 'REMOTE_ORDER' && (
               <div className="bg-orange-50 border border-orange-100 p-4 rounded-sm flex items-center gap-3 shadow-sm shadow-orange-50/50">
@@ -277,38 +330,9 @@ export default function SalesPOSPage() {
             </div>
             <ProductCatalog />
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-white rounded-sm border border-slate-100 shadow-sm transition-all duration-700">
-            <div className="w-24 h-24 rounded-sm bg-blue-50 flex items-center justify-center mb-6 shadow-xl shadow-blue-50/50 animate-pulse">
-              <svg
-                className="w-12 h-12 text-blue-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-black text-slate-800">Mulai Kunjungan</h3>
-            <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-[240px]">
-              Silakan melakukan <span className="font-bold text-blue-600 underline">Check-in</span> ke outlet terlebih dahulu untuk membuka katalog produk.
-            </p>
-          </div>
         )}
       </div>
 
-      {/* Cart Sheet (floating) */}
       <CartSheet
         onCheckout={handleCheckout}
         checkoutLoading={checkoutLoading}
@@ -316,26 +340,15 @@ export default function SalesPOSPage() {
         open={cartOpen}
         onOpenChange={setCartOpen}
       />
-    </div>
-  );
-}
 
-function CheckCircleIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
+      <AddOutletDialog 
+        open={addOutletOpen} 
+        onOpenChange={setAddOutletOpen} 
+        onSuccess={(id: string, mode: 'WITH_ORDER' | 'PROSPECT_ONLY') => {
+          // Both modes currently reload to refresh caches and visit history
+          window.location.reload();
+        }} 
+      />
+    </div>
   );
 }

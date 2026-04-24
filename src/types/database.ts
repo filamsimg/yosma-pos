@@ -82,6 +82,7 @@ export interface Outlet {
   visit_frequency: string | null;
   assigned_sales: string | null;
   is_active: boolean;
+  status: 'PROSPECT' | 'ACTIVE' | 'INACTIVE' | null;
   created_at: string;
   updated_at: string;
 }

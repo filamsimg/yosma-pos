@@ -88,6 +88,25 @@ export const PAYMENT_STATUSES = [
 ] as const;
 
 // Visit Schedule constants
+// 4. Outlet Status Mapping
+export const OUTLET_STATUS_MAP = {
+  PROSPECT: {
+    label: 'Prospek',
+    color: 'bg-amber-50 text-amber-600 border-amber-200',
+    iconColor: 'text-amber-500'
+  },
+  ACTIVE: {
+    label: 'Pelanggan',
+    color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    iconColor: 'text-emerald-500'
+  },
+  INACTIVE: {
+    label: 'Non-Aktif',
+    color: 'bg-slate-50 text-slate-400 border-slate-100',
+    iconColor: 'text-slate-400'
+  }
+} as const;
+
 export const VISIT_DAYS = [
   { value: 'Senin', label: 'Senin' },
   { value: 'Selasa', label: 'Selasa' },
