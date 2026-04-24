@@ -46,7 +46,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
+import { TRANSACTION_STATUS_MAP, PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import type { Transaction, TransactionItem } from '@/types';
 import { updateTransactionStatus } from '@/lib/actions/transactions';
 import { toast } from 'sonner';
@@ -114,8 +114,8 @@ export default function AdminTransactionsPage() {
       if (result.error) {
         toast.error('Gagal mengubah status', { description: result.error });
       } else {
-        const labels: Record<string, string> = { PROCESSING: 'Diproses', COMPLETED: 'Selesai', CANCELLED: 'Batal' };
-        toast.success(`Status: ${labels[newStatus]}`);
+        const label = TRANSACTION_STATUS_MAP[newStatus].label;
+        toast.success(`Status berhasil diubah: ${label}`);
         setTransactions(prev => prev.map(t => t.id === txnId ? { ...t, status: newStatus } : t));
         if (selectedTxn?.id === txnId) setSelectedTxn(prev => prev ? { ...prev, status: newStatus } : null);
       }
@@ -216,13 +216,11 @@ export default function AdminTransactionsPage() {
                     <h2 className="text-lg font-black text-slate-800 leading-none uppercase">{selectedTxn.invoice_number}</h2>
                  </div>
                  <Badge variant="outline" className={cn(
-                   "text-[9px] font-black px-3 py-1 border rounded-full uppercase",
-                   selectedTxn.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                   selectedTxn.status === 'PROCESSING' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                   selectedTxn.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                   selectedTxn.status === 'CANCELLED' ? 'bg-red-50 text-red-600 border-red-200' :
-                   'bg-slate-50 text-slate-600 border-slate-200'
-                 )}>{selectedTxn.status}</Badge>
+                   "text-[9px] font-black px-3 py-1 border rounded-full uppercase tracking-widest",
+                   TRANSACTION_STATUS_MAP[selectedTxn.status as keyof typeof TRANSACTION_STATUS_MAP]?.color || 'bg-slate-50 text-slate-600 border-slate-200'
+                 )}>
+                   {TRANSACTION_STATUS_MAP[selectedTxn.status as keyof typeof TRANSACTION_STATUS_MAP]?.label || selectedTxn.status}
+                 </Badge>
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto space-y-6">

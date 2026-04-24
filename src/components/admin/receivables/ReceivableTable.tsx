@@ -14,7 +14,7 @@ import { Calendar, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { PAYMENT_STATUSES } from '@/lib/constants';
+import { TRANSACTION_STATUS_MAP, PAYMENT_STATUS_MAP } from '@/lib/constants';
 
 interface ReceivableTableProps {
   data: any[];
@@ -121,7 +121,12 @@ export function ReceivableTable({ data, loading, onPay, type }: ReceivableTableP
                         <Plus className="h-3.5 w-3.5 mr-1" /> Cicil
                       </Button>
                     ) : (
-                      <Badge className="bg-emerald-50 text-emerald-600 border-0 text-[11px] px-2.5 py-1 font-medium rounded-md">LUNAS</Badge>
+                      <Badge variant="outline" className={cn(
+                        "text-[10px] px-2.5 py-1 font-black border rounded-md uppercase tracking-wider",
+                        PAYMENT_STATUS_MAP.PAID.color
+                      )}>
+                        {PAYMENT_STATUS_MAP.PAID.label}
+                      </Badge>
                     )}
                   </TableCell>
                 </TableRow>

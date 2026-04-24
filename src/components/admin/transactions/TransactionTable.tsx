@@ -14,7 +14,7 @@ import { Eye, Clock, Calendar, Store } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { PAYMENT_STATUSES } from '@/lib/constants';
+import { TRANSACTION_STATUS_MAP } from '@/lib/constants';
 
 interface TransactionTableProps {
   data: any[];
@@ -23,15 +23,6 @@ interface TransactionTableProps {
 }
 
 export function TransactionTable({ data, loading, onView }: TransactionTableProps) {
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':     return 'bg-amber-50 text-amber-600';
-      case 'PROCESSING':  return 'bg-blue-50 text-blue-600';
-      case 'COMPLETED':   return 'bg-emerald-50 text-emerald-600';
-      case 'CANCELLED':   return 'bg-red-50 text-red-600';
-      default:            return 'bg-slate-50 text-slate-600';
-    }
-  };
 
   if (loading) {
     return (
@@ -83,10 +74,10 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
                 
                 <TableCell className="py-4 px-4 text-center">
                   <Badge variant="outline" className={cn(
-                    "text-[11px] px-2.5 py-1 font-medium border-0 rounded-md uppercase",
-                    statusColor(item.status)
+                    "text-[10px] px-2.5 py-1 font-black border rounded-md uppercase tracking-wider",
+                    TRANSACTION_STATUS_MAP[item.status as keyof typeof TRANSACTION_STATUS_MAP]?.color || 'bg-slate-50 text-slate-600 border-slate-200'
                   )}>
-                    {item.status}
+                    {TRANSACTION_STATUS_MAP[item.status as keyof typeof TRANSACTION_STATUS_MAP]?.label || item.status}
                   </Badge>
                 </TableCell>
 

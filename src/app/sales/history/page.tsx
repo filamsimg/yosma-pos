@@ -35,6 +35,7 @@ import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Transaction, TransactionItem } from '@/types';
 import { cancelTransaction } from '@/lib/actions/transactions';
+import { TRANSACTION_STATUS_MAP, PAYMENT_STATUS_MAP } from '@/lib/constants';
 import { toast } from 'sonner';
 import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
 
@@ -107,15 +108,25 @@ export default function SalesHistoryPage() {
   }
 
   function getStatusInfo(txn: { status: string; payment_status: string }) {
-    if (txn.status === 'CANCELLED') return { label: 'BATAL', style: 'bg-red-50 text-red-600 border-red-100' };
-    if (txn.status === 'PENDING') return { label: 'MENUNGGU', style: 'bg-amber-50 text-amber-600 border-amber-100' };
-    if (txn.status === 'PROCESSING') return { label: 'DIPROSES', style: 'bg-blue-50 text-blue-600 border-blue-100' };
-    switch (txn.payment_status) {
-      case 'PAID': return { label: 'LUNAS', style: 'bg-emerald-50 text-emerald-600 border-emerald-100' };
-      case 'PARTIAL': return { label: 'CICILAN', style: 'bg-blue-50 text-blue-600 border-blue-100' };
-      case 'UNPAID': return { label: 'TEMPO', style: 'bg-amber-50 text-amber-600 border-amber-100' };
-      default: return { label: 'SELESAI', style: 'bg-slate-50 text-slate-500 border-slate-100' };
+    // 1. Prioritaskan status transaksi jika Batal atau Pending
+    if (txn.status === 'CANCELLED' || txn.status === 'PENDING' || txn.status === 'PROCESSING') {
+      const info = TRANSACTION_STATUS_MAP[txn.status as keyof typeof TRANSACTION_STATUS_MAP];
+      return { 
+        label: info?.label.toUpperCase() || txn.status, 
+        style: info?.color || 'bg-slate-50 text-slate-500 border-slate-100' 
+      };
     }
+
+    // 2. Jika sudah selesai, gunakan status pembayaran untuk konteks tambahan
+    const info = PAYMENT_STATUS_MAP[txn.payment_status as keyof typeof PAYMENT_STATUS_MAP];
+    if (info) {
+      return { 
+        label: info.label.toUpperCase(), 
+        style: info.color 
+      };
+    }
+
+    return { label: 'SELESAI', style: 'bg-slate-50 text-slate-500 border-slate-100' };
   }
 
   return (
