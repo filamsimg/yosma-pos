@@ -35,11 +35,17 @@ import {
   Store,
   Calendar,
   X,
+  Truck,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import type { Transaction, TransactionItem } from '@/types';
+import { updateTransactionStatus } from '@/lib/actions/transactions';
+import { toast } from 'sonner';
 
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -48,6 +54,7 @@ export default function AdminTransactionsPage() {
   const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
   const [txnItems, setTxnItems] = useState<TransactionItem[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -103,6 +110,34 @@ export default function AdminTransactionsPage() {
     if (data) setTxnItems(data);
   }
 
+  async function handleStatusUpdate(
+    txnId: string,
+    newStatus: 'PROCESSING' | 'COMPLETED' | 'CANCELLED'
+  ) {
+    setUpdatingStatus(txnId + newStatus);
+    try {
+      const result = await updateTransactionStatus(txnId, newStatus);
+      if (result.error) {
+        toast.error('Gagal mengubah status', { description: result.error });
+      } else {
+        const labels: Record<string, string> = {
+          PROCESSING: 'Sedang diproses',
+          COMPLETED: 'Selesai / Terkirim',
+          CANCELLED: 'Dibatalkan',
+        };
+        toast.success(`Status diperbarui: ${labels[newStatus]}`);
+        setTransactions(prev =>
+          prev.map(t => t.id === txnId ? { ...t, status: newStatus } : t)
+        );
+        if (selectedTxn?.id === txnId) {
+          setSelectedTxn(prev => prev ? { ...prev, status: newStatus } : null);
+        }
+      }
+    } finally {
+      setUpdatingStatus(null);
+    }
+  }
+
   function handlePrint(txn: Transaction) {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -149,14 +184,23 @@ export default function AdminTransactionsPage() {
     printWindow.document.close();
   }
 
-  const statusColor = (status: string) => {
+  const txnStatusStyle = (status: string) => {
     switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'CANCELLED':
-        return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default:
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      case 'PENDING':     return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      case 'PROCESSING':  return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'COMPLETED':   return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'CANCELLED':   return 'bg-red-500/10 text-red-400 border-red-500/20';
+      default:            return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+    }
+  };
+
+  const txnStatusLabel = (status: string) => {
+    switch (status) {
+      case 'PENDING':    return 'Menunggu';
+      case 'PROCESSING': return 'Diproses';
+      case 'COMPLETED':  return 'Selesai';
+      case 'CANCELLED':  return 'Batal';
+      default:           return status;
     }
   };
 
@@ -241,27 +285,65 @@ export default function AdminTransactionsPage() {
                       {PAYMENT_METHODS.find(m => m.value === txn.payment_method)?.label || txn.payment_method}
                     </TableCell>
                     <TableCell>
-                      {(() => {
-                        const s = PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'));
-                        return (
-                          <Badge variant="outline" className={`text-[10px] border-0 ${s?.color}`}>
-                            {s?.label}
-                          </Badge>
-                        );
-                      })()}
+                      <div className="flex items-center gap-1.5">
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] border ${txnStatusStyle(txn.status)}`}
+                        >
+                          {txnStatusLabel(txn.status)}
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="text-slate-400 text-xs">
                       {format(new Date(txn.created_at), 'dd MMM HH:mm', { locale: idLocale })}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDetail(txn)}
-                        className="text-slate-400 hover:text-white h-7 w-7 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetail(txn)}
+                          className="text-slate-400 hover:text-white h-7 w-7 p-0"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {txn.status === 'PENDING' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusUpdate(txn.id, 'PROCESSING')}
+                            disabled={updatingStatus === txn.id + 'PROCESSING'}
+                            className="text-blue-400 hover:text-blue-300 h-7 w-7 p-0"
+                            title="Tandai Diproses"
+                          >
+                            <Truck className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {txn.status === 'PROCESSING' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusUpdate(txn.id, 'COMPLETED')}
+                            disabled={updatingStatus === txn.id + 'COMPLETED'}
+                            className="text-green-400 hover:text-green-300 h-7 w-7 p-0"
+                            title="Tandai Selesai"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(txn.status === 'PENDING' || txn.status === 'PROCESSING') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusUpdate(txn.id, 'CANCELLED')}
+                            disabled={updatingStatus === txn.id + 'CANCELLED'}
+                            className="text-red-400 hover:text-red-300 h-7 w-7 p-0"
+                            title="Batalkan"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
