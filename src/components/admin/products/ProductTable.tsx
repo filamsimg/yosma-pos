@@ -97,38 +97,38 @@ export function ProductTable({
             key={p.id} 
             className={selectedIds.includes(p.id) ? 'bg-blue-50/30' : ''}
           >
-            <TableCell className="px-4">
+            <TableCell className="px-4 py-4">
               <input 
                 type="checkbox" 
                 checked={selectedIds.includes(p.id)}
                 onChange={() => toggleOne(p.id)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </TableCell>
-            <TableCell className="px-4 text-[10px] font-bold text-slate-400 uppercase">{p.sku}</TableCell>
-            <TableCell className="px-4">
+            <TableCell className="px-4 py-4 text-[11px] font-black text-slate-400 uppercase tracking-tight">{p.sku}</TableCell>
+            <TableCell className="px-4 py-4">
               <div className="flex flex-col">
-                <span className="font-black text-slate-800 text-xs uppercase tracking-tight">{p.name}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{p.category?.name}</span>
+                <span className="font-black text-slate-900 text-sm uppercase tracking-tight">{p.name}</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">{p.category?.name}</span>
               </div>
             </TableCell>
-            <TableCell className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-tighter">{p.brand?.name || '-'}</TableCell>
-            <TableCell className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-tighter">{p.unit?.name || '-'}</TableCell>
-            <TableCell className="px-4 text-right">
-              <span className="font-black text-slate-900 text-xs tabular-nums">Rp {p.price.toLocaleString('id-ID')}</span>
+            <TableCell className="px-4 py-4 text-[11px] font-black text-slate-600 uppercase tracking-tighter">{p.brand?.name || '-'}</TableCell>
+            <TableCell className="px-4 py-4 text-[11px] font-black text-slate-600 uppercase tracking-tighter">{p.unit?.name || '-'}</TableCell>
+            <TableCell className="px-4 py-4 text-right">
+              <span className="font-black text-slate-900 text-sm tabular-nums">Rp {p.price.toLocaleString('id-ID')}</span>
             </TableCell>
-            <TableCell className="px-4 text-center">
+            <TableCell className="px-4 py-4 text-center">
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-[9px] px-2 py-0.5 font-black border-none rounded-sm uppercase tracking-tighter",
+                  "text-[10px] px-3 py-1 font-black border-none rounded-sm uppercase tracking-tighter",
                   p.stock <= 0 ? 'bg-red-50 text-red-600' : p.stock <= (p.min_stock ?? 10) ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
                 )}
               >
                 {p.stock} {p.unit?.name}
               </Badge>
             </TableCell>
-            <TableCell className="px-4 text-center">
+            <TableCell className="px-4 py-4 text-center">
               <div className="flex items-center justify-center gap-1">
                 <Button
                   variant="ghost"

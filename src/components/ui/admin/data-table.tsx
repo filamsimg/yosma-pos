@@ -33,7 +33,8 @@ function AdminTableComponent({
       "rounded-sm border border-slate-200 bg-white shadow-sm overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200",
       containerClassName
     )}>
-      <Table className={cn("text-xs font-medium", className)}>
+      {/* Meningkatkan basis font ke text-sm (14px) untuk legibilitas maksimal */}
+      <Table className={cn("text-sm font-semibold", className)}>
         <TableHeader className={cn(
           "bg-slate-100 border-b-2 border-slate-200",
           stickyHeader && "sticky top-0 z-10"
@@ -42,7 +43,7 @@ function AdminTableComponent({
             {headers.map((header, i) => (
               <TableHead 
                 key={i} 
-                className="h-12 text-[10px] font-black text-slate-600 uppercase tracking-widest px-4 border-r border-slate-200/50 last:border-r-0"
+                className="h-14 text-[11px] font-black text-slate-700 uppercase tracking-widest px-4 border-r border-slate-200/50 last:border-r-0"
               >
                 {header}
               </TableHead>
@@ -57,5 +58,5 @@ function AdminTableComponent({
   )
 }
 
-// Memoize the table to prevent redundant re-renders during parent state updates (like search query input)
+// Memoize the table to prevent redundant re-renders during parent state updates
 export const AdminTable = React.memo(AdminTableComponent);

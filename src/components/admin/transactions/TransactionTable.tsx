@@ -52,47 +52,47 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
       ) : (
         data.map((item) => (
           <TableRow key={item.id}>
-            <TableCell className="px-4 py-3">
+            <TableCell className="px-4 py-4">
               <div className="flex flex-col">
-                <span className="font-black text-slate-800 text-xs uppercase tracking-tight">
+                <span className="font-black text-slate-900 text-sm uppercase tracking-tight">
                    {item.invoice_number}
                 </span>
-                <div className="flex items-center gap-1 text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">
-                   <Store className="h-2.5 w-2.5" />
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-black uppercase tracking-tighter mt-1">
+                   <Store className="h-3 w-3" />
                    {item.outlet?.name || 'Toko Umum'}
                 </div>
               </div>
             </TableCell>
             
-            <TableCell className="px-4 text-right">
-              <span className="font-black text-blue-600 text-xs tabular-nums">
+            <TableCell className="px-4 py-4 text-right">
+              <span className="font-black text-blue-600 text-sm tabular-nums">
                 Rp {item.total_price.toLocaleString('id-ID')}
               </span>
             </TableCell>
             
-            <TableCell className="px-4 text-center">
+            <TableCell className="px-4 py-4 text-center">
               <Badge variant="outline" className={cn(
-                "text-[9px] px-2 py-0.5 font-black border-none rounded-sm uppercase tracking-tighter",
+                "text-[10px] px-3 py-1 font-black border-none rounded-sm uppercase tracking-tighter",
                 TRANSACTION_STATUS_MAP[item.status as keyof typeof TRANSACTION_STATUS_MAP]?.color || 'bg-slate-50 text-slate-600 border-slate-200'
               )}>
                 {TRANSACTION_STATUS_MAP[item.status as keyof typeof TRANSACTION_STATUS_MAP]?.label || item.status}
               </Badge>
             </TableCell>
 
-            <TableCell className="px-4 text-[10px] font-bold text-slate-400 uppercase">
+            <TableCell className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase">
               <div className="flex items-center gap-2">
-                 <Calendar className="h-3 w-3 opacity-40" />
+                 <Calendar className="h-3.5 w-3.5 opacity-50 text-blue-500" />
                  {format(new Date(item.created_at), 'dd MMM yyyy', { locale: idLocale })}
               </div>
             </TableCell>
             
-            <TableCell className="px-4 text-center">
+            <TableCell className="px-4 py-4 text-center">
               <div className="flex items-center justify-center">
                 <Button 
                   size="sm" 
                   onClick={() => onView(item)}
                   variant="ghost"
-                  className="text-slate-300 hover:text-blue-600 hover:bg-blue-50 h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-sm"
+                  className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-9 px-4 text-[11px] font-black uppercase tracking-widest rounded-sm border border-transparent hover:border-blue-100"
                 >
                    Detail
                 </Button>
