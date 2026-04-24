@@ -1,31 +1,28 @@
-'use client';
+"use client"
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { Search, Plus, ChevronLeft, ChevronRight, Trash2 as TrashIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { AppDialog } from '@/components/ui/app-dialog';
 
 import { DataTableFacetedFilter } from '@/components/admin/shared/DataTableFacetedFilter';
 import { OutletTable } from '@/components/admin/outlets/OutletTable';
 import { OutletForm } from '@/components/admin/outlets/OutletForm';
 import { ImportDialog } from '@/components/admin/outlets/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { AdminPageHeader } from '@/components/ui/admin/page-header';
+import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
+import { AdminTable } from '@/components/ui/admin/data-table';
+import { cn } from '@/lib/utils';
 import { 
   upsertOutlet, 
   softDeleteOutlet, 
@@ -171,34 +168,17 @@ export default function AdminOutletsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header section */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Daftar Outlet</h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Kelola cabang dan lokasi outlet perusahaan Anda.
-        </p>
-      </div>
-
-      {/* Actions section (Search & Create) */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Cari nama atau alamat..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+    <div className="space-y-6">
+      <AdminPageHeader 
+        title="Daftar Outlet"
+        description="Kelola cabang dan lokasi outlet perusahaan Anda secara real-time"
+        breadcrumbs={[{ label: 'Outlet' }]}
+        action={
+          <div className="grid grid-cols-2 md:flex items-center gap-2 w-full md:w-auto">
             <ExportButton 
               fetcher={getAllOutlets}
               filename="Daftar_Outlet"
+              className="w-full md:w-auto"
               mapper={(o) => ({
                 'Nama': o.name,
                 'Tipe': o.type || '-',
@@ -210,195 +190,206 @@ export default function AdminOutletsPage() {
                 'NIK Sales': o.assigned_sales || '-'
               })}
             />
-            <ImportDialog onSuccess={fetchData} />
+            <ImportDialog onSuccess={fetchData} className="w-full md:w-auto" />
             <Button
               onClick={() => handleOpenForm()}
-              className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
+              className="col-span-2 md:col-auto bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 rounded-sm font-black text-[10px] uppercase tracking-widest w-full md:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
-              <span>Outlet Baru</span>
+              Outlet Baru
             </Button>
           </div>
-        </div>
+        }
+      />
 
-        {/* Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
-           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Filter:</div>
-           <DataTableFacetedFilter
-             title="Tipe"
-             options={outletTypes.map(t => ({ label: t.name, value: t.name }))}
-             selectedValues={typeFilter}
-             onSelect={(val) => { setTypeFilter(val); setCurrentPage(1); }}
-           />
-           <DataTableFacetedFilter
-             title="Hari Kunjungan"
-             options={VISIT_DAYS.map(day => ({ label: day.label, value: day.value }))}
-             selectedValues={dayFilter}
-             onSelect={(val) => { setDayFilter(val); setCurrentPage(1); }}
-           />
-           
-           {(typeFilter.length > 0 || dayFilter.length > 0) && (
-             <Button 
-               variant="ghost" 
-               size="sm" 
-               onClick={() => {
-                 setTypeFilter([]);
-                 setDayFilter([]);
-                 setCurrentPage(1);
-               }}
-               className="h-8 px-2 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50"
-             >
-               Hapus Filter
-             </Button>
-           )}
-        </div>
-      </div>
+      <AdminToolbar>
+        <AdminToolbarSection grow>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <input
+              placeholder="Cari nama atau alamat..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+            />
+          </div>
+        </AdminToolbarSection>
+
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1">
+          <div className="flex items-center gap-2">
+            <DataTableFacetedFilter
+              title="Tipe"
+              options={outletTypes.map(t => ({ label: t.name, value: t.name }))}
+              selectedValues={typeFilter}
+              onSelect={(val) => { setTypeFilter(val); setCurrentPage(1); }}
+            />
+            <DataTableFacetedFilter
+              title="Hari"
+              options={VISIT_DAYS.map(day => ({ label: day.label, value: day.value }))}
+              selectedValues={dayFilter}
+              onSelect={(val) => { setDayFilter(val); setCurrentPage(1); }}
+            />
+            
+            {(typeFilter.length > 0 || dayFilter.length > 0) && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setTypeFilter([]);
+                  setDayFilter([]);
+                  setCurrentPage(1);
+                }}
+                className="h-8 px-2 text-[9px] font-black text-red-600 hover:text-red-700 hover:bg-red-50 uppercase tracking-widest"
+              >
+                Reset
+              </Button>
+            )}
+          </div>
+        </AdminToolbarSection>
+      </AdminToolbar>
 
       {/* Bulk Actions Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
-          <div className="text-blue-700 text-sm font-medium px-2">
-            <span className="font-bold">{selectedIds.length}</span> outlet dipilih
+        <div className="bg-blue-50 border border-blue-100 p-3 rounded-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+          <div className="text-blue-700 text-[10px] font-black uppercase tracking-widest px-2">
+            <span className="text-blue-900">{selectedIds.length}</span> Outlet Terpilih
           </div>
           <Button 
             variant="destructive" 
             size="sm" 
             onClick={handleBulkDelete}
-            className="bg-red-600 text-white hover:bg-white hover:text-red-600 border border-red-600 h-9 font-bold transition-all px-4"
+            className="bg-red-600 text-white hover:bg-red-700 h-8 font-black text-[10px] uppercase tracking-widest transition-all px-4 rounded-sm"
             disabled={isSubmitting}
           >
-            <TrashIcon className="h-4 w-4 mr-2" />
-            Hapus Terpilih
+            <TrashIcon className="h-3.5 w-3.5 mr-2" />
+            Hapus Masal
           </Button>
         </div>
       )}
 
       {/* Main Table Container */}
-      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
-        <div className="flex-1 overflow-x-auto">
-          <OutletTable 
-            outlets={outlets}
-            loading={loading}
-            onEdit={handleOpenForm}
-            onDelete={handleDelete}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            sorting={sorting}
-            onSort={(field) => {
-              setSorting(prev => ({
-                field,
-                dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
-              }));
-              setCurrentPage(1);
-            }}
-          />
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <OutletTable 
+          outlets={outlets}
+          loading={loading}
+          onEdit={handleOpenForm}
+          onDelete={handleDelete}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          sorting={sorting}
+          onSort={(field) => {
+            setSorting(prev => ({
+              field,
+              dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+            }));
+            setCurrentPage(1);
+          }}
+        />
+      </div>
 
-        {/* Pagination Footer */}
-        {totalPages > 0 && (
-          <div className="border-t border-slate-100 p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                Menampilkan <span className="text-slate-900 font-bold">{outlets.length}</span> dari <span className="text-slate-900 font-bold">{totalCount}</span> outlet
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Baris:</span>
-                <Select 
-                  value={pageSize.toString()} 
-                  onValueChange={(val) => {
-                    if (val) {
-                      setPageSize(parseInt(val));
-                      setCurrentPage(1);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-8 w-16 bg-white border-slate-200 text-xs font-bold text-slate-700 focus:ring-blue-600 transition-all">
-                    <SelectValue placeholder={pageSize.toString()} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl min-w-[4rem]">
-                    {[10, 25, 50, 100].map(size => (
-                      <SelectItem key={size} value={size.toString()} className="text-xs cursor-pointer focus:bg-blue-50 focus:text-blue-600">
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Pagination Footer */}
+      {totalPages > 0 && (
+        <div className="border border-slate-100 p-4 bg-white rounded-sm shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest whitespace-nowrap">
+              Total <span className="text-slate-900">{totalCount}</span> Outlet
             </div>
             
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1 || loading}
-                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+            <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
+              <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Baris:</span>
+              <Select 
+                value={pageSize.toString()} 
+                onValueChange={(val) => {
+                  if (val) {
+                    setPageSize(parseInt(val));
+                    setCurrentPage(1);
+                  }
+                }}
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                  .map((p, idx, arr) => {
-                    const showDots = idx > 0 && p - arr[idx - 1] > 1;
-                    return (
-                      <div key={p} className="flex items-center gap-1">
-                        {showDots && <span className="text-slate-300 px-1">...</span>}
-                        <Button
-                          variant={currentPage === p ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setCurrentPage(p)}
-                          disabled={loading}
-                          className={`h-8 w-8 p-0 text-xs font-bold ${
-                            currentPage === p 
-                              ? 'bg-blue-600 text-white border-blue-600' 
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
-                          }`}
-                        >
-                          {p}
-                        </Button>
-                      </div>
-                    );
-                  })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || loading}
-                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+                <SelectTrigger className="h-7 w-16 bg-slate-50 border-none text-[10px] font-black text-slate-600 focus:ring-0 rounded-sm">
+                  <SelectValue placeholder={pageSize.toString()} />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl min-w-[4rem] rounded-sm">
+                  {[10, 25, 50, 100].map(size => (
+                    <SelectItem key={size} value={size.toString()} className="text-[10px] font-black uppercase cursor-pointer focus:bg-blue-50 focus:text-blue-600">
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
-      </Card>
-
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden max-h-[96vh] flex flex-col shadow-2xl rounded-xl">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="text-xl font-bold text-slate-900">
-              {selectedOutlet ? 'Edit Outlet' : 'Tambah Outlet Baru'}
-            </DialogTitle>
-            <DialogDescription className="text-slate-500 mt-1">
-              Isi detail outlet untuk mengelola cabang toko Anda.
-            </DialogDescription>
-          </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto p-6 pt-4 min-h-0">
-            <OutletForm 
-              initialData={selectedOutlet}
-              loading={isSubmitting}
-              onSubmit={handleOutletSubmit}
-              onCancel={() => setModalOpen(false)}
-            />
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 || loading}
+              className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => {
+                  const showDots = idx > 0 && p - arr[idx - 1] > 1;
+                  return (
+                    <div key={p} className="flex items-center gap-1">
+                      {showDots && <span className="text-slate-200 px-1 text-[10px] font-black">...</span>}
+                      <Button
+                        variant={currentPage === p ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCurrentPage(p)}
+                        disabled={loading}
+                        className={cn(
+                          "h-8 w-8 p-0 text-[10px] font-black rounded-sm transition-all",
+                          currentPage === p 
+                            ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" 
+                            : "border-slate-100 text-slate-400 hover:bg-slate-50"
+                        )}
+                      >
+                        {p}
+                      </Button>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages || loading}
+              className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
+
+      <AppDialog
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title={selectedOutlet ? 'Edit Outlet' : 'Tambah Outlet Baru'}
+        subtitle="Isi detail outlet untuk mengelola cabang toko Anda."
+        variant="receipt"
+      >
+        <div className="min-h-0">
+          <OutletForm 
+            initialData={selectedOutlet}
+            loading={isSubmitting}
+            onSubmit={handleOutletSubmit}
+            onCancel={() => setModalOpen(false)}
+          />
+        </div>
+      </AppDialog>
 
       <ConfirmDialog 
         open={deleteConfirmOpen}

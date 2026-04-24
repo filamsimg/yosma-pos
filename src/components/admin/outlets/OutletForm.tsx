@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { FormSection } from '@/components/ui/form-section';
 import { normalizeTypeName, normalizePhoneNumber } from '@/lib/utils/string-utils';
 import type { Outlet, Profile, OutletType } from '@/types';
 
@@ -162,29 +163,24 @@ export function OutletForm({
       <div className="space-y-10">
         
         {/* Section 1: Detail Outlet */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Store className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Detail & Lokasi Outlet</h3>
-          </div>
-
-          <div className="grid gap-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2.5">
-                <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Nama Lengkap Outlet *</Label>
+        <FormSection 
+          title="Detail & Lokasi Outlet" 
+        >
+          <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap Outlet *</Label>
                 <Input
                   {...register('name')}
                   onChange={(e) => setValue('name', e.target.value.toUpperCase())}
-                  className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl uppercase font-semibold text-base"
+                  className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus-visible:ring-blue-600 px-4 shadow-none rounded-sm uppercase font-bold text-xs"
                   placeholder="CONTOH: SEHAT JAYA"
                 />
-                {errors.name && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.name.message}</p>}
+                {errors.name && <p className="text-[10px] text-red-600 mt-1 font-bold ml-1 uppercase">{errors.name.message}</p>}
               </div>
 
-              <div className="space-y-2.5">
-                <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Tipe Outlet / Toko</Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipe Outlet / Toko</Label>
                 {isAddingType ? (
                   <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
                     <Input
@@ -192,47 +188,47 @@ export function OutletForm({
                       value={newTypeName}
                       onChange={(e) => setNewTypeName(e.target.value.toUpperCase())}
                       autoFocus
-                      className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 rounded-xl shadow-sm uppercase font-bold"
+                      className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 px-4 focus-visible:ring-blue-600 rounded-sm shadow-none uppercase font-bold text-xs"
                     />
                     <Button 
                       type="button"
                       size="icon" 
                       onClick={handleAddType} 
                       disabled={submittingType}
-                      className="bg-blue-600 hover:bg-blue-700 h-12 w-12 shrink-0 rounded-xl shadow-sm"
+                      className="bg-blue-600 hover:bg-blue-700 h-10 w-10 shrink-0 rounded-sm shadow-sm"
                     >
-                      {submittingType ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <Check className="h-5 w-5 text-white" />}
+                      {submittingType ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-4 w-4 text-white" />}
                     </Button>
                     <Button 
                       type="button"
                       size="sm" 
                       variant="ghost" 
                       onClick={() => setIsAddingType(false)}
-                      className="text-slate-500 hover:text-red-600 h-12 px-2 font-bold"
+                      className="text-slate-400 hover:text-red-600 h-10 px-2 font-black text-[10px] uppercase"
                     >
                       BATAL
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <Controller
                       name="type"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ''} onValueChange={field.onChange} disabled={fetchingTypes}>
-                          <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 focus:ring-blue-600 px-5 flex-1 rounded-xl font-medium">
+                          <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 flex-1 rounded-sm font-bold text-xs uppercase">
                             <SelectValue placeholder={fetchingTypes ? "MEMUAT..." : "PILIH TIPE"} />
                           </SelectTrigger>
-                          <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-xl">
+                          <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
                             {outletTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.name} className="focus:bg-slate-50 focus:text-blue-600 py-3 px-4 flex items-center justify-between group/item">
+                              <SelectItem key={type.id} value={type.name} className="focus:bg-slate-50 focus:text-blue-600 py-2 px-3 flex items-center justify-between group/item text-xs font-bold uppercase">
                                 <span>{type.name}</span>
                                 <button
                                   type="button"
                                   onClick={(e) => handleDeleteTypeClick(e, type)}
                                   className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-red-50 hover:text-red-600 rounded transition-all ml-2"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </button>
                               </SelectItem>
                             ))}
@@ -244,52 +240,47 @@ export function OutletForm({
                       type="button"
                       size="icon" 
                       onClick={() => setIsAddingType(true)}
-                      className="h-12 w-12 shrink-0 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-xl"
+                      className="h-10 w-10 shrink-0 bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-none rounded-sm"
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2.5">
-              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Alamat Lengkap Outlet</Label>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Alamat Lengkap Outlet</Label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                 <Input
                   {...register('address')}
-                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-10 shadow-sm rounded-xl"
+                  className="pl-9 bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus-visible:ring-blue-600 shadow-none rounded-sm text-xs font-bold uppercase"
                   placeholder="Gunakan nama jalan, nomor, dan kecamatan..."
                 />
               </div>
             </div>
           </div>
-        </section>
+        </FormSection>
 
         {/* Section 2: Operasional & Jadwal */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <CalendarClock className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Operasional & Jadwal Kunjungan</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2.5">
-              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Hari Kunjungan Utama</Label>
+        <FormSection 
+          title="Operasional & Jadwal" 
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hari Kunjungan Utama</Label>
               <Controller
                 name="visit_day"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 focus:ring-blue-600 px-5 rounded-xl font-medium">
+                    <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm font-bold text-xs uppercase">
                       <SelectValue placeholder="PILIH HARI" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-xl">
+                    <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
                       {VISIT_DAYS.map((day) => (
-                        <SelectItem key={day.value} value={day.value} className="focus:bg-slate-50 focus:text-blue-600 py-3">
+                        <SelectItem key={day.value} value={day.value} className="focus:bg-slate-50 focus:text-blue-600 py-2 text-xs font-bold uppercase">
                           {day.label}
                         </SelectItem>
                       ))}
@@ -299,19 +290,19 @@ export function OutletForm({
               />
             </div>
 
-            <div className="space-y-2.5">
-              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Frekuensi Kunjungan</Label>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Frekuensi Kunjungan</Label>
               <Controller
                 name="visit_frequency"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 focus:ring-blue-600 px-5 rounded-xl font-medium">
+                    <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm font-bold text-xs uppercase">
                       <SelectValue placeholder="SEMINGGU SEKALI" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-xl">
+                    <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
                       {VISIT_FREQUENCIES.map((freq) => (
-                        <SelectItem key={freq.value} value={freq.value} className="focus:bg-slate-50 focus:text-blue-600 py-3">
+                        <SelectItem key={freq.value} value={freq.value} className="focus:bg-slate-50 focus:text-blue-600 py-2 text-xs font-bold uppercase">
                           {freq.label}
                         </SelectItem>
                       ))}
@@ -321,40 +312,34 @@ export function OutletForm({
               />
             </div>
           </div>
-        </section>
+        </FormSection>
 
         {/* Section 3: Penugasan & Kontak */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Users className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Penugasan & Kontak</h3>
-          </div>
-
-          <div className="grid gap-8">
-            <div className="space-y-3.5">
-              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1 flex items-center justify-between">
+        <FormSection 
+          title="Penugasan & Kontak" 
+        >
+          <div className="grid gap-6">
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
                 <span>Penugasan Sales Lapangan</span>
-                <span className="text-[10px] text-slate-400 font-medium normal-case">Sales yang dapat melakukan check-in di outlet ini.</span>
               </Label>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <Select onValueChange={(val: any) => { if (typeof val === 'string') addSales(val); }}>
-                  <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 focus:ring-blue-600 px-5 rounded-xl shadow-sm">
+                  <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm shadow-none font-bold text-xs uppercase">
                     <SelectValue placeholder={fetchingProfiles ? "MEMUAT DATA SALES..." : "PILIH SALES UNTUK DITAMBAHKAN"} />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-xl">
+                  <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
                     {salesProfiles.filter(p => p.nik && !selectedCodes.includes(p.nik.toUpperCase())).length === 0 ? (
-                      <div className="p-6 text-center text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">Semua sales aktif<br/>telah ditugaskan ke outlet ini</div>
+                      <div className="p-6 text-center text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">Semua sales aktif telah ditugaskan</div>
                     ) : (
                       salesProfiles
                         .filter(p => p.nik && !selectedCodes.includes(p.nik.toUpperCase()))
                         .map((profile) => (
-                          <SelectItem key={profile.id} value={profile.nik || ''} className="focus:bg-slate-50 focus:text-blue-600 py-3 px-4">
+                          <SelectItem key={profile.id} value={profile.nik || ''} className="focus:bg-slate-50 focus:text-blue-600 py-2 px-3 text-xs font-bold uppercase">
                             <div className="flex items-center gap-2">
-                               <span className="font-bold text-slate-900">{profile.full_name}</span>
-                               <span className="text-[10px] font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{profile.nik}</span>
+                               <span className="text-slate-900">{profile.full_name}</span>
+                               <span className="text-[9px] font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{profile.nik}</span>
                             </div>
                           </SelectItem>
                         ))
@@ -363,26 +348,25 @@ export function OutletForm({
                 </Select>
 
                 {/* List Selected Items */}
-                <div className={`p-5 rounded-2xl border transition-all duration-300 flex flex-wrap gap-3 ${selectedCodes.length === 0 ? 'bg-slate-50/50 border-slate-100' : 'bg-slate-50 border-slate-200 shadow-inner'}`}>
+                <div className={`p-4 rounded-sm border transition-all duration-300 flex flex-wrap gap-2 ${selectedCodes.length === 0 ? 'bg-slate-50/50 border-slate-100' : 'bg-slate-50 border-slate-100 shadow-inner'}`}>
                   {selectedCodes.length > 0 ? (
                     selectedCodes.map(code => {
                       const profile = salesProfiles.find(p => p.nik?.toUpperCase() === code);
                       return (
-                        <div key={code} className="flex items-center gap-3 bg-white border border-slate-200 pl-4 pr-2 py-2 rounded-xl transition-all hover:border-blue-300 hover:shadow-md group">
+                        <div key={code} className="flex items-center gap-2 bg-white border border-slate-100 pl-3 pr-1 py-1 rounded-sm transition-all hover:border-blue-200 group">
                            <div className="flex flex-col">
-                             <span className="text-xs font-black text-slate-900">{profile?.full_name || 'Loading...'}</span>
+                             <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{profile?.full_name || 'Loading...'}</span>
                              <span className="text-[9px] font-mono text-blue-600 font-bold">{code}</span>
                            </div>
-                           <button type="button" onClick={() => removeSales(code)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all">
-                             <X className="h-4 w-4" />
+                           <button type="button" onClick={() => removeSales(code)} className="w-6 h-6 rounded-sm flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all">
+                             <X className="h-3.5 w-3.5" />
                            </button>
                         </div>
                       )
                     })
                   ) : (
-                    <div className="w-full text-center py-2 flex flex-col items-center gap-2 opacity-40">
-                       <Users className="h-6 w-6 text-slate-400" />
-                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Belum ada sales terpilih untuk outlet ini</span>
+                    <div className="w-full text-center py-2 flex flex-col items-center gap-1 opacity-20">
+                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Belum ada sales terpilih</span>
                     </div>
                   )}
                 </div>
@@ -390,42 +374,42 @@ export function OutletForm({
               <Input type="hidden" {...register('assigned_sales')} />
             </div>
 
-            <div className="space-y-2.5">
-              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">No. WhatsApp Toko / Owner</Label>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. WhatsApp Toko / Owner</Label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 border-r border-slate-200 pr-3 h-6 flex items-center">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-300 border-r border-slate-100 pr-3 h-4 flex items-center">
                   +62
                 </div>
                 <Input
                   {...register('phone')}
                   onChange={(e) => setValue('phone', normalizePhoneNumber(e.target.value))}
-                  className="pl-16 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 text-base font-semibold rounded-xl"
+                  className="pl-14 bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus-visible:ring-blue-600 text-xs font-black tabular-nums rounded-sm shadow-none"
                   placeholder="812xxxxxx"
                 />
               </div>
-              {errors.phone && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.phone.message}</p>}
+              {errors.phone && <p className="text-[10px] text-red-600 mt-1 font-bold ml-1 uppercase">{errors.phone.message}</p>}
             </div>
           </div>
-        </section>
+        </FormSection>
 
       </div>
 
-      <div className="flex items-center justify-end gap-4 pt-10 mt-6 border-t border-slate-100">
+      <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-slate-100">
         <Button
           type="button"
           variant="ghost"
           onClick={onCancel}
-          className="text-slate-500 hover:text-slate-800 hover:bg-slate-100 h-12 px-8 font-bold rounded-xl transition-all"
+          className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 h-10 px-6 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all"
         >
           Batal
         </Button>
         <Button
           type="submit"
           disabled={loading || fetchingProfiles || fetchingTypes}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-10 font-black text-sm shadow-xl shadow-blue-200 transition-all active:scale-95 rounded-xl flex items-center gap-2"
+          className="bg-slate-900 hover:bg-black text-white h-10 px-8 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-100 transition-all active:scale-95 rounded-sm flex items-center gap-2"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-          {initialData ? 'SIMPAN PERUBAHAN' : 'SELESAIKAN PENDAFTARAN'}
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          {initialData ? 'SIMPAN PERUBAHAN' : 'SELESAIKAN'}
         </Button>
       </div>
 
