@@ -164,6 +164,7 @@ export function AddOutletDialog({ open, onOpenChange, onSuccess }: AddOutletDial
       onOpenChange={onOpenChange}
       title="Daftarkan Outlet Baru"
       subtitle="Input data toko untuk mulai transaksi atau catat prospek"
+      maxWidth="max-w-md"
     >
       <div className="flex flex-col h-[75vh] md:h-[600px]">
         <form 

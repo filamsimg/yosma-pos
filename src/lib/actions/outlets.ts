@@ -8,7 +8,7 @@ export async function getPaginatedOutlets(
   page: number, 
   pageSize: number, 
   search: string = '',
-  filters?: { type?: string[]; visit_day?: string[]; assigned_sales?: string[] },
+  filters?: { type?: string[]; visit_day?: string[]; assigned_sales?: string[]; status?: string[] },
   orderBy: string = 'name',
   orderDir: 'asc' | 'desc' = 'asc'
 ) {
@@ -35,10 +35,11 @@ export async function getPaginatedOutlets(
   }
 
   if (filters?.assigned_sales && filters.assigned_sales.length > 0) {
-    // For assigned_sales, since it was previously ilike, 
-    // if it's multiple we might need a different approach, 
-    // but usually it's one sales name. Using .in() for consistency.
     query = query.in('assigned_sales', filters.assigned_sales);
+  }
+
+  if (filters?.status && filters.status.length > 0) {
+    query = query.in('status', filters.status);
   }
 
   const { data, count, error } = await query.range(from, to);

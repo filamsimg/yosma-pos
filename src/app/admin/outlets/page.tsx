@@ -32,7 +32,7 @@ import {
   getAllOutlets
 } from '@/lib/actions/outlets';
 import { ExportButton } from '@/components/admin/shared/ExportButton';
-import { VISIT_DAYS } from '@/lib/constants';
+import { VISIT_DAYS, OUTLET_STATUS_MAP } from '@/lib/constants';
 import { type Outlet } from '@/types';
 import { type OutletFormValues } from '@/lib/validations/outlet';
 
@@ -42,6 +42,7 @@ export default function AdminOutletsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [dayFilter, setDayFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [sorting, setSorting] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'name', dir: 'asc' });
   const [outletTypes, setOutletTypes] = useState<any[]>([]);
 
@@ -73,13 +74,14 @@ export default function AdminOutletsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, searchQuery, pageSize, typeFilter, dayFilter, sorting]);
+  }, [currentPage, searchQuery, pageSize, typeFilter, dayFilter, statusFilter, sorting]);
 
   async function fetchData() {
     setLoading(true);
     const filters = {
       type: typeFilter,
-      visit_day: dayFilter
+      visit_day: dayFilter,
+      status: statusFilter
     };
     const result = await getPaginatedOutlets(
       currentPage, 
@@ -232,14 +234,21 @@ export default function AdminOutletsPage() {
               selectedValues={dayFilter}
               onSelect={(val) => { setDayFilter(val); setCurrentPage(1); }}
             />
+            <DataTableFacetedFilter
+              title="Status"
+              options={Object.entries(OUTLET_STATUS_MAP).map(([key, val]) => ({ label: val.label, value: key }))}
+              selectedValues={statusFilter}
+              onSelect={(val) => { setStatusFilter(val); setCurrentPage(1); }}
+            />
             
-            {(typeFilter.length > 0 || dayFilter.length > 0) && (
+            {(typeFilter.length > 0 || dayFilter.length > 0 || statusFilter.length > 0) && (
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => {
                   setTypeFilter([]);
                   setDayFilter([]);
+                  setStatusFilter([]);
                   setCurrentPage(1);
                 }}
                 className="h-8 px-2 text-[9px] font-black text-red-600 hover:text-red-700 hover:bg-red-50 uppercase tracking-widest"
@@ -381,7 +390,7 @@ export default function AdminOutletsPage() {
         subtitle="Isi detail outlet untuk mengelola cabang toko Anda."
         variant="receipt"
       >
-        <div className="min-h-0">
+        <div className="max-h-[80vh] overflow-y-auto custom-scrollbar p-1">
           <OutletForm 
             initialData={selectedOutlet}
             loading={isSubmitting}

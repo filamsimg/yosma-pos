@@ -14,7 +14,7 @@ import {
   ArrowUp, 
   ArrowDown 
 } from 'lucide-react';
-import { VISIT_DAYS, VISIT_FREQUENCIES } from '@/lib/constants';
+import { VISIT_DAYS, VISIT_FREQUENCIES, OUTLET_STATUS_MAP } from '@/lib/constants';
 import type { Outlet } from '@/types';
 import { cn } from '@/lib/utils';
 import { AdminTable } from '@/components/ui/admin/data-table';
@@ -97,6 +97,7 @@ export function OutletTable({
       )}
     </div>,
     "Kontak",
+    "Status",
     <div className="text-center">Aksi</div>
   ];
 
@@ -158,13 +159,23 @@ export function OutletTable({
             {o.phone ? (
               <div className="flex items-center gap-1.5">
                 <div className="w-7 h-7 rounded-sm bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
-                  <Phone className="h-3 w-3" />
+                  <Phone className="h-3.5 w-3.5" />
                 </div>
                 <span className="text-[11px] font-black text-slate-700 tabular-nums">{o.phone}</span>
               </div>
             ) : (
               <span className="text-[10px] text-slate-300 italic">No Contact</span>
             )}
+          </TableCell>
+          <TableCell className="px-4 py-3">
+             {o.status && (
+                <Badge className={cn(
+                  "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm",
+                  OUTLET_STATUS_MAP[o.status as keyof typeof OUTLET_STATUS_MAP]?.color || "bg-slate-100 text-slate-500"
+                )}>
+                  {OUTLET_STATUS_MAP[o.status as keyof typeof OUTLET_STATUS_MAP]?.label || o.status}
+                </Badge>
+              )}
           </TableCell>
           <TableCell className="px-4 py-3 text-center">
             <div className="flex items-center justify-center gap-1">
