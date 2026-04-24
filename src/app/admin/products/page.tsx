@@ -369,7 +369,7 @@ export default function AdminProductsPage() {
 
       {/* Bulk Actions Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="bg-red-50 border border-red-100 p-3 rounded-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-300 shadow-sm mb-4">
+        <div className="bg-red-50 border border-red-100 p-3 rounded-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-150 shadow-sm mb-4">
           <div className="text-red-700 text-[10px] font-black uppercase tracking-widest px-2">
             <span className="bg-red-600 text-white px-2 py-0.5 rounded-sm mr-2">{selectedIds.length}</span> PRODUK DIPILIH
           </div>

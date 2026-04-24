@@ -20,7 +20,7 @@ interface AdminTableProps {
   zebra?: boolean
 }
 
-export function AdminTable({
+function AdminTableComponent({
   headers,
   children,
   className,
@@ -56,3 +56,6 @@ export function AdminTable({
     </div>
   )
 }
+
+// Memoize the table to prevent redundant re-renders during parent state updates (like search query input)
+export const AdminTable = React.memo(AdminTableComponent);

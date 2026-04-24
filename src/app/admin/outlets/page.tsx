@@ -253,7 +253,7 @@ export default function AdminOutletsPage() {
 
       {/* Bulk Actions Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="bg-blue-50 border border-blue-100 p-3 rounded-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+        <div className="bg-blue-50 border border-blue-100 p-3 rounded-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-150">
           <div className="text-blue-700 text-[10px] font-black uppercase tracking-widest px-2">
             <span className="text-blue-900">{selectedIds.length}</span> Outlet Terpilih
           </div>

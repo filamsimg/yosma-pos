@@ -253,7 +253,7 @@ export default function ReceivablesPage() {
                   </div>
 
                   {paymentMethod === 'TRANSFER' && (
-                    <div className="space-y-3 animate-in slide-in-from-top-4 duration-300">
+                    <div className="space-y-3 animate-in slide-in-from-top-4 duration-150">
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         <Camera className="h-3.5 w-3.5 text-blue-500" /> Bukti Transfer
                       </Label>

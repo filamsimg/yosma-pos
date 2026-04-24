@@ -70,7 +70,7 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-5 items-start animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="grid gap-6 lg:grid-cols-5 items-start animate-in fade-in slide-in-from-bottom-4 duration-150 pb-12">
       
       {/* Kolom Kiri: Info Profil Utama */}
       <div className="lg:col-span-3 space-y-6">
