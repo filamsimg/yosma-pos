@@ -25,7 +25,11 @@ import {
   AlertTriangle,
   Loader2,
   Pencil,
-  X
+  X,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Plus
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
@@ -46,35 +50,90 @@ export default function SalesHistoryPage() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  
   const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
   const [txnItems, setTxnItems] = useState<TransactionItem[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
+  const ITEMS_PER_PAGE = 20;
+
+  // Debounced fetch function
   useEffect(() => {
-    async function fetchHistory() {
-      if (!user) return;
-      const supabase = createClient();
-      const { data } = await supabase
+    const timer = setTimeout(() => {
+      setPage(0);
+      fetchHistory(0, true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, statusFilter, user]);
+
+  async function fetchHistory(pageToFetch: number, isNewSearch = false) {
+    if (!user) return;
+    
+    if (isNewSearch) setLoading(true);
+    else setLoadingMore(true);
+
+    const supabase = createClient();
+    const from = pageToFetch * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    try {
+      let query = supabase
         .from('transactions')
-        .select('*, outlet:outlets(*), sales:profiles(*)')
+        .select('*, outlet:outlets(*), sales:profiles(*)', { count: 'exact' })
         .eq('sales_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(50);
-      if (data) setTransactions(data);
+        .range(from, to);
+
+      if (statusFilter !== 'ALL') {
+        query = query.eq('status', statusFilter);
+      }
+
+      if (searchQuery.trim()) {
+        query = query.ilike('invoice_number', `%${searchQuery}%`);
+      }
+
+      const { data, count } = await query;
+
+      if (data) {
+        if (isNewSearch) {
+          setTransactions(data);
+        } else {
+          setTransactions(prev => [...prev, ...data]);
+        }
+        setHasMore(count ? (from + data.length) < count : false);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+    } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-    fetchHistory();
-  }, [user]);
+  }
+
+  function handleLoadMore() {
+    if (loadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchHistory(nextPage);
+  }
 
   const todayTransactions = transactions.filter(t => 
     format(new Date(t.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
   );
   
   const stats = {
-    today_count: todayTransactions.length,
-    today_omzet: todayTransactions.reduce((sum, t) => sum + t.total_price, 0),
+    today_count: todayTransactions.filter(t => t.status !== 'CANCELLED').length,
+    today_cancelled: todayTransactions.filter(t => t.status === 'CANCELLED').length,
+    today_omzet: todayTransactions
+      .filter(t => t.status !== 'CANCELLED')
+      .reduce((sum, t) => sum + t.total_price, 0),
     pending_count: transactions.filter(t => t.status === 'PENDING').length
   };
 
@@ -146,13 +205,90 @@ export default function SalesHistoryPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Order Hari Ini" value={stats.today_count} icon={History} iconBgColor="bg-blue-50" iconColor="text-blue-600" className="border-slate-100 p-3" />
-          <StatCard label="Pending" value={stats.pending_count} icon={Clock} iconBgColor="bg-amber-50" iconColor="text-amber-600" className="border-slate-100 p-3" />
+        <div className="space-y-4">
+          {/* Omzet Highlight */}
+          <div className="bg-blue-600 rounded-sm p-4 text-white shadow-lg shadow-blue-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Omzet Hari Ini</p>
+              <p className="text-2xl font-black tracking-tighter mt-1">
+                Rp {stats.today_omzet.toLocaleString('id-ID')}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-sm bg-white/20 flex items-center justify-center backdrop-blur-md">
+              <Receipt className="h-6 w-6 text-white" />
+            </div>
+          </div>
+
+          {/* Counts Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <StatCard 
+              label="Selesai" 
+              value={stats.today_count} 
+              icon={CheckCircle2} 
+              iconBgColor="bg-emerald-50" 
+              iconColor="text-emerald-600" 
+              className="border-slate-100 p-3" 
+            />
+            <StatCard 
+              label="Menunggu" 
+              value={stats.pending_count} 
+              icon={Clock} 
+              iconBgColor="bg-amber-50" 
+              iconColor="text-amber-600" 
+              className="border-slate-100 p-3" 
+            />
+            <div className="col-span-2">
+              <StatCard 
+                label="Dibatalkan" 
+                value={stats.today_cancelled} 
+                icon={XCircle} 
+                iconBgColor="bg-red-50" 
+                iconColor="text-red-600" 
+                className="border-slate-100 p-3" 
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="p-5 space-y-3">
+      <div className="p-5 space-y-5">
+        {/* Search & Filter Bar */}
+        <div className="space-y-3">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Cari No. Invoice atau Nama Outlet..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 h-12 bg-white border border-slate-200 rounded-sm text-sm font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {[
+              { id: 'ALL', label: 'SEMUA', icon: History },
+              { id: 'PENDING', label: 'MENUNGGU', icon: Clock },
+              { id: 'COMPLETED', label: 'SELESAI', icon: CheckCircle2 },
+              { id: 'CANCELLED', label: 'DIBATALKAN', icon: XCircle },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setStatusFilter(f.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-4 py-2 rounded-sm text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border",
+                  statusFilter === f.id
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100"
+                    : "bg-white text-slate-400 border-slate-100 hover:border-blue-200 hover:text-blue-600"
+                )}
+              >
+                <f.icon className="h-3 w-3" />
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-sm bg-white border border-slate-100" />)}
@@ -187,6 +323,26 @@ export default function SalesHistoryPage() {
                 </Card>
               </button>
             ))}
+
+            {hasMore && (
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="w-full py-4 bg-white border border-slate-100 rounded-sm text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Memuat Data...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-3 w-3" />
+                    Muat Lebih Banyak
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
       </div>

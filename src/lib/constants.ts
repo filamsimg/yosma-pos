@@ -78,7 +78,7 @@ export const TRANSACTION_STATUSES = [
   { value: 'PENDING', label: 'Menunggu', color: 'bg-amber-500' },
   { value: 'PROCESSING', label: 'Diproses', color: 'bg-blue-500' },
   { value: 'COMPLETED', label: 'Selesai', color: 'bg-emerald-500' },
-  { value: 'CANCELLED', label: 'Batal', color: 'bg-red-500' },
+  { value: 'CANCELLED', label: 'Dibatalkan', color: 'bg-red-500' },
 ] as const;
 
 export const PAYMENT_STATUSES = [
