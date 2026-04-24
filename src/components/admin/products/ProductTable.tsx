@@ -44,13 +44,6 @@ export function ProductTable({
     );
   }
 
-  if (products.length === 0) {
-    return (
-      <div className="p-8 text-center text-slate-400">
-        Tidak ada produk ditemukan.
-      </div>
-    );
-  }
 
   const toggleAll = () => {
     if (selectedIds.length === products.length) {
@@ -142,86 +135,94 @@ export function ProductTable({
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-slate-100">
-          {products.map((p) => (
-            <TableRow 
-              key={p.id} 
-              className={`hover:bg-slate-50/50 transition-colors ${selectedIds.includes(p.id) ? 'bg-blue-50/30' : ''}`}
-            >
-              <TableCell className="py-4 px-6">
-                <input 
-                  type="checkbox" 
-                  checked={selectedIds.includes(p.id)}
-                  onChange={() => toggleOne(p.id)}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
-                />
-              </TableCell>
-              <TableCell className="py-4 px-5 text-sm text-slate-500">{p.sku}</TableCell>
-              <TableCell className="py-4 px-5 font-medium text-slate-900 text-sm">
-                <div>
-                  {p.name}
-                  <div className="text-[10px] text-slate-400 font-normal">{p.category?.name}</div>
-                </div>
-              </TableCell>
-              <TableCell className="py-4 px-5 text-slate-500 text-sm">{p.brand?.name || '-'}</TableCell>
-              <TableCell className="py-4 px-5 text-slate-500 text-sm">{p.unit?.name || '-'}</TableCell>
-              <TableCell className="py-4 px-5 text-slate-900 font-medium text-sm text-right">
-                Rp {p.price.toLocaleString('id-ID')}
-              </TableCell>
-              <TableCell className="py-4 px-5 text-center text-slate-500 text-xs">
-                {p.discount_regular > 0 ? `${p.discount_regular}%` : '-'}
-              </TableCell>
-              <TableCell className="py-4 px-5 text-center">
-                <Badge
-                  variant="outline"
-                  className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${
-                    p.stock <= 0
-                      ? 'bg-red-50 text-red-600'
-                      : p.stock <= (p.min_stock ?? 10)
-                      ? 'bg-amber-50 text-amber-600'
-                      : 'bg-emerald-50 text-emerald-600'
-                  }`}
-                >
-                  {p.stock} {p.unit?.name}
-                </Badge>
-                {p.stock > 0 && p.stock <= (p.min_stock ?? 10) && (
-                  <div className="text-[10px] text-amber-600 mt-1 font-semibold uppercase" title={`Batas: ${p.min_stock ?? 10}`}>
-                    Segera Restock!
-                  </div>
-                )}
-              </TableCell>
-              <TableCell className="py-3 px-6 text-center whitespace-nowrap">
-                <div className="flex items-center justify-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onAdjustStock(p)}
-                  className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 px-2"
-                  title="Sesuaikan Stok"
-                >
-                  <PackagePlus className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit(p)}
-                  className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
-                  title="Edit Produk"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(p.id)}
-                  className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 px-2"
-                  title="Hapus Produk"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                </div>
+          {products.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={9} className="py-20 text-center text-slate-400 italic">
+                Tidak ada produk ditemukan.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            products.map((p) => (
+              <TableRow 
+                key={p.id} 
+                className={`hover:bg-slate-50/50 transition-colors ${selectedIds.includes(p.id) ? 'bg-blue-50/30' : ''}`}
+              >
+                <TableCell className="py-4 px-6">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.includes(p.id)}
+                    onChange={() => toggleOne(p.id)}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+                  />
+                </TableCell>
+                <TableCell className="py-4 px-5 text-sm text-slate-500">{p.sku}</TableCell>
+                <TableCell className="py-4 px-5 font-medium text-slate-900 text-sm">
+                  <div>
+                    {p.name}
+                    <div className="text-[10px] text-slate-400 font-normal">{p.category?.name}</div>
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-5 text-slate-500 text-sm">{p.brand?.name || '-'}</TableCell>
+                <TableCell className="py-4 px-5 text-slate-500 text-sm">{p.unit?.name || '-'}</TableCell>
+                <TableCell className="py-4 px-5 text-slate-900 font-medium text-sm text-right">
+                  Rp {p.price.toLocaleString('id-ID')}
+                </TableCell>
+                <TableCell className="py-4 px-5 text-center text-slate-500 text-xs">
+                  {p.discount_regular > 0 ? `${p.discount_regular}%` : '-'}
+                </TableCell>
+                <TableCell className="py-4 px-5 text-center">
+                  <Badge
+                    variant="outline"
+                    className={`text-[11px] px-2.5 py-1 font-medium border-0 rounded-md ${
+                      p.stock <= 0
+                        ? 'bg-red-50 text-red-600'
+                        : p.stock <= (p.min_stock ?? 10)
+                        ? 'bg-amber-50 text-amber-600'
+                        : 'bg-emerald-50 text-emerald-600'
+                    }`}
+                  >
+                    {p.stock} {p.unit?.name}
+                  </Badge>
+                  {p.stock > 0 && p.stock <= (p.min_stock ?? 10) && (
+                    <div className="text-[10px] text-amber-600 mt-1 font-semibold uppercase" title={`Batas: ${p.min_stock ?? 10}`}>
+                      Segera Restock!
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="py-3 px-6 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAdjustStock(p)}
+                    className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 px-2"
+                    title="Sesuaikan Stok"
+                  >
+                    <PackagePlus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(p)}
+                    className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
+                    title="Edit Produk"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(p.id)}
+                    className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 px-2"
+                    title="Hapus Produk"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
