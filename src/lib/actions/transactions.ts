@@ -13,34 +13,45 @@ export async function cancelTransaction(transactionId: string) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return { error: 'Unauthorized' };
 
+  // Ambil data transaksi dasar tanpa join
   const { data: transaction, error: txnError } = await supabase
     .from('transactions')
-    .select('id, status, invoice_number, transaction_items(product_id, quantity)')
+    .select('id, status, invoice_number')
     .eq('id', transactionId)
     .eq('sales_id', user.id)
     .single();
 
-  if (txnError || !transaction) return { error: 'Transaksi tidak ditemukan' };
+  if (txnError || !transaction) return { error: txnError?.message || 'Transaksi tidak ditemukan' };
+  
   if (transaction.status !== 'PENDING') {
     return { error: 'Hanya transaksi berstatus MENUNGGU yang bisa dibatalkan' };
   }
 
-  // Kembalikan stok semua item
-  const items: { product_id: string; quantity: number }[] = (transaction as any).transaction_items || [];
-  for (const item of items) {
+  // Ambil item transaksi secara terpisah untuk restock
+  const { data: items, error: itemsError } = await supabase
+    .from('transaction_items')
+    .select('product_id, quantity')
+    .eq('transaction_id', transactionId);
+
+  if (itemsError) return { error: `Gagal mengambil item: ${itemsError.message}` };
+
+  for (const item of (items || [])) {
     const { data: product } = await supabase
       .from('products').select('stock').eq('id', item.product_id).single();
-    if (!product) continue;
-    await supabase.from('products')
-      .update({ stock: product.stock + item.quantity })
-      .eq('id', item.product_id);
-    await supabase.from('stock_adjustments').insert([{
-      product_id: item.product_id,
-      adjusted_by: user.id,
-      old_stock: product.stock,
-      new_stock: product.stock + item.quantity,
-      reason: `RESTOCK: Pembatalan pesanan ${(transaction as any).invoice_number}`,
-    }]);
+    
+    if (product) {
+      await supabase.from('products')
+        .update({ stock: product.stock + item.quantity })
+        .eq('id', item.product_id);
+        
+      await supabase.from('stock_adjustments').insert([{
+        product_id: item.product_id,
+        adjusted_by: user.id,
+        old_stock: product.stock,
+        new_stock: product.stock + item.quantity,
+        reason: `RESTOCK: Pembatalan pesanan ${transaction.invoice_number}`,
+      }]);
+    }
   }
 
   const { error } = await supabase
@@ -202,41 +213,56 @@ export async function updateTransactionStatus(
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return { error: 'Unauthorized' };
 
+  // Ambil data transaksi dasar tanpa join untuk menghindari error relasi
   const { data: transaction, error: txnError } = await supabase
     .from('transactions')
-    .select('id, status, invoice_number, transaction_items(product_id, quantity)')
+    .select('id, status, invoice_number')
     .eq('id', transactionId)
     .single();
 
-  if (txnError || !transaction) return { error: 'Transaksi tidak ditemukan' };
+  if (txnError || !transaction) {
+    return { error: txnError?.message || 'Transaksi tidak ditemukan' };
+  }
+  
   if (transaction.status === newStatus) return { success: true };
 
-  // Jika cancel: kembalikan stok
+  // Jika status diubah menjadi CANCELLED: kembalikan stok
   if (newStatus === 'CANCELLED') {
-    const items: { product_id: string; quantity: number }[] = (transaction as any).transaction_items || [];
-    for (const item of items) {
+    // Ambil item transaksi secara terpisah
+    const { data: items, error: itemsError } = await supabase
+      .from('transaction_items')
+      .select('product_id, quantity')
+      .eq('transaction_id', transactionId);
+
+    if (itemsError) return { error: `Gagal mengambil item: ${itemsError.message}` };
+
+    for (const item of (items || [])) {
       const { data: product } = await supabase
         .from('products').select('stock').eq('id', item.product_id).single();
-      if (!product) continue;
-      await supabase.from('products')
-        .update({ stock: product.stock + item.quantity })
-        .eq('id', item.product_id);
-      await supabase.from('stock_adjustments').insert([{
-        product_id: item.product_id,
-        adjusted_by: user.id,
-        old_stock: product.stock,
-        new_stock: product.stock + item.quantity,
-        reason: `RESTOCK: Admin batalkan transaksi ${(transaction as any).invoice_number}`,
-      }]);
+      
+      if (product) {
+        await supabase.from('products')
+          .update({ stock: product.stock + item.quantity })
+          .eq('id', item.product_id);
+          
+        await supabase.from('stock_adjustments').insert([{
+          product_id: item.product_id,
+          adjusted_by: user.id,
+          old_stock: product.stock,
+          new_stock: product.stock + item.quantity,
+          reason: `RESTOCK: Admin batalkan transaksi ${transaction.invoice_number}`,
+        }]);
+      }
     }
   }
 
-  const { error } = await supabase
+  // Lakukan pembaruan status
+  const { error: updateError } = await supabase
     .from('transactions')
     .update({ status: newStatus })
     .eq('id', transactionId);
 
-  if (error) return { error: error.message };
+  if (updateError) return { error: updateError.message };
 
   revalidatePath('/admin/transactions');
   revalidatePath('/sales/history');
