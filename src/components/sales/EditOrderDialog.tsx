@@ -200,16 +200,24 @@ export function EditOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-full max-h-[90vh] flex flex-col p-0 rounded-sm overflow-hidden gap-0">
+      <DialogContent className="max-w-lg w-full max-h-[90vh] flex flex-col p-0 rounded-sm overflow-hidden gap-0 border-0 shadow-2xl">
+        {/* Decorative Top */}
+        <div className="h-1.5 w-full bg-blue-600" />
+
         {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100">
-          <DialogTitle className="text-base font-black text-slate-900 tracking-tight">
-            Edit Pesanan
-          </DialogTitle>
-          <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            {invoiceNumber}
-          </DialogDescription>
-        </DialogHeader>
+        <div className="px-6 py-6 border-b border-dashed border-slate-200 bg-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mb-1">Order Modification</p>
+              <DialogTitle className="text-xl font-black text-slate-900 tracking-tight uppercase">
+                Koreksi Pesanan
+              </DialogTitle>
+            </div>
+            <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 font-black text-[9px] px-2 py-1 rounded-sm uppercase tracking-widest">
+              {invoiceNumber}
+            </Badge>
+          </div>
+        </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Search Produk */}
