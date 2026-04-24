@@ -28,10 +28,12 @@ import {
   Trash2 as TrashIcon, 
   XCircle, 
   AlertTriangle, 
-  TrendingUp 
+  TrendingUp,
+  Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTableFacetedFilter } from '@/components/admin/shared/DataTableFacetedFilter';
 import { ProductTable } from '@/components/admin/products/ProductTable';
 import { ProductForm } from '@/components/admin/products/ProductForm';
 import { ImportDialog } from '@/components/admin/products/ImportDialog';
@@ -277,43 +279,92 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Actions section (Search, Import, Create) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Cari produk, SKU, atau merk..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Cari produk, SKU, atau merk..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <ExportButton 
+              fetcher={getAllProducts}
+              filename="Daftar_Produk"
+              mapper={(p) => ({
+                'Nama': p.name,
+                'SKU': p.sku,
+                'Merk': p.brand?.name || '-',
+                'Kategori': p.category?.name || '-',
+                'Satuan': p.unit?.name || '-',
+                'Harga': p.price,
+                'Stok': p.stock,
+                'Min Stok': p.min_stock,
+                'Deskripsi': p.description || '-'
+              })}
+            />
+            <ImportDialog onSuccess={fetchData} />
+            <Button
+              onClick={() => handleOpenForm()}
+              className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              <span>Produk Baru</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <ExportButton 
-            fetcher={getAllProducts}
-            filename="Daftar_Produk"
-            mapper={(p) => ({
-              'Nama': p.name,
-              'SKU': p.sku,
-              'Merk': p.brand?.name || '-',
-              'Kategori': p.category?.name || '-',
-              'Satuan': p.unit?.name || '-',
-              'Harga': p.price,
-              'Stok': p.stock,
-              'Min Stok': p.min_stock,
-              'Deskripsi': p.description || '-'
-            })}
-          />
-          <ImportDialog onSuccess={fetchData} />
-          <Button
-            onClick={() => handleOpenForm()}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span>Produk Baru</span>
-          </Button>
+
+        {/* Filter Bar */}
+        <div className="flex flex-wrap items-center gap-2 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Filter:</div>
+           <DataTableFacetedFilter
+             title="Kategori"
+             options={categories.map(c => ({ label: c.name, value: c.id }))}
+             selectedValues={categoryFilter}
+             onSelect={(val) => { setCategoryFilter(val); setCurrentPage(1); }}
+           />
+           <DataTableFacetedFilter
+             title="Merk"
+             options={brands.map(b => ({ label: b.name, value: b.id }))}
+             selectedValues={brandFilter}
+             onSelect={(val) => { setBrandFilter(val); setCurrentPage(1); }}
+           />
+           <Select value={stockFilter} onValueChange={(val) => { if (val) { setStockFilter(val); setCurrentPage(1); } }}>
+             <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-slate-50 px-3">
+               <div className="flex items-center gap-2">
+                 <Filter className="h-3 w-3 text-slate-400" />
+                 <SelectValue placeholder="Status Stok" />
+               </div>
+             </SelectTrigger>
+             <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
+               <SelectItem value="ALL" className="text-xs">SEMUA STOK</SelectItem>
+               <SelectItem value="OUT_OF_STOCK" className="text-xs">HABIS (0)</SelectItem>
+               <SelectItem value="LOW_STOCK" className="text-xs">MENIPIS ({"<="}10)</SelectItem>
+               <SelectItem value="IN_STOCK" className="text-xs">TERSEDIA ({'>'}10)</SelectItem>
+             </SelectContent>
+           </Select>
+           
+           {(categoryFilter.length > 0 || brandFilter.length > 0 || stockFilter !== 'ALL') && (
+             <Button 
+               variant="ghost" 
+               size="sm" 
+               onClick={() => {
+                 setCategoryFilter([]);
+                 setBrandFilter([]);
+                 setStockFilter('ALL');
+                 setCurrentPage(1);
+               }}
+               className="h-8 px-2 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50"
+             >
+               Hapus Filter
+             </Button>
+           )}
         </div>
       </div>
 
@@ -347,14 +398,6 @@ export default function AdminProductsPage() {
             onAdjustStock={handleOpenStockAdjust}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={(val) => { setCategoryFilter(val); setCurrentPage(1); }}
-            brandFilter={brandFilter}
-            setBrandFilter={(val) => { setBrandFilter(val); setCurrentPage(1); }}
-            stockFilter={stockFilter}
-            setStockFilter={(val) => { setStockFilter(val); setCurrentPage(1); }}
-            categories={categories}
-            brands={brands}
             sorting={sorting}
             onSort={(field) => {
               setSorting(prev => ({

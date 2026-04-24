@@ -21,6 +21,7 @@ import {
 import { Search, Plus, ChevronLeft, ChevronRight, Trash2 as TrashIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTableFacetedFilter } from '@/components/admin/shared/DataTableFacetedFilter';
 import { OutletTable } from '@/components/admin/outlets/OutletTable';
 import { OutletForm } from '@/components/admin/outlets/OutletForm';
 import { ImportDialog } from '@/components/admin/outlets/ImportDialog';
@@ -180,42 +181,76 @@ export default function AdminOutletsPage() {
       </div>
 
       {/* Actions section (Search & Create) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Cari nama atau alamat..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Cari nama atau alamat..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <ExportButton 
+              fetcher={getAllOutlets}
+              filename="Daftar_Outlet"
+              mapper={(o) => ({
+                'Nama': o.name,
+                'Tipe': o.type || '-',
+                'Alamat': o.address || '-',
+                'Telepon': o.phone || '-',
+                'Pemilik': o.owner_name || '-',
+                'Hari Kunjungan': o.visit_day || '-',
+                'Frekuensi': o.visit_frequency || '-',
+                'NIK Sales': o.assigned_sales || '-'
+              })}
+            />
+            <ImportDialog onSuccess={fetchData} />
+            <Button
+              onClick={() => handleOpenForm()}
+              className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              <span>Outlet Baru</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <ExportButton 
-            fetcher={getAllOutlets}
-            filename="Daftar_Outlet"
-            mapper={(o) => ({
-              'Nama': o.name,
-              'Tipe': o.type || '-',
-              'Alamat': o.address || '-',
-              'Telepon': o.phone || '-',
-              'Pemilik': o.owner_name || '-',
-              'Hari Kunjungan': o.visit_day || '-',
-              'Frekuensi': o.visit_frequency || '-',
-              'NIK Sales': o.assigned_sales || '-'
-            })}
-          />
-          <ImportDialog onSuccess={fetchData} />
-          <Button
-            onClick={() => handleOpenForm()}
-            className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span>Outlet Baru</span>
-          </Button>
+
+        {/* Filter Bar */}
+        <div className="flex flex-wrap items-center gap-2 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Filter:</div>
+           <DataTableFacetedFilter
+             title="Tipe"
+             options={outletTypes.map(t => ({ label: t.name, value: t.name }))}
+             selectedValues={typeFilter}
+             onSelect={(val) => { setTypeFilter(val); setCurrentPage(1); }}
+           />
+           <DataTableFacetedFilter
+             title="Hari Kunjungan"
+             options={VISIT_DAYS.map(day => ({ label: day.label, value: day.value }))}
+             selectedValues={dayFilter}
+             onSelect={(val) => { setDayFilter(val); setCurrentPage(1); }}
+           />
+           
+           {(typeFilter.length > 0 || dayFilter.length > 0) && (
+             <Button 
+               variant="ghost" 
+               size="sm" 
+               onClick={() => {
+                 setTypeFilter([]);
+                 setDayFilter([]);
+                 setCurrentPage(1);
+               }}
+               className="h-8 px-2 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50"
+             >
+               Hapus Filter
+             </Button>
+           )}
         </div>
       </div>
 
@@ -248,11 +283,6 @@ export default function AdminOutletsPage() {
             onDelete={handleDelete}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
-            typeFilter={typeFilter}
-            setTypeFilter={(val) => { setTypeFilter(val); setCurrentPage(1); }}
-            dayFilter={dayFilter}
-            setDayFilter={(val) => { setDayFilter(val); setCurrentPage(1); }}
-            outletTypes={outletTypes}
             sorting={sorting}
             onSort={(field) => {
               setSorting(prev => ({

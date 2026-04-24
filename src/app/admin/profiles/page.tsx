@@ -21,6 +21,7 @@ import {
 import { Search, Plus, ChevronLeft, ChevronRight, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTableFacetedFilter } from '@/components/admin/shared/DataTableFacetedFilter';
 import { ProfileTable } from '@/components/admin/profiles/ProfileTable';
 import { ProfileForm } from '@/components/admin/profiles/ProfileForm';
 import { getPaginatedProfiles, updateProfile } from '@/lib/actions/profiles';
@@ -125,18 +126,58 @@ export default function AdminProfilesPage() {
       </div>
 
       {/* Actions section (Search) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Cari nama atau kode sales..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Cari nama atau kode sales..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
+            />
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="flex flex-wrap items-center gap-2 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Filter:</div>
+           <DataTableFacetedFilter
+             title="Role"
+             options={[
+               { label: "Admin", value: "ADMIN" },
+               { label: "Sales", value: "SALES" },
+             ]}
+             selectedValues={roleFilter}
+             onSelect={(val) => { setRoleFilter(val); setCurrentPage(1); }}
+           />
+           <DataTableFacetedFilter
+             title="Status"
+             options={[
+               { label: "Aktif", value: "ACTIVE" },
+               { label: "Nonaktif", value: "INACTIVE" },
+             ]}
+             selectedValues={statusFilter}
+             onSelect={(val) => { setStatusFilter(val); setCurrentPage(1); }}
+           />
+           
+           {(roleFilter.length > 0 || statusFilter.length > 0) && (
+             <Button 
+               variant="ghost" 
+               size="sm" 
+               onClick={() => {
+                 setRoleFilter([]);
+                 setStatusFilter([]);
+                 setCurrentPage(1);
+               }}
+               className="h-8 px-2 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50"
+             >
+               Hapus Filter
+             </Button>
+           )}
         </div>
       </div>
 
@@ -147,10 +188,6 @@ export default function AdminProfilesPage() {
             profiles={profiles}
             loading={loading}
             onEdit={handleOpenForm}
-            roleFilter={roleFilter}
-            setRoleFilter={(val) => { setRoleFilter(val); setCurrentPage(1); }}
-            statusFilter={statusFilter}
-            setStatusFilter={(val) => { setStatusFilter(val); setCurrentPage(1); }}
             sorting={sorting}
             onSort={(field) => {
               setSorting(prev => ({

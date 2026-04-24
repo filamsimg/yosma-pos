@@ -8,21 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DataTableFacetedFilter } from "../shared/DataTableFacetedFilter";
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Store, MapPin, Phone, Calendar, Briefcase, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { VISIT_DAYS, VISIT_FREQUENCIES } from '@/lib/constants';
 import type { Outlet } from '@/types';
-
 interface OutletTableProps {
   outlets: Outlet[];
   onEdit: (outlet: Outlet) => void;
@@ -30,11 +21,6 @@ interface OutletTableProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   loading?: boolean;
-  typeFilter: string[];
-  setTypeFilter: (val: string[]) => void;
-  dayFilter: string[];
-  setDayFilter: (val: string[]) => void;
-  outletTypes: any[];
   sorting: { field: string; dir: 'asc' | 'desc' };
   onSort: (field: string) => void;
 }
@@ -46,11 +32,6 @@ export function OutletTable({
   selectedIds,
   onSelectionChange,
   loading,
-  typeFilter,
-  setTypeFilter,
-  dayFilter,
-  setDayFilter,
-  outletTypes,
   sorting,
   onSort,
 }: OutletTableProps) {
@@ -108,7 +89,7 @@ export function OutletTable({
               />
             </TableHead>
             <TableHead 
-              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase cursor-pointer hover:bg-slate-100 transition-colors"
+              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => onSort('name')}
             >
               <div className="flex items-center gap-2">
@@ -116,19 +97,13 @@ export function OutletTable({
                 {sorting.field === 'name' ? (
                   sorting.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
                 ) : (
-                  <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-30" />
                 )}
-                <DataTableFacetedFilter
-                  title="Tipe"
-                  options={outletTypes.map(t => ({ label: t.name, value: t.name }))}
-                  selectedValues={typeFilter}
-                  onSelect={setTypeFilter}
-                />
               </div>
             </TableHead>
             <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Alamat</TableHead>
             <TableHead 
-              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase cursor-pointer hover:bg-slate-100 transition-colors"
+              className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => onSort('visit_day')}
             >
               <div className="flex items-center gap-2">
@@ -136,14 +111,8 @@ export function OutletTable({
                 {sorting.field === 'visit_day' ? (
                   sorting.dir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-blue-600" /> : <ArrowDown className="h-3.5 w-3.5 text-blue-600" />
                 ) : (
-                  <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                  <ArrowUpDown className="h-3.5 w-3.5 opacity-30" />
                 )}
-                <DataTableFacetedFilter
-                  title="Hari"
-                  options={VISIT_DAYS.map(day => ({ label: day.label, value: day.value }))}
-                  selectedValues={dayFilter}
-                  onSelect={setDayFilter}
-                />
               </div>
             </TableHead>
             <TableHead className="py-4 px-6 font-semibold text-slate-500 text-xs uppercase">Kontak</TableHead>
