@@ -153,10 +153,10 @@ export default function SalesHistoryPage() {
       <div className="p-5 space-y-3">
         {loading ? (
           <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl bg-white border border-slate-100" />)}
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-sm bg-white border border-slate-100" />)}
           </div>
         ) : transactions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm text-center px-6">
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-sm border border-slate-100 shadow-sm text-center px-6">
              <Receipt className="h-10 w-10 text-slate-200 mb-4" />
              <p className="text-sm font-black text-slate-300 uppercase italic">Belum Ada Transaksi</p>
           </div>
@@ -164,14 +164,14 @@ export default function SalesHistoryPage() {
           <div className="space-y-3">
             {transactions.map((txn) => (
               <button key={txn.id} onClick={() => handleViewDetail(txn)} className="w-full text-left active:scale-[0.98] transition-transform">
-                <Card className="border border-slate-100 bg-white shadow-sm rounded-xl overflow-hidden group">
+                <Card className="border border-slate-100 bg-white shadow-sm rounded-sm overflow-hidden group">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                         <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black"><Receipt className="h-4 w-4" /></div>
+                         <div className="w-9 h-9 rounded-sm bg-blue-50 flex items-center justify-center text-blue-600 font-black"><Receipt className="h-4 w-4" /></div>
                          <div>
                             <p className="font-black text-xs text-slate-800 leading-tight uppercase">{txn.invoice_number}</p>
-                            <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-4 border rounded-full uppercase mt-1", getStatusInfo(txn).style)}>{getStatusInfo(txn).label}</Badge>
+                            <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-4 border rounded-sm uppercase mt-1", getStatusInfo(txn).style)}>{getStatusInfo(txn).label}</Badge>
                          </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
@@ -190,7 +190,7 @@ export default function SalesHistoryPage() {
       </div>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white p-0 rounded-2xl overflow-hidden border border-slate-100 shadow-2xl">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white p-0 rounded-sm overflow-hidden border border-slate-100 shadow-2xl">
           {selectedTxn && (
             <div className="flex flex-col h-full max-h-[90vh]">
               <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
@@ -198,7 +198,7 @@ export default function SalesHistoryPage() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Receipt</p>
                     <h2 className="text-base font-black text-slate-800 leading-none uppercase">{selectedTxn.invoice_number}</h2>
                  </div>
-                 <Badge variant="outline" className={cn("text-[9px] font-black px-3 py-1 border rounded-full uppercase", getStatusInfo(selectedTxn).style)}>{getStatusInfo(selectedTxn).label}</Badge>
+                 <Badge variant="outline" className={cn("text-[9px] font-black px-3 py-1 border rounded-sm uppercase", getStatusInfo(selectedTxn).style)}>{getStatusInfo(selectedTxn).label}</Badge>
               </div>
 
               <div className="p-5 flex-1 overflow-y-auto space-y-5">
@@ -217,7 +217,7 @@ export default function SalesHistoryPage() {
                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detail Item</p>
                    <div className="space-y-2">
                      {txnItems.map(item => (
-                       <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                       <div key={item.id} className="flex justify-between items-center p-3 rounded-sm bg-slate-50 border border-slate-100">
                           <div className="flex-1 pr-2">
                              <p className="font-black text-[11px] text-slate-800 uppercase truncate leading-tight">{item.product?.name}</p>
                              <p className="text-[9px] font-bold text-slate-400 mt-0.5">{item.quantity} Unit x Rp {item.price_at_sale.toLocaleString('id-ID')}</p>
@@ -237,10 +237,10 @@ export default function SalesHistoryPage() {
 
                  {selectedTxn.status === 'PENDING' && (
                   <div className="flex gap-2">
-                    <button onClick={() => setEditOpen(true)} className="flex-1 h-11 rounded-xl bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <button onClick={() => setEditOpen(true)} className="flex-1 h-11 rounded-sm bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2">
                       <Pencil className="h-4 w-4" /> Edit Pesanan
                     </button>
-                    <button onClick={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)} disabled={cancelling} className="h-11 w-11 rounded-xl bg-red-50 text-red-500 border border-red-100 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50">
+                    <button onClick={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)} disabled={cancelling} className="h-11 w-11 rounded-sm bg-red-50 text-red-500 border border-red-100 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50">
                       {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                     </button>
                   </div>

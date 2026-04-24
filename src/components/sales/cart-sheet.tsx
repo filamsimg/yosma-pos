@@ -78,11 +78,11 @@ export function CartSheet({
       {itemCount > 0 && (
         <button
           onClick={() => onOpenChange?.(true)}
-          className="fixed bottom-20 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-[28px] bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
+          className="fixed bottom-20 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-sm bg-blue-600 text-white shadow-2xl shadow-blue-400/50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"
         >
           <div className="relative">
             <ShoppingCart className="h-6 w-6 group-hover:rotate-12 transition-transform" />
-            <span className="absolute -top-2 -right-2 bg-white text-blue-600 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+            <span className="absolute -top-2 -right-2 bg-white text-blue-600 text-[10px] font-black w-5 h-5 rounded-sm flex items-center justify-center shadow-md">
               {itemCount}
             </span>
           </div>
@@ -99,12 +99,12 @@ export function CartSheet({
 
       <SheetContent
         side="bottom"
-        className="h-[90vh] rounded-t-[40px] bg-white border-slate-200 p-0 flex flex-col shadow-2xl"
+        className="h-[90vh] rounded-t-sm bg-white border-slate-200 p-0 flex flex-col shadow-2xl"
       >
         <SheetHeader className="p-6 pb-2 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
+              <div className="w-12 h-12 rounded-sm bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
                 <ShoppingCart className="h-6 w-6" />
               </div>
               <div>
@@ -121,7 +121,7 @@ export function CartSheet({
                 variant="ghost"
                 size="sm"
                 onClick={clearCart}
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 rounded-xl font-bold text-xs"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 rounded-sm font-bold text-xs"
               >
                 <Trash2 className="h-4 w-4 mr-1.5" />
                 KOSONGKAN
@@ -132,7 +132,7 @@ export function CartSheet({
 
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 text-slate-300">
-            <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+            <div className="w-24 h-24 rounded-sm bg-slate-50 flex items-center justify-center mb-4">
               <ShoppingCart className="h-10 w-10 opacity-20" />
             </div>
             <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Keranjang Kosong</p>
@@ -146,7 +146,7 @@ export function CartSheet({
                 {items.map((item) => (
                   <div
                     key={item.product.id}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 shadow-sm"
+                    className="flex items-center gap-4 p-4 rounded-sm bg-slate-50/50 border border-slate-100 shadow-sm"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black text-slate-900 truncate uppercase tracking-tighter">
@@ -158,7 +158,7 @@ export function CartSheet({
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-xl shadow-inner shrink-0">
+                    <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-sm shadow-inner shrink-0">
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                         className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90"
@@ -189,7 +189,7 @@ export function CartSheet({
             </ScrollArea>
 
             {/* Checkout Section */}
-            <div className="bg-slate-50 border-t border-slate-200 p-6 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px]">
+            <div className="bg-slate-50 border-t border-slate-200 p-6 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-sm">
             <div className="flex flex-col gap-5">
               {/* Step 1: Payment Type (Lunas vs Tempo) */}
               <div className="space-y-2.5">
@@ -200,7 +200,7 @@ export function CartSheet({
                   <button
                     onClick={() => setPaymentMethod('CASH')}
                     className={cn(
-                      "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                      "h-10 rounded-sm text-xs font-black transition-all flex items-center justify-center gap-2",
                       paymentMethod !== 'CREDIT'
                         ? "bg-white text-blue-600 shadow-sm"
                         : "text-slate-400 hover:text-slate-600"
@@ -215,7 +215,7 @@ export function CartSheet({
                   <button
                     onClick={() => setPaymentMethod('CREDIT')}
                     className={cn(
-                      "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                      "h-10 rounded-sm text-xs font-black transition-all flex items-center justify-center gap-2",
                       paymentMethod === 'CREDIT'
                         ? "bg-white text-orange-600 shadow-sm"
                         : "text-slate-400 hover:text-slate-600"
@@ -240,7 +240,7 @@ export function CartSheet({
                     <button
                       onClick={() => setPaymentMethod('CASH')}
                       className={cn(
-                        "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                        "h-10 rounded-sm text-xs font-black transition-all flex items-center justify-center gap-2",
                         paymentMethod === 'CASH'
                           ? "bg-white text-emerald-600 shadow-sm"
                           : "text-slate-400 hover:text-slate-600"
@@ -251,7 +251,7 @@ export function CartSheet({
                     <button
                       onClick={() => setPaymentMethod('TRANSFER')}
                       className={cn(
-                        "h-10 rounded-[14px] text-xs font-black transition-all flex items-center justify-center gap-2",
+                        "h-10 rounded-sm text-xs font-black transition-all flex items-center justify-center gap-2",
                         paymentMethod === 'TRANSFER'
                           ? "bg-white text-emerald-600 shadow-sm"
                           : "text-slate-400 hover:text-slate-600"
@@ -263,8 +263,8 @@ export function CartSheet({
                 </div>
               ) : (
                 /* Tempo Info Alert */
-                <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm shadow-orange-50">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+                <div className="bg-orange-50 border border-orange-100 p-4 rounded-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm shadow-orange-50">
+                  <div className="w-10 h-10 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600">
                     <Calendar className="h-5 w-5" />
                   </div>
                   <div>
@@ -278,7 +278,7 @@ export function CartSheet({
             </div>
 
               {/* Summary Totals */}
-              <div className="p-4 bg-white/50 border border-slate-200/50 rounded-2xl space-y-2">
+              <div className="p-4 bg-white/50 border border-slate-200/50 rounded-sm space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-slate-400">SUBTOTAL</span>
                   <span className="text-slate-600">Rp {subtotal.toLocaleString('id-ID')}</span>
@@ -301,7 +301,7 @@ export function CartSheet({
               <Button
                 onClick={onCheckout}
                 disabled={checkoutLoading || disabled || items.length === 0}
-                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow-xl shadow-blue-200 rounded-2xl active:scale-95 transition-all"
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow-xl shadow-blue-200 rounded-sm active:scale-95 transition-all"
               >
                 {checkoutLoading ? (
                   <div className="flex items-center gap-2">

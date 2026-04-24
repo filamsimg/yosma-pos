@@ -24,7 +24,7 @@ export default function SalesLayout({
       {/* Top Header */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-slate-200 bg-white/80 backdrop-blur-xl">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600">
+          <div className="flex items-center justify-center w-8 h-8 rounded-sm bg-gradient-to-br from-blue-500 to-indigo-600">
             <ShoppingCart className="h-4 w-4 text-white" />
           </div>
           <span className="text-slate-900 font-semibold text-sm tracking-tight">
@@ -59,7 +59,7 @@ export default function SalesLayout({
                 <div className="relative">
                   <Icon className="h-5 w-5" />
                   {item.label === 'POS' && itemCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-bold text-white bg-blue-500 rounded-full">
+                    <span className="absolute -top-1.5 -right-2 flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-bold text-white bg-blue-500 rounded-sm">
                       {itemCount}
                     </span>
                   )}

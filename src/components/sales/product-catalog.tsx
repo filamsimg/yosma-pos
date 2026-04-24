@@ -109,7 +109,7 @@ export function ProductCatalog() {
           placeholder="Cari produk di gudang..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-10 bg-white border-slate-200 text-slate-900 h-12 shadow-sm focus-visible:ring-blue-600 transition-all rounded-xl"
+          className="pl-10 pr-10 bg-white border-slate-200 text-slate-900 h-12 shadow-sm focus-visible:ring-blue-600 transition-all rounded-sm"
         />
         {searchQuery && (
           <button
@@ -126,7 +126,7 @@ export function ProductCatalog() {
         <div className="flex gap-2 pb-2">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm border ${
+            className={`shrink-0 px-4 py-2 rounded-sm text-xs font-bold transition-all shadow-sm border ${
               selectedCategory === null
                 ? 'bg-blue-600 text-white border-blue-600 shadow-blue-100'
                 : 'bg-white text-slate-500 border-slate-200 hover:border-blue-200 hover:text-blue-600'
@@ -138,7 +138,7 @@ export function ProductCatalog() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-              className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm border ${
+              className={`shrink-0 px-4 py-2 rounded-sm text-xs font-bold transition-all shadow-sm border ${
                 selectedCategory === cat.id
                   ? 'bg-blue-600 text-white border-blue-600 shadow-blue-100'
                   : 'bg-white text-slate-500 border-slate-200 hover:border-blue-200 hover:text-blue-600'
@@ -154,8 +154,8 @@ export function ProductCatalog() {
       {loading && allProducts.length === 0 ? (
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3 shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-slate-50" />
+            <div key={i} className="rounded-sm border border-slate-100 bg-white p-4 space-y-3 shadow-sm">
+              <div className="w-10 h-10 rounded-sm bg-slate-50" />
               <div className="space-y-2">
                 <div className="h-4 w-3/4 bg-slate-100 rounded animate-pulse" />
                 <div className="h-3 w-1/2 bg-slate-50 rounded animate-pulse" />
@@ -164,8 +164,8 @@ export function ProductCatalog() {
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm">
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-sm border border-dashed border-slate-200">
+          <div className="w-16 h-16 rounded-sm bg-white flex items-center justify-center mb-4 shadow-sm">
             <Package className="h-8 w-8 text-slate-200" />
           </div>
           <p className="text-sm font-bold text-slate-600 tracking-tight">Tidak ada produk ditemukan</p>
@@ -180,7 +180,7 @@ export function ProductCatalog() {
             return (
               <div
                 key={product.id}
-                className={`relative rounded-2xl border p-4 transition-all duration-300 ${
+                className={`relative rounded-sm border p-4 transition-all duration-300 ${
                   isOutOfStock
                     ? 'bg-slate-50 border-slate-100 opacity-60'
                     : cartQty > 0
@@ -208,7 +208,7 @@ export function ProductCatalog() {
                   </p>
                   <Badge
                     variant="secondary"
-                    className={`text-[10px] font-bold w-fit py-0 px-2 rounded-lg border-none ${
+                    className={`text-[10px] font-bold w-fit py-0 px-2 rounded-sm border-none ${
                       isOutOfStock
                         ? 'bg-red-50 text-red-600'
                         : product.stock < 10
@@ -222,11 +222,11 @@ export function ProductCatalog() {
 
                 {/* Counter / Add Button */}
                 {isOutOfStock ? (
-                  <div className="h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-slate-200">
+                  <div className="h-10 flex items-center justify-center rounded-sm bg-slate-100 text-slate-400 text-xs font-bold border border-slate-200">
                     KOSONG
                   </div>
                 ) : cartQty > 0 ? (
-                  <div className="flex items-center justify-between h-10 rounded-xl bg-white border border-blue-200 shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between h-10 rounded-sm bg-white border border-blue-200 shadow-sm overflow-hidden">
                     <button
                       onClick={() => updateQuantity(product.id, cartQty - 1)}
                       className="flex items-center justify-center w-10 h-10 text-red-500 hover:bg-red-50 transition-colors"
@@ -247,7 +247,7 @@ export function ProductCatalog() {
                 ) : (
                   <button
                     onClick={() => addItem(product)}
-                    className="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all text-xs font-bold shadow-md shadow-blue-100 active:scale-95"
+                    className="flex items-center justify-center gap-2 w-full h-10 rounded-sm bg-blue-600 text-white hover:bg-blue-700 transition-all text-xs font-bold shadow-md shadow-blue-100 active:scale-95"
                   >
                     <Plus className="h-4 w-4" />
                     TAMBAH

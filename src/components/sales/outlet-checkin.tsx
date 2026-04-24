@@ -208,9 +208,9 @@ export function OutletCheckin({
   // If already checked in
   if (checkedIn && checkinData) {
     return (
-      <Card className="border-blue-100 bg-white shadow-md shadow-blue-50/50 rounded-[24px] overflow-hidden">
+      <Card className="border-blue-100 bg-white shadow-md shadow-blue-50/50 rounded-sm overflow-hidden">
         <CardContent className="flex items-center gap-4 p-5">
-          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 shadow-sm shadow-emerald-50">
+          <div className="flex items-center justify-center w-12 h-12 rounded-sm bg-emerald-50 border border-emerald-100 text-emerald-600 shadow-sm shadow-emerald-50">
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
@@ -243,9 +243,9 @@ export function OutletCheckin({
       <DialogTrigger 
         nativeButton={false}
         render={
-          <Card className="border-blue-200 bg-white shadow-xl shadow-blue-100/50 rounded-[24px] overflow-hidden hover:scale-[1.02] transition-all cursor-pointer group active:scale-95">
+          <Card className="border-blue-200 bg-white shadow-xl shadow-blue-100/50 rounded-sm overflow-hidden hover:scale-[1.02] transition-all cursor-pointer group active:scale-95">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200 group-hover:rotate-12 transition-transform">
+              <div className="flex items-center justify-center w-12 h-12 rounded-sm bg-blue-600 text-white shadow-lg shadow-blue-200 group-hover:rotate-12 transition-transform">
                 <MapPin className="h-6 w-6" />
               </div>
               <div className="flex-1 text-left">
@@ -262,11 +262,11 @@ export function OutletCheckin({
         }
       />
       <DialogContent
-        className="max-w-lg w-[calc(100%-2rem)] max-h-[92vh] overflow-hidden flex flex-col bg-white border-slate-200 p-0 rounded-[32px] shadow-2xl"
+        className="max-w-lg w-[calc(100%-2rem)] max-h-[92vh] overflow-hidden flex flex-col bg-white border-slate-200 p-0 rounded-sm shadow-2xl"
       >
         <DialogHeader className="p-6 pb-4 bg-slate-50/50 border-b border-slate-100">
           <DialogTitle className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-200">
+            <div className="w-8 h-8 rounded-sm bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-200">
               <Map className="h-4 w-4" />
             </div>
             CHECK-IN OUTLET
@@ -276,10 +276,10 @@ export function OutletCheckin({
           </DialogDescription>
           
           {/* Mode Switcher */}
-          <div className="flex p-1 bg-slate-100 rounded-xl mt-4 w-fit border border-slate-200">
+          <div className="flex p-1 bg-slate-100 rounded-sm mt-4 w-fit border border-slate-200">
             <button
               onClick={() => setIsRemote(false)}
-              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all ${
                 !isRemote ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -287,7 +287,7 @@ export function OutletCheckin({
             </button>
             <button
               onClick={() => setIsRemote(true)}
-              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all ${
                 isRemote ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -301,14 +301,14 @@ export function OutletCheckin({
           {!isRemote && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
-                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                <span className="flex items-center justify-center w-6 h-6 rounded-sm bg-blue-100 text-blue-700 text-xs font-bold">
                   01
                 </span>
                 Validasi Lokasi GPS
               </div>
               {geo.latitude && geo.longitude ? (
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm shadow-emerald-50/50">
-                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm">
+                <div className="flex items-center gap-3 p-4 rounded-sm bg-emerald-50 border border-emerald-100 shadow-sm shadow-emerald-50/50">
+                  <div className="w-8 h-8 rounded-sm bg-white flex items-center justify-center text-emerald-600 shadow-sm">
                     <Navigation className="h-4 w-4" />
                   </div>
                   <div>
@@ -322,7 +322,7 @@ export function OutletCheckin({
                 <Button
                   onClick={geo.getCurrentPosition}
                   disabled={geo.loading}
-                  className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-blue-200 transition-all font-bold shadow-sm"
+                  className="w-full h-14 rounded-sm bg-white border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-blue-200 transition-all font-bold shadow-sm"
                 >
                   {geo.loading ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin text-blue-600" />
@@ -333,7 +333,7 @@ export function OutletCheckin({
                 </Button>
               )}
               {geo.error && (
-                <div className="p-3 bg-red-50 rounded-xl border border-red-100 flex items-center gap-2">
+                <div className="p-3 bg-red-50 rounded-sm border border-red-100 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-red-500" />
                   <p className="text-xs text-red-600 font-bold tracking-tight"> {geo.error}</p>
                 </div>
@@ -344,7 +344,7 @@ export function OutletCheckin({
           {/* Step 2: Select Outlet */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
-              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+              <span className="flex items-center justify-center w-6 h-6 rounded-sm bg-blue-100 text-blue-700 text-xs font-bold">
                 {isRemote ? '01' : '02'}
               </span>
               Pilih Outlet Kunjungan
@@ -355,11 +355,11 @@ export function OutletCheckin({
                 placeholder="Cari apotik / toko..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12 bg-slate-50 border-slate-200 text-slate-900 rounded-xl font-medium focus-visible:bg-white transition-all shadow-inner"
+                className="pl-10 h-12 bg-slate-50 border-slate-200 text-slate-900 rounded-sm font-medium focus-visible:bg-white transition-all shadow-inner"
               />
             </div>
             
-            <ScrollArea className="h-56 rounded-2xl border border-slate-100 bg-slate-50/30 p-2 shadow-inner">
+            <ScrollArea className="h-56 rounded-sm border border-slate-100 bg-slate-50/30 p-2 shadow-inner">
               <div className="space-y-1.5">
                 {filteredOutlets.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 opacity-30 text-slate-400">
@@ -375,7 +375,7 @@ export function OutletCheckin({
                       <button
                         key={outlet.id}
                         onClick={() => setSelectedOutlet(outlet)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all relative overflow-hidden group ${
+                        className={`w-full flex items-center gap-3 p-3 rounded-sm text-left transition-all relative overflow-hidden group ${
                           selectedOutlet?.id === outlet.id
                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
                             : isToday 
@@ -383,7 +383,7 @@ export function OutletCheckin({
                             : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-100'
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        <div className={`w-10 h-10 rounded-sm flex items-center justify-center shrink-0 ${
                           selectedOutlet?.id === outlet.id 
                           ? 'bg-white/20' 
                           : isToday 
@@ -422,7 +422,7 @@ export function OutletCheckin({
           {!isRemote && (
             <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-widest">
-                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">
+                <span className="flex items-center justify-center w-6 h-6 rounded-sm bg-blue-100 text-blue-700 text-xs font-bold">
                   03
                 </span>
                 Foto Bukti Kunjungan
@@ -438,7 +438,7 @@ export function OutletCheckin({
               />
 
               {img.preview ? (
-                <div className="relative rounded-2xl overflow-hidden border-2 border-blue-500/20 shadow-xl group">
+                <div className="relative rounded-sm overflow-hidden border-2 border-blue-500/20 shadow-xl group">
                   <img
                     src={img.preview}
                     alt="Preview outlet"
@@ -450,7 +450,7 @@ export function OutletCheckin({
                         img.clearImage();
                         if (fileInputRef.current) fileInputRef.current.value = '';
                       }}
-                      className="p-3 rounded-full bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
+                      className="p-3 rounded-sm bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -466,7 +466,7 @@ export function OutletCheckin({
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full h-32 rounded-2xl bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
                 >
-                  <div className="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center group-hover:bg-white shadow-inner">
+                  <div className="bg-slate-50 w-12 h-12 rounded-sm flex items-center justify-center group-hover:bg-white shadow-inner">
                     <Camera className="h-6 w-6" />
                   </div>
                   <span className="text-xs font-black uppercase tracking-widest">Buka Kamera</span>

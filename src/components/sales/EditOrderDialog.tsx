@@ -200,7 +200,7 @@ export function EditOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-full max-h-[90vh] flex flex-col p-0 rounded-[32px] overflow-hidden gap-0">
+      <DialogContent className="max-w-lg w-full max-h-[90vh] flex flex-col p-0 rounded-sm overflow-hidden gap-0">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100">
           <DialogTitle className="text-base font-black text-slate-900 tracking-tight">
@@ -214,7 +214,7 @@ export function EditOrderDialog({
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Search Produk */}
           <div className="relative">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-sm px-4 py-3">
               <Search className="h-4 w-4 text-slate-400 shrink-0" />
               <input
                 type="text"
@@ -228,7 +228,7 @@ export function EditOrderDialog({
 
             {/* Hasil pencarian */}
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-sm shadow-xl z-10 overflow-hidden">
                 {searchResults.map((product) => (
                   <button
                     key={product.id}
@@ -267,7 +267,7 @@ export function EditOrderDialog({
               {items.map((item) => (
                 <div
                   key={item.product_id}
-                  className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                  className="bg-white border border-slate-100 rounded-sm p-4 flex items-center gap-3 shadow-sm"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-slate-800 truncate">{item.name}</p>
@@ -280,7 +280,7 @@ export function EditOrderDialog({
                     {/* Qty controls */}
                     <button
                       onClick={() => updateQty(item.product_id, -1)}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
+                      className="w-7 h-7 rounded-sm bg-slate-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -290,7 +290,7 @@ export function EditOrderDialog({
                     <button
                       onClick={() => updateQty(item.product_id, 1)}
                       disabled={item.quantity >= item.maxStock}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 flex items-center justify-center transition-colors disabled:opacity-30"
+                      className="w-7 h-7 rounded-sm bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 flex items-center justify-center transition-colors disabled:opacity-30"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -298,7 +298,7 @@ export function EditOrderDialog({
                     {/* Hapus */}
                     <button
                       onClick={() => removeItem(item.product_id)}
-                      className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors ml-1"
+                      className="w-7 h-7 rounded-sm bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors ml-1"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -322,7 +322,7 @@ export function EditOrderDialog({
             {isCredit && (
               <Badge
                 variant="outline"
-                className={`font-black text-xs border-none px-3 py-1.5 rounded-full ${
+                className={`font-black text-xs border-none px-3 py-1.5 rounded-sm ${
                   tempoDays === 30
                     ? 'bg-emerald-50 text-emerald-700'
                     : 'bg-amber-50 text-amber-700'
@@ -337,7 +337,7 @@ export function EditOrderDialog({
           <button
             onClick={handleSave}
             disabled={saving || items.length === 0}
-            className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-200"
+            className="w-full h-12 rounded-sm bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-200"
           >
             {saving ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Menyimpan...</>

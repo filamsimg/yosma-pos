@@ -81,7 +81,7 @@ export function CancelTransactionBanner({
 
   return (
     <div
-      className={`mx-5 mt-4 rounded-[24px] border p-4 shadow-lg transition-all duration-500 animate-in slide-in-from-top-4 ${
+      className={`mx-5 mt-4 rounded-sm border p-4 shadow-lg transition-all duration-500 animate-in slide-in-from-top-4 ${
         urgency
           ? 'bg-red-50 border-red-200 shadow-red-100'
           : 'bg-amber-50 border-amber-200 shadow-amber-100'
@@ -90,7 +90,7 @@ export function CancelTransactionBanner({
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+          className={`w-10 h-10 rounded-sm flex items-center justify-center shrink-0 ${
             urgency ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
           }`}
         >
@@ -133,7 +133,7 @@ export function CancelTransactionBanner({
         {/* Dismiss button */}
         <button
           onClick={onDismiss}
-          className="text-slate-300 hover:text-slate-500 transition-colors p-1 rounded-lg"
+          className="text-slate-300 hover:text-slate-500 transition-colors p-1 rounded-sm"
           aria-label="Tutup"
         >
           <X className="h-4 w-4" />
@@ -144,7 +144,7 @@ export function CancelTransactionBanner({
       <button
         onClick={handleCancel}
         disabled={cancelling || secondsLeft <= 0}
-        className={`mt-3 w-full h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 ${
+        className={`mt-3 w-full h-10 rounded-sm text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 ${
           urgency
             ? 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200'
             : 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-200'

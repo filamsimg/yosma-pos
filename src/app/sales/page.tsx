@@ -132,7 +132,7 @@ export default function SalesPOSPage() {
               User: <span className="text-slate-600">{user?.full_name?.split(' ')[0] ?? 'Sales'}</span>
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shadow-blue-50">
+          <div className="w-10 h-10 rounded-sm bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shadow-blue-50">
             <ShoppingBag className="h-5 w-5" />
           </div>
         </div>
@@ -150,8 +150,8 @@ export default function SalesPOSPage() {
         {checkedIn ? (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {checkinData?.photoUrl === 'REMOTE_ORDER' && (
-              <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 shadow-sm shadow-orange-50/50">
-                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+              <div className="bg-orange-50 border border-orange-100 p-4 rounded-sm flex items-center gap-3 shadow-sm shadow-orange-50/50">
+                <div className="w-10 h-10 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600">
                   <Terminal className="h-5 w-5" />
                 </div>
                 <div>
@@ -162,15 +162,15 @@ export default function SalesPOSPage() {
             )}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                <span className="w-1.5 h-6 bg-blue-600 rounded-sm" />
                 Katalog Produk
               </h2>
             </div>
             <ProductCatalog />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-white rounded-[32px] border border-slate-100 shadow-sm transition-all duration-700">
-            <div className="w-24 h-24 rounded-[32px] bg-blue-50 flex items-center justify-center mb-6 shadow-xl shadow-blue-50/50 animate-pulse">
+          <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-white rounded-sm border border-slate-100 shadow-sm transition-all duration-700">
+            <div className="w-24 h-24 rounded-sm bg-blue-50 flex items-center justify-center mb-6 shadow-xl shadow-blue-50/50 animate-pulse">
               <svg
                 className="w-12 h-12 text-blue-500"
                 fill="none"
