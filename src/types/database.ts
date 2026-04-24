@@ -3,8 +3,8 @@
 // ============================================================
 
 export type UserRole = 'ADMIN' | 'SALES';
-export type PaymentMethod = 'CASH' | 'TRANSFER' | 'QRIS' | 'CREDIT';
-export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+export type PaymentMethod = 'CASH' | 'TRANSFER' | 'CREDIT';
+export type TransactionStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
 export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID';
 export type VisitDay = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 export type VisitFrequency = 'WEEKLY' | 'BIWEEKLY';
