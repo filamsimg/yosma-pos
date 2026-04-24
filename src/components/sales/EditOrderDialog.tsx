@@ -7,9 +7,6 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,6 +20,9 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { FormSection } from '@/components/ui/form-section';
+import { cn } from '@/lib/utils';
 
 interface EditItem {
   product_id: string;
@@ -209,28 +209,23 @@ export function EditOrderDialog({
   }, [items, transactionId, invoiceNumber, totalPrice, onSaved, onOpenChange]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-full max-h-[90vh] flex flex-col p-0 rounded-sm overflow-hidden gap-0 border-0 shadow-2xl">
-        {/* Decorative Top */}
-        <div className="h-1.5 w-full bg-blue-600" />
+    <AppDialog 
+      open={open} 
+      onOpenChange={onOpenChange}
+      variant="info"
+      title="Koreksi Pesanan"
+      subtitle="Order Modification"
+      maxWidth="max-w-lg"
+    >
+      <div className="absolute top-6 right-16">
+        <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 font-black text-[9px] px-2 py-1 rounded-sm uppercase tracking-widest bg-white">
+          {invoiceNumber}
+        </Badge>
+      </div>
 
-        {/* Header */}
-        <div className="px-6 py-6 border-b border-dashed border-slate-200 bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mb-1">Order Modification</p>
-              <DialogTitle className="text-xl font-black text-slate-900 tracking-tight uppercase">
-                Koreksi Pesanan
-              </DialogTitle>
-            </div>
-            <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 font-black text-[9px] px-2 py-1 rounded-sm uppercase tracking-widest">
-              {invoiceNumber}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {/* Search Produk */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Search Section */}
+        <FormSection padding="md">
           <div className="relative">
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-sm px-4 py-3">
               <Search className="h-4 w-4 text-slate-400 shrink-0" />
@@ -246,7 +241,7 @@ export function EditOrderDialog({
 
             {/* Hasil pencarian */}
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-sm shadow-xl z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-sm shadow-xl z-10 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                 {searchResults.map((product) => (
                   <button
                     key={product.id}
@@ -269,123 +264,126 @@ export function EditOrderDialog({
               </div>
             )}
           </div>
+        </FormSection>
 
-          {/* Daftar Item */}
+        {/* Daftar Item */}
+        <FormSection 
+          title={`Item Pesanan (${items.length})`}
+          padding="md"
+          dashed={false}
+        >
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
               <Package className="h-10 w-10 text-slate-200 mb-3" />
-              <p className="text-sm font-bold text-slate-400">Belum ada produk</p>
-              <p className="text-xs text-slate-300 mt-1">Cari produk di atas untuk menambahkan</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Belum ada produk</p>
+              <p className="text-[9px] font-bold text-slate-300 mt-1 uppercase tracking-tight">Cari produk di atas untuk menambahkan</p>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
-                Item Pesanan ({items.length})
-              </p>
+            <div className="space-y-3">
               {items.map((item) => (
                 <div
                   key={item.product_id}
                   className="bg-white border border-slate-100 rounded-sm p-4 flex items-center gap-3 shadow-sm"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-800 truncate">{item.name}</p>
-                    <p className="text-xs font-bold text-blue-600">
+                    <p className="text-sm font-black text-slate-800 truncate uppercase tracking-tight">{item.name}</p>
+                    <p className="text-[10px] font-bold text-blue-600 mt-0.5">
                       Rp {item.price_at_sale.toLocaleString('id-ID')} / pcs
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    {/* Qty controls */}
-                    <button
-                      onClick={() => updateQty(item.product_id, -1)}
-                      className="w-7 h-7 rounded-sm bg-slate-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-8 text-center text-sm font-black text-slate-800 tabular-nums">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQty(item.product_id, 1)}
-                      disabled={item.quantity >= item.maxStock}
-                      className="w-7 h-7 rounded-sm bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 flex items-center justify-center transition-colors disabled:opacity-30"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
+                    <div className="flex items-center gap-2 p-1 bg-slate-50 border border-slate-100 rounded-sm">
+                      <button
+                        onClick={() => updateQty(item.product_id, -1)}
+                        className="w-7 h-7 rounded-sm bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 transition-all active:scale-90 flex items-center justify-center shadow-sm"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="w-8 text-center text-xs font-black text-slate-900 tabular-nums">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateQty(item.product_id, 1)}
+                        disabled={item.quantity >= item.maxStock}
+                        className="w-7 h-7 rounded-sm bg-white border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-100 transition-all active:scale-90 disabled:opacity-30 flex items-center justify-center shadow-sm"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
 
-                    {/* Hapus */}
                     <button
                       onClick={() => removeItem(item.product_id, item.name)}
-                      className="w-7 h-7 rounded-sm bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors ml-1"
+                      className="w-8 h-8 rounded-sm bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors shadow-sm shadow-red-50"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </FormSection>
+      </div>
 
-        {/* Footer: Total & Simpan */}
-        <div className="p-5 border-t border-slate-100 bg-slate-50 space-y-3">
-          {/* Summary */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Baru</p>
-              <p className="text-xl font-black text-blue-600 tracking-tighter">
-                Rp {totalPrice.toLocaleString('id-ID')}
+      {/* Footer */}
+      <FormSection padding="lg" className="bg-slate-50/50" dashed={false}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Total Akhir Baru</p>
+            <div className="flex items-center gap-2">
+              <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-black rounded-sm uppercase tracking-tighter">IDR</span>
+              <p className="text-2xl font-black text-blue-600 tracking-tighter tabular-nums">
+                {totalPrice.toLocaleString('id-ID')}
               </p>
             </div>
-            {isCredit && (
-              <Badge
-                variant="outline"
-                className={`font-black text-xs border-none px-3 py-1.5 rounded-sm ${
-                  tempoDays === 30
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'bg-amber-50 text-amber-700'
-                }`}
-              >
-                Tempo {tempoDays} Hari
-              </Badge>
-            )}
           </div>
-
-          {/* Simpan */}
-          <button
-            onClick={() => setConfirmSaveOpen(true)}
-            disabled={saving || items.length === 0}
-            className="w-full h-12 rounded-sm bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-200"
-          >
-            {saving ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Menyimpan...</>
-            ) : (
-              <><CheckCircle2 className="h-4 w-4" /> Simpan Perubahan</>
-            )}
-          </button>
+          {isCredit && (
+            <Badge
+              variant="outline"
+              className={cn(
+                "font-black text-[10px] border px-3 py-1.5 rounded-sm uppercase tracking-widest bg-white shadow-sm",
+                tempoDays === 30 ? "text-emerald-600 border-emerald-100" : "text-orange-600 border-orange-100"
+              )}
+            >
+              Tempo {tempoDays} Hari
+            </Badge>
+          )}
         </div>
 
-        <ConfirmDialog
-          open={confirmSaveOpen}
-          onOpenChange={setConfirmSaveOpen}
-          title="Simpan Perubahan?"
-          description="Apakah Anda yakin ingin memperbarui pesanan ini? Perubahan akan langsung disimpan ke database."
-          onConfirm={handleSave}
-          confirmText="Ya, Simpan"
-          variant="info"
-          loading={saving}
-        />
+        <button
+          onClick={() => setConfirmSaveOpen(true)}
+          disabled={saving || items.length === 0}
+          className="w-full h-12 rounded-sm bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          {saving ? (
+            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Menyimpan...</>
+          ) : (
+            <><CheckCircle2 className="h-3.5 w-3.5" /> Simpan Perubahan</>
+          )}
+        </button>
+      </FormSection>
 
-        <ConfirmDialog
-          open={!!confirmRemoveItem}
-          onOpenChange={(open) => !open && setConfirmRemoveItem(null)}
-          title="Hapus Item?"
-          description={`Hapus ${confirmRemoveItem?.name} dari pesanan?`}
-          onConfirm={executeRemoveItem}
-          confirmText="Ya, Hapus"
-          variant="danger"
-        />
-      </DialogContent>
-    </Dialog>
+      <ConfirmDialog
+        open={confirmSaveOpen}
+        onOpenChange={setConfirmSaveOpen}
+        title="Simpan Perubahan?"
+        description="Apakah Anda yakin ingin memperbarui pesanan ini? Perubahan akan langsung disimpan ke database."
+        onConfirm={handleSave}
+        confirmText="Ya, Simpan"
+        variant="info"
+        loading={saving}
+      />
+
+      <ConfirmDialog
+        open={!!confirmRemoveItem}
+        onOpenChange={(open) => !open && setConfirmRemoveItem(null)}
+        title="Hapus Item?"
+        description={`Hapus ${confirmRemoveItem?.name} dari pesanan?`}
+        onConfirm={executeRemoveItem}
+        confirmText="Ya, Hapus"
+        variant="danger"
+      />
+    </AppDialog>
   );
 }
