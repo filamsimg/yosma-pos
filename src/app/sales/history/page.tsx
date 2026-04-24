@@ -261,27 +261,26 @@ export default function SalesHistoryPage() {
                       </p>
                     </div>
                   </div>
-                  {selectedTxn.status === 'PENDING' && (
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => setConfirmCancelOpen(true)} 
-                        disabled={cancelling}
-                        className="h-10 w-10 rounded-sm bg-red-50 text-red-500 border border-red-100 flex items-center justify-center transition-all hover:bg-red-100 disabled:opacity-50"
-                        title="Batalkan Pesanan"
-                      >
-                        {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  )}
                </div>
 
                {selectedTxn.status === 'PENDING' && (
-                  <button 
-                    onClick={() => setEditOpen(true)} 
-                    className="w-full h-12 rounded-sm bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Pencil className="h-3.5 w-3.5" /> Koreksi Pesanan
-                  </button>
+                  <div className="space-y-2">
+                    <button 
+                      onClick={() => setEditOpen(true)} 
+                      className="w-full h-12 rounded-sm bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Koreksi Pesanan
+                    </button>
+                    
+                    <button 
+                      onClick={() => setConfirmCancelOpen(true)} 
+                      disabled={cancelling}
+                      className="w-full h-12 rounded-sm bg-red-50 text-red-600 border border-red-100 flex items-center justify-center gap-2 transition-all hover:bg-red-100 disabled:opacity-50 text-[10px] font-black uppercase tracking-[0.1em]"
+                    >
+                      {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                      Batalkan Pesanan
+                    </button>
+                  </div>
                )}
             </FormSection>
           </>
