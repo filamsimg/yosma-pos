@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/store/cart-store';
 import { useAuth } from '@/components/providers/auth-provider';
@@ -8,8 +8,11 @@ import { OutletCheckin } from '@/components/sales/outlet-checkin';
 import { ProductCatalog } from '@/components/sales/product-catalog';
 import { CartSheet } from '@/components/sales/cart-sheet';
 import { toast } from 'sonner';
-import { Terminal, ShoppingBag } from 'lucide-react';
+import { Terminal, ShoppingBag, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { addDays } from 'date-fns';
+import { useOfflineSync } from '@/hooks/use-offline-sync';
+import { OfflineBanner } from '@/components/sales/OfflineBanner';
 import type { Outlet } from '@/types';
 
 interface CheckinData {
@@ -28,6 +31,93 @@ export default function SalesPOSPage() {
 
   const { items, discount, paymentMethod, getSubtotal, getTotalPrice, clearCart } =
     useCartStore();
+
+  // --- Offline Sync Integration ---
+  const handleSyncItem = async (item: any) => {
+    const supabase = createClient();
+    
+    if (item.type === 'ORDER') {
+      const { transactionData, itemsData } = item.payload;
+      
+      // 1. Create transaction
+      const { data: transaction, error: txnError } = await supabase
+        .from('transactions')
+        .insert(transactionData)
+        .select('id, invoice_number')
+        .single();
+
+      if (txnError) throw txnError;
+
+      // 2. Create transaction items with the new ID
+      const txnItems = itemsData.map((it: any) => ({
+        ...it,
+        transaction_id: transaction.id
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('transaction_items')
+        .insert(txnItems);
+
+      if (itemsError) throw itemsError;
+      
+      return transaction;
+    }
+    throw new Error('Unknown sync type');
+  };
+
+  const { isOnline, addToQueue, pendingCount, queue } = useOfflineSync(handleSyncItem);
+  const isSyncing = queue.some(i => i.status === 'SYNCING');
+  const [isDataSyncing, setIsDataSyncing] = useState(false);
+
+  // Function to manually sync all catalogs for offline use
+  const handleManualSync = async () => {
+    if (!isOnline) {
+      toast.error("Tidak dapat sinkronisasi saat offline.");
+      return;
+    }
+
+    setIsDataSyncing(true);
+    const syncToastId = toast.loading("Sedang memperbarui data offline...");
+
+    try {
+      const supabase = createClient();
+      
+      // 1. Sync Products & Categories
+      const [pRes, cRes, oRes] = await Promise.all([
+        supabase.from('products').select('*, category:categories(*)').eq('is_active', true).order('name'),
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('outlets').select('*').eq('is_active', true).order('name')
+      ]);
+
+      if (pRes.data) localStorage.setItem('yosma_products_cache', JSON.stringify(pRes.data));
+      if (cRes.data) localStorage.setItem('yosma_categories_cache', JSON.stringify(cRes.data));
+      if (oRes.data) localStorage.setItem('yosma_outlets_cache', JSON.stringify(oRes.data));
+      
+      localStorage.setItem('yosma_last_sync', new Date().toISOString());
+
+      toast.success("Data berhasil diperbarui!", {
+        id: syncToastId,
+        description: "Aplikasi siap digunakan dalam mode offline."
+      });
+      
+      // Refresh components by reloading (or we could use a state/event)
+      window.location.reload();
+    } catch (error) {
+      toast.error("Gagal sinkronisasi data.", { id: syncToastId });
+    } finally {
+      setIsDataSyncing(false);
+    }
+  };
+
+  // Load last sync time on mount
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const time = localStorage.getItem('yosma_last_sync');
+    if (time) {
+      setLastSyncTime(new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }
+  }, [isDataSyncing]); // Update when manual sync completes
 
   function handleCheckin(data: CheckinData) {
     setCheckinData(data);
@@ -49,7 +139,6 @@ export default function SalesPOSPage() {
     setCheckoutLoading(true);
 
     try {
-      const supabase = createClient();
       const subtotal = getSubtotal();
       const totalPrice = getTotalPrice();
 
@@ -60,10 +149,9 @@ export default function SalesPOSPage() {
       const paymentStatus = isCredit ? 'UNPAID' : 'PAID';
       const paidAmount = isCredit ? 0 : totalPrice;
 
-      // 1. Create transaction
-      const { data: transaction, error: txnError } = await supabase
-        .from('transactions')
-        .insert({
+      // Prepare payload for offline sync
+      const payload = {
+        transactionData: {
           sales_id: user.id,
           outlet_id: checkinData.outlet.id,
           subtotal,
@@ -77,42 +165,33 @@ export default function SalesPOSPage() {
           lat: checkinData.lat,
           lng: checkinData.lng,
           photo_url: checkinData.photoUrl,
-        })
-        .select('id, invoice_number')
-        .single();
+        },
+        itemsData: items.map((item) => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          price_at_sale: item.price_at_sale,
+        }))
+      };
 
-      if (txnError) throw txnError;
+      // Add to local sync queue (Instant completion)
+      addToQueue('ORDER', payload);
 
-      // 2. Create transaction items
-      const txnItems = items.map((item) => ({
-        transaction_id: transaction.id,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        price_at_sale: item.price_at_sale,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('transaction_items')
-        .insert(txnItems);
-
-      if (itemsError) throw itemsError;
-
-      // 3. Success!
-      toast.success(`Transaksi berhasil!`, {
+      // Success Feedback (Instant)
+      toast.success(`Pesanan Disimpan!`, {
         duration: 4000,
-        description: `Invoice: ${transaction.invoice_number} | Total: Rp ${totalPrice.toLocaleString('id-ID')}`,
+        description: !isOnline 
+          ? "Tersimpan lokal. Akan otomatis terkirim saat Anda mendapat sinyal." 
+          : "Sedang mengirim ke server...",
       });
 
-      // 4. Reset state & close cart
+      // Reset state & close cart immediately
       setCartOpen(false);
       clearCart();
       setCheckedIn(false);
       setCheckinData(null);
     } catch (err: any) {
       console.error('Checkout failed:', err);
-      toast.error('Gagal membuat transaksi. Silakan coba lagi.', {
-        description: err?.message,
-      });
+      toast.error('Gagal memproses transaksi.');
     } finally {
       setCheckoutLoading(false);
     }
@@ -120,20 +199,50 @@ export default function SalesPOSPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
+      {/* Offline/Sync Banner */}
+      <OfflineBanner 
+        isOnline={isOnline} 
+        pendingCount={pendingCount} 
+        isSyncing={isSyncing} 
+      />
+
       {/* Sales Header */}
-      <div className="bg-white border-b border-slate-200 px-5 py-6 shadow-sm sticky top-0 z-10">
+      <div className="bg-white border-b border-slate-200 px-5 py-5 shadow-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">
               KASIR SALES <span className="text-blue-600">POS</span>
             </h1>
-            <p className="text-xs font-bold text-slate-400 mt-0.5 flex items-center gap-1.5 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-slate-400 mt-1.5 flex items-center gap-1.5 uppercase tracking-wider">
               <Terminal className="h-3 w-3" />
               User: <span className="text-slate-600">{user?.full_name?.split(' ')[0] ?? 'Sales'}</span>
             </p>
           </div>
-          <div className="w-10 h-10 rounded-sm bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shadow-blue-50">
-            <ShoppingBag className="h-5 w-5" />
+
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={handleManualSync}
+                disabled={isDataSyncing || !isOnline}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all h-8",
+                  isOnline 
+                    ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100" 
+                    : "bg-slate-50 text-slate-400 border border-slate-100 opacity-50"
+                )}
+              >
+                <RefreshCw className={cn("h-3 w-3", isDataSyncing && "animate-spin")} />
+                {isDataSyncing ? 'Syncing...' : 'Sync Data'}
+              </button>
+              {lastSyncTime && (
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mr-1">
+                  Updated: {lastSyncTime}
+                </span>
+              )}
+            </div>
+            <div className="w-10 h-10 rounded-sm bg-blue-600 border border-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-100">
+              <ShoppingBag className="h-5 w-5" />
+            </div>
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import type { Product, Category } from '@/types';
+import { useAuth } from '../providers/auth-provider';
 
 export function ProductCatalog() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -26,10 +27,28 @@ export function ProductCatalog() {
   const [loading, setLoading] = useState(true);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
+  const { isOnline } = useAuth();
   const { items: cartItems, addItem, updateQuantity } = useCartStore();
+
+  // Load from cache on mount
+  useEffect(() => {
+    const cachedProducts = localStorage.getItem('yosma_products_cache');
+    const cachedCategories = localStorage.getItem('yosma_categories_cache');
+    const cachedSyncTime = localStorage.getItem('yosma_last_sync');
+
+    if (cachedProducts) setAllProducts(JSON.parse(cachedProducts));
+    if (cachedCategories) setCategories(JSON.parse(cachedCategories));
+    if (cachedSyncTime) setLastSync(new Date(cachedSyncTime));
+    
+    if (cachedProducts) setLoading(false);
+  }, []);
 
   // Fetch all data once
   const fetchData = async () => {
+    if (!navigator.onLine) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const supabase = createClient();
     
@@ -46,10 +65,21 @@ export function ProductCatalog() {
           .order('name')
       ]);
 
-      if (pRes.data) setAllProducts(pRes.data);
-      if (cRes.data) setCategories(cRes.data);
-      setLastSync(new Date());
-    } catch (error) {
+      if (pRes.error || cRes.error) throw pRes.error || cRes.error;
+
+      if (pRes.data) {
+        setAllProducts(pRes.data);
+        localStorage.setItem('yosma_products_cache', JSON.stringify(pRes.data));
+      }
+      if (cRes.data) {
+        setCategories(cRes.data);
+        localStorage.setItem('yosma_categories_cache', JSON.stringify(cRes.data));
+      }
+      
+      const now = new Date();
+      setLastSync(now);
+      localStorage.setItem('yosma_last_sync', now.toISOString());
+    } catch (error: any) {
       console.error('Fetch error:', error);
     } finally {
       setLoading(false);
@@ -85,18 +115,17 @@ export function ProductCatalog() {
       {/* Top Header & Sync Status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-400">
-          <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-          <span>Katalog Ter-SINKRON</span>
-          {lastSync && (
-            <span className="text-slate-300 font-medium normal-case">
-              • {lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
+          {!isOnline ? (
+            <RefreshCw className="h-3 w-3 text-amber-500 animate-spin-slow" />
+          ) : (
+            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
           )}
+          <span>{!isOnline ? 'Data Terakhir (OFFLINE)' : 'Katalog Ter-SINKRON'}</span>
         </div>
         <button 
           onClick={fetchData} 
-          disabled={loading}
-          className="text-blue-600 hover:text-blue-700 disabled:opacity-50 transition-all active:rotate-180 duration-500"
+          disabled={loading || !isOnline}
+          className="text-blue-600 hover:text-blue-700 disabled:opacity-30 transition-all active:rotate-180 duration-500"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
         </button>

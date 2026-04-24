@@ -34,6 +34,7 @@ import {
   Calendar,
   Star
 } from 'lucide-react';
+import { useAuth } from '@/components/providers/auth-provider';
 import type { Outlet } from '@/types';
 
 interface OutletCheckinProps {
@@ -57,6 +58,7 @@ export function OutletCheckin({
   checkedIn,
   checkinData,
 }: OutletCheckinProps) {
+  const { user } = useAuth();
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,29 +81,41 @@ export function OutletCheckin({
     async function fetchData() {
       const supabase = createClient();
       
-      // Get Profile for role & sales_code
-      const { data: { user } } = await supabase.auth.getUser();
+      // Load from cache first
+      const cachedOutlets = localStorage.getItem('yosma_outlets_cache');
+      if (cachedOutlets) {
+        setOutlets(JSON.parse(cachedOutlets));
+      }
+
+      // Use existing user from context
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
-        setUserProfile(profile);
+        
+        if (profile) setUserProfile(profile);
+        else setUserProfile(user); 
       }
 
-      const { data } = await supabase
-        .from('outlets')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('outlets')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
 
-      if (data) {
-        setOutlets(data);
+        if (data) {
+          setOutlets(data);
+          localStorage.setItem('yosma_outlets_cache', JSON.stringify(data));
+        }
+      } catch (e) {
+        console.log('Failed to fetch outlets online, using cache if available');
       }
     }
     fetchData();
-  }, []);
+  }, [user]);
 
   // Filter & Sort outlets logic
   const filteredOutlets = useMemo(() => {
@@ -163,9 +177,8 @@ export function OutletCheckin({
     setUploading(true);
     try {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      
+      // Use existing user session from context
       if (!user) throw new Error('Not authenticated');
 
       let lat = geo.latitude || 0;
@@ -173,6 +186,8 @@ export function OutletCheckin({
       let photoUrl = 'REMOTE_ORDER';
 
       if (!isRemote && img.compressedFile) {
+        // Warning: Storage upload WILL still fail if offline, 
+        // but the error will be handled by the catch block
         const fileName = `${user.id}/${Date.now()}_checkin.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('transaction-photos')
