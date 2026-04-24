@@ -35,6 +35,7 @@ import {
   Star
 } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
+import { OUTLET_STATUS_MAP } from '@/lib/constants';
 import type { Outlet } from '@/types';
 
 interface OutletCheckinProps {
@@ -414,6 +415,15 @@ export function OutletCheckin({
                              <p className={`text-sm font-black truncate uppercase ${selectedOutlet?.id === outlet.id ? 'text-white' : 'text-slate-900'}`}>
                               {outlet.type ? `${outlet.type} ${outlet.name}` : outlet.name}
                             </p>
+                            {outlet.status && (
+                              <Badge className={`text-[7px] h-3.5 px-1 font-black uppercase tracking-tighter border ${
+                                selectedOutlet?.id === outlet.id 
+                                ? 'bg-white/20 text-white border-white/30' 
+                                : OUTLET_STATUS_MAP[outlet.status as keyof typeof OUTLET_STATUS_MAP]?.color || 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {OUTLET_STATUS_MAP[outlet.status as keyof typeof OUTLET_STATUS_MAP]?.label || outlet.status}
+                              </Badge>
+                            )}
                             {isToday && selectedOutlet?.id !== outlet.id && (
                               <Badge className="bg-blue-600 text-[8px] h-4 px-1.5 font-black uppercase tracking-tighter">HARI INI</Badge>
                             )}
@@ -511,18 +521,20 @@ export function OutletCheckin({
             {uploading ? 'MENYIMPAN...' : 'KONFIRMASI & MULAI ORDER'}
           </Button>
 
-          <Button
-            variant="outline"
-            onClick={() => handleCheckinSubmission('VISIT_ONLY')}
-            disabled={
-              !selectedOutlet ||
-              (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
-              uploading
-            }
-            className="w-full h-12 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
-          >
-            Hanya Catat Kunjungan
-          </Button>
+          {!isRemote && (
+            <Button
+              variant="outline"
+              onClick={() => handleCheckinSubmission('VISIT_ONLY')}
+              disabled={
+                !selectedOutlet ||
+                (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
+                uploading
+              }
+              className="w-full h-12 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+            >
+              Hanya Catat Kunjungan
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
