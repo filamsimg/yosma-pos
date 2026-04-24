@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -13,37 +13,21 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Package,
-  Users,
   TrendingUp,
   ArrowUpRight,
   Store,
-  Calendar,
   History,
   ShoppingCart,
-  XCircle,
-  Clock,
   Receipt,
-  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { PAYMENT_STATUSES } from '@/lib/constants';
 import type { Transaction } from '@/types';
 import { StatCard } from '@/components/ui/stat-card';
 import { cn } from '@/lib/utils';
-
-interface DashboardStats {
-  totalRevenue: number;
-  totalTransactions: number;
-  totalProducts: number;
-  totalSales: number;
-  todayRevenue: number;
-  todayTransactions: number;
-  yesterdayRevenue: number;
-  pendingCount: number;
-  processingCount: number;
-  topProducts: any[];
-}
+import { AdminPageHeader } from '@/components/ui/admin/page-header';
+import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<any>(null);
@@ -62,45 +46,13 @@ export default function AdminDashboardPage() {
       // Fetch all stats in parallel
       const [txnResult, productResult, salesResult, todayTxnResult, yesterdayTxnResult, recentResult, topProductsResult] =
         await Promise.all([
-          // Total transactions + revenue
-          supabase
-            .from('transactions')
-            .select('total_price')
-            .neq('status', 'CANCELLED'),
-          // Total products
-          supabase
-            .from('products')
-            .select('id', { count: 'exact', head: true })
-            .eq('is_active', true),
-          // Total sales users
-          supabase
-            .from('profiles')
-            .select('id', { count: 'exact', head: true })
-            .eq('role', 'SALES')
-            .eq('is_active', true),
-          // Today's transactions
-          supabase
-            .from('transactions')
-            .select('total_price, status')
-            .gte('created_at', today.toISOString()),
-          // Yesterday's transactions
-          supabase
-            .from('transactions')
-            .select('total_price')
-            .gte('created_at', yesterday.toISOString())
-            .lt('created_at', today.toISOString())
-            .neq('status', 'CANCELLED'),
-          // Recent transactions
-          supabase
-            .from('transactions')
-            .select('*, outlet:outlets(name, type), sales:profiles(full_name)')
-            .order('created_at', { ascending: false })
-            .limit(10),
-          // Top products (simplified fetch, logic below)
-          supabase
-            .from('transaction_items')
-            .select('product_id, quantity, product:products(name, sku)')
-            .limit(100)
+          supabase.from('transactions').select('total_price').neq('status', 'CANCELLED'),
+          supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'SALES').eq('is_active', true),
+          supabase.from('transactions').select('total_price, status').gte('created_at', today.toISOString()),
+          supabase.from('transactions').select('total_price').gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString()).neq('status', 'CANCELLED'),
+          supabase.from('transactions').select('*, outlet:outlets(name, type), sales:profiles(full_name)').order('created_at', { ascending: false }).limit(8),
+          supabase.from('transaction_items').select('product_id, quantity, product:products(name, sku)').limit(100)
         ]);
 
       const totalRevenue = txnResult.data?.reduce((sum, t) => sum + Number(t.total_price), 0) ?? 0;
@@ -118,9 +70,7 @@ export default function AdminDashboardPage() {
         const current = topMap.get(id) || { name: p?.name, sku: p?.sku, qty: 0 };
         topMap.set(id, { ...current, qty: current.qty + item.quantity });
       });
-      const topList = Array.from(topMap.values())
-        .sort((a, b) => b.qty - a.qty)
-        .slice(0, 5);
+      const topList = Array.from(topMap.values()).sort((a, b) => b.qty - a.qty).slice(0, 5);
 
       setStats({
         totalRevenue,
@@ -154,22 +104,17 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Store className="h-6 w-6 text-blue-600" />
-            DASHBOARD <span className="text-blue-600">MODERN</span>
-        </h1>
-        <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">
-          Ringkasan performa bisnis dan monitoring transaksi harian
-        </p>
-      </div>
+      <AdminPageHeader 
+        title="DASHBOARD MODERN"
+        description="Ringkasan performa bisnis dan monitoring transaksi harian perusahaan Anda secara real-time"
+        breadcrumbs={[]} // Home page
+      />
 
       {/* Stat Cards Section */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {loading ? (
              Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-[12px] bg-white border border-slate-100" />
+                <Skeleton key={i} className="h-24 rounded-sm bg-slate-50 border border-slate-100" />
               ))
         ) : (
             <>
@@ -211,56 +156,61 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Transactions Section */}
-        <Card className="lg:col-span-2 border border-slate-100 bg-white shadow-sm rounded-[12px] overflow-hidden">
-            <CardHeader className="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                    <History className="h-5 w-5 text-blue-600" />
-                    <div>
-                        <CardTitle className="text-sm font-black text-slate-800 uppercase tracking-tight">
+        <Card className="lg:col-span-2 border-slate-100 bg-white shadow-sm rounded-sm overflow-hidden">
+            <CardHeader className="px-6 py-4 bg-slate-50/50 border-b border-slate-50">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-sm bg-blue-50 flex items-center justify-center">
+                            <History className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <CardTitle className="text-xs font-black text-slate-800 uppercase tracking-widest">
                             Transaksi Terbaru
                         </CardTitle>
                     </div>
+                    <Link href="/admin/transactions" className="text-[10px] font-black text-blue-600 hover:text-blue-700 flex items-center gap-1 uppercase tracking-widest">
+                        Semua <ChevronRight className="h-3 w-3" />
+                    </Link>
                 </div>
             </CardHeader>
             <CardContent className="p-0">
             {loading ? (
                 <div className="p-6 space-y-3">
                     {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-10 w-full rounded-lg bg-slate-50" />
+                        <Skeleton key={i} className="h-10 w-full rounded-sm bg-slate-50" />
                     ))}
                 </div>
             ) : recentTxns.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-300">
-                    <ShoppingCart className="h-8 w-8 mb-2 opacity-20" />
+                    <Receipt className="h-10 w-10 mb-2 opacity-20" />
                     <p className="text-[10px] font-black uppercase tracking-widest">Belum Ada Transaksi</p>
                 </div>
             ) : (
                 <div className="overflow-x-auto scrollbar-none">
                     <table className="w-full text-left whitespace-nowrap">
                         <thead>
-                            <tr className="bg-slate-50/30 text-left border-b border-slate-100">
+                            <tr className="bg-slate-50/30 text-left border-b border-slate-50">
                                 <th className="py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Invoice</th>
-                                <th className="py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-100/50">Waktu</th>
-                                <th className="py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-100/50">Total</th>
-                                <th className="py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-100/50 text-right">Status</th>
+                                <th className="py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-50/50">Waktu</th>
+                                <th className="py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-50/50">Total</th>
+                                <th className="py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-50/50 text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {recentTxns.map((txn) => (
-                                <tr key={txn.id} className="hover:bg-slate-50/50 transition-colors">
+                                <tr key={txn.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="py-3 px-6 align-middle">
-                                        <p className="text-xs font-black text-slate-800 tracking-tight">{txn.invoice_number}</p>
-                                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase truncate max-w-[120px]">{txn.outlet?.name}</p>
+                                        <p className="text-[11px] font-black text-slate-800 tracking-tight font-mono uppercase">{txn.invoice_number}</p>
+                                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase truncate max-w-[150px]">{txn.outlet?.name}</p>
                                     </td>
-                                    <td className="py-3 px-4 align-middle">
+                                    <td className="py-3 px-4 align-middle border-l border-slate-50/50">
                                         <p className="text-[10px] font-bold text-slate-600">{format(new Date(txn.created_at), 'dd MMM', { locale: idLocale })}</p>
                                         <p className="text-[9px] font-bold text-slate-400 uppercase">{format(new Date(txn.created_at), 'HH:mm')}</p>
                                     </td>
-                                    <td className="py-3 px-4 align-middle">
-                                        <p className="text-xs font-black text-blue-600">Rp {txn.total_price.toLocaleString('id-ID')}</p>
+                                    <td className="py-3 px-4 align-middle border-l border-slate-50/50">
+                                        <p className="text-[11px] font-black text-blue-600 font-mono">Rp {txn.total_price.toLocaleString('id-ID')}</p>
                                     </td>
-                                    <td className="py-3 px-6 align-middle text-right">
-                                        <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-5 border rounded-full uppercase tracking-widest", statusColor(txn.status))}>
+                                    <td className="py-3 px-6 align-middle text-right border-l border-slate-50/50">
+                                        <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-5 border rounded-sm uppercase tracking-widest", statusColor(txn.status))}>
                                             {txn.status === 'PENDING' ? 'MENUNGGU' : txn.status === 'PROCESSING' ? 'DIPROSES' : txn.status === 'COMPLETED' ? 'SELESAI' : 'BATAL'}
                                         </Badge>
                                     </td>
@@ -274,35 +224,38 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Top Products Section */}
-        <Card className="border border-slate-100 bg-white shadow-sm rounded-[12px] overflow-hidden">
-            <CardHeader className="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+        <Card className="border-slate-100 bg-white shadow-sm rounded-sm overflow-hidden">
+            <CardHeader className="px-6 py-4 bg-slate-50/50 border-b border-slate-50">
                 <div className="flex items-center gap-3">
-                    <Package className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-sm font-black text-slate-800 uppercase tracking-tight">Produk Terlaris</CardTitle>
+                    <div className="h-8 w-8 rounded-sm bg-indigo-50 flex items-center justify-center">
+                        <Package className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    <CardTitle className="text-xs font-black text-slate-800 uppercase tracking-widest">Produk Terlaris</CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="p-4">
                 {loading ? (
                     <div className="space-y-2">
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <Skeleton key={i} className="h-12 w-full rounded-lg bg-slate-50" />
+                            <Skeleton key={i} className="h-14 w-full rounded-sm bg-slate-50" />
                         ))}
                     </div>
                 ) : (stats as any)?.topProducts?.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-slate-300 italic">
+                    <div className="flex flex-col items-center justify-center py-10 text-slate-300">
+                        <Package className="h-10 w-10 mb-2 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-widest">Belum Ada Data</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
                         {(stats as any)?.topProducts?.map((p: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-white hover:border-indigo-100 transition-all group">
+                            <div key={i} className="flex items-center justify-between p-3 rounded-sm bg-slate-50/50 border border-slate-100 hover:bg-white hover:border-blue-100 transition-all group">
                                 <div className="flex-1 min-w-0 pr-2">
-                                    <p className="text-xs font-black text-slate-800 truncate uppercase leading-none mb-1">{p.name}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SKU: {p.sku}</p>
+                                    <p className="text-[11px] font-black text-slate-800 truncate uppercase leading-none mb-1">{p.name}</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">{p.sku}</p>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <p className="text-sm font-black text-slate-900 leading-none">{p.qty}</p>
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">UNIT</p>
+                                    <p className="text-[12px] font-black text-blue-600 leading-none">{p.qty}</p>
+                                    <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-1">UNIT</p>
                                 </div>
                             </div>
                         ))}

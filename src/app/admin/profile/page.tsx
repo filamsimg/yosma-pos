@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ProfileForm } from '@/components/profile/ProfileForm';
+import { AdminPageHeader } from '@/components/ui/admin/page-header';
 
 export default async function AdminProfilePage() {
   const supabase = await createClient();
@@ -21,13 +22,12 @@ export default async function AdminProfilePage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Profil Saya</h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">Kelola data diri dan informasi kontak Anda.</p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader 
+        title="Profil Saya"
+        description="Kelola data diri, informasi kontak, dan keamanan akun Anda secara mandiri"
+        breadcrumbs={[{ label: 'Profil' }, { label: 'Pengaturan' }]}
+      />
       
       <ProfileForm profile={profile} email={user.email} />
     </div>
