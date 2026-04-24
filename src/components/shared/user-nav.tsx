@@ -58,7 +58,7 @@ export function UserNav() {
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <Link href={user.role === 'ADMIN' ? '/admin/profile' : '/sales/profile'}>
+        <Link href={(pathname || '').startsWith('/admin') ? '/admin/profile' : '/sales/profile'}>
           <DropdownMenuItem className="cursor-pointer">
             <User className="mr-2 h-4 w-4 text-slate-500" />
             <span>Profil Saya</span>
