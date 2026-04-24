@@ -2,26 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getReceivables, addPayment } from '@/lib/actions/receivables';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -51,6 +33,10 @@ import type { PaymentMethod } from '@/types';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { ReceivableTable } from '@/components/admin/receivables/ReceivableTable';
+import { AdminPageHeader } from '@/components/ui/admin/page-header';
+import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { FormSection } from '@/components/ui/form-section';
 
 export default function ReceivablesPage() {
   const [loading, setLoading] = useState(true);
@@ -131,18 +117,16 @@ export default function ReceivablesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-blue-600" />
-            MANAJEMEN <span className="text-blue-600">PIUTANG</span>
-          </h1>
-          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-tight">
-            Pantau penagihan outlet dengan tempo 14/30 hari
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Manajemen Piutang"
+        description="Pantau penagihan outlet dan kelola jatuh tempo pembayaran secara real-time"
+        breadcrumbs={[{ label: 'Piutang' }]}
+        action={
+          <Button variant="outline" className="h-10 px-4 border-slate-200 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50 w-full md:w-auto">
+            <TrendingUp className="h-4 w-4 mr-2 text-blue-600" /> Laporan Piutang
+          </Button>
+        }
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -152,109 +136,190 @@ export default function ReceivablesPage() {
         <StatCard label="Invoice Aktif" value={activeReceivables.length} icon={TrendingUp} iconBgColor="bg-indigo-50" iconColor="text-indigo-600" />
       </div>
 
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input placeholder="Cari outlet atau nomor invoice..." className="pl-10 h-10 bg-white border-slate-100 text-slate-900 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      <AdminToolbar>
+        <AdminToolbarSection grow>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <input
+              placeholder="Cari outlet atau nomor invoice..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+            />
           </div>
+        </AdminToolbarSection>
+
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-50/50 rounded-sm overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => {}} // Active logic already handled by Tabs below, but keeping look consistent
+              className={cn(
+                "px-4 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all",
+                "bg-slate-900 text-white shadow-lg shadow-slate-200"
+              )}
+            >
+              Semua Piutang
+            </button>
+          </div>
+        </AdminToolbarSection>
+      </AdminToolbar>
+
+      <Tabs defaultValue="aktif" className="w-full">
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-none pb-1">
+           <TabsList className="bg-slate-50/50 p-1 h-auto rounded-sm border border-slate-100">
+             <TabsTrigger value="aktif" className="font-black text-[9px] uppercase tracking-[0.2em] px-6 py-2 rounded-sm data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Aktif</TabsTrigger>
+             <TabsTrigger value="selesai" className="font-black text-[9px] uppercase tracking-[0.2em] px-6 py-2 rounded-sm data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Selesai</TabsTrigger>
+           </TabsList>
         </div>
 
-        <Tabs defaultValue="aktif" className="w-full">
-          <TabsList className="bg-slate-100 p-1 mb-6 h-12 w-full sm:w-auto grid grid-cols-2 rounded-xl">
-            <TabsTrigger value="aktif" className="font-bold text-[10px] uppercase tracking-widest px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Aktif</TabsTrigger>
-            <TabsTrigger value="selesai" className="font-bold text-[10px] uppercase tracking-widest px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Selesai</TabsTrigger>
-          </TabsList>
-
           <TabsContent value="aktif" className="mt-0">
-            <Card className="border border-slate-100 bg-white shadow-sm overflow-hidden rounded-xl">
-              <ReceivableTable 
-                data={filteredActive} 
-                loading={loading} 
-                onPay={handleOpenPayment} 
-                type="ACTIVE" 
-              />
-            </Card>
+             <ReceivableTable 
+               data={filteredActive} 
+               loading={loading} 
+               onPay={handleOpenPayment} 
+               type="ACTIVE" 
+             />
           </TabsContent>
 
           <TabsContent value="selesai" className="mt-0">
-            <Card className="border border-slate-100 bg-white shadow-sm overflow-hidden rounded-xl">
-              <ReceivableTable 
-                data={filteredCompleted} 
-                loading={loading} 
-                onPay={() => {}} 
-                type="COMPLETED" 
-              />
-            </Card>
+             <ReceivableTable 
+               data={filteredCompleted} 
+               loading={loading} 
+               onPay={() => {}} 
+               type="COMPLETED" 
+             />
           </TabsContent>
         </Tabs>
 
-        {/* Global Payment Dialog */}
-        <Dialog open={isPaymentDialogOpen} onOpenChange={(open) => { setIsPaymentDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white rounded-2xl shadow-3xl border-none p-0 overflow-hidden">
-            {selectedTxn && (
-              <>
-                <div className="p-6 bg-slate-50 border-b border-slate-100">
-                  <DialogTitle className="text-base font-black text-slate-800 uppercase tracking-tight">Catat Pembayaran</DialogTitle>
-                  <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase mt-1">Invoice: {selectedTxn.invoice_number} • {selectedTxn.outlet?.name}</DialogDescription>
+      <AppDialog 
+        open={isPaymentDialogOpen} 
+        onOpenChange={(open) => { setIsPaymentDialogOpen(open); if (!open) resetForm(); }}
+        variant="receipt"
+        title="Catat Pembayaran"
+        subtitle={`Invoice: ${selectedTxn?.invoice_number}`}
+      >
+        {selectedTxn && (
+          <>
+            <FormSection padding="md" className="bg-blue-50/30">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Sisa Tagihan</p>
+                  <p className="text-2xl font-black text-blue-600 tracking-tighter tabular-nums">
+                    Rp {(selectedTxn.total_price - selectedTxn.paid_amount).toLocaleString('id-ID')}
+                  </p>
                 </div>
-                <div className="p-6 space-y-6">
-                  <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex justify-between items-center">
-                    <div>
-                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Sisa Tagihan</p>
-                      <p className="text-xl font-black text-blue-600">Rp {(selectedTxn.total_price - selectedTxn.paid_amount).toLocaleString('id-ID')}</p>
-                    </div>
-                    <Wallet className="h-6 w-6 text-blue-200" />
+                <div className="h-10 w-10 bg-white rounded-sm border border-blue-100 flex items-center justify-center shadow-sm">
+                  <Wallet className="h-5 w-5 text-blue-500" />
+                </div>
+              </div>
+            </FormSection>
+
+            <div className="flex-1 overflow-y-auto">
+              <FormSection title="Data Pembayaran" subtitle="Mohon isi nominal dengan teliti">
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jumlah Bayar (Rp)</Label>
+                    <Input 
+                      type="number" 
+                      placeholder="0" 
+                      className="h-12 bg-white border-slate-100 text-lg font-black text-slate-800 rounded-sm focus:ring-blue-500 transition-all" 
+                      value={paymentAmount} 
+                      onChange={(e) => setPaymentAmount(e.target.value)} 
+                    />
                   </div>
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Jumlah Bayar (Rp)</Label>
-                      <Input type="number" placeholder="0" className="h-11 bg-white border-slate-100 text-base font-black text-slate-800 focus:ring-blue-500 transition-all" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Metode</Label>
-                      <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
-                        <button onClick={() => setPaymentMethod('CASH')} className={cn("h-10 rounded-lg text-xs font-black uppercase tracking-widest transition-all", paymentMethod === 'CASH' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>Tunai</button>
-                        <button onClick={() => setPaymentMethod('TRANSFER')} className={cn("h-10 rounded-lg text-xs font-black uppercase tracking-widest transition-all", paymentMethod === 'TRANSFER' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>Transfer</button>
-                      </div>
-                    </div>
-                    {paymentMethod === 'TRANSFER' && (
-                      <div className="space-y-3 animate-in slide-in-from-top-4 duration-300">
-                        <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 italic">
-                          <Camera className="h-3 w-3" /> Bukti Transfer
-                        </Label>
-                        <div className="aspect-video relative rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-blue-300 transition-all">
-                          {img.preview ? (
-                            <>
-                              <img src={img.preview} className="w-full h-full object-cover" />
-                              <button onClick={(e) => { e.stopPropagation(); img.clearImage(); }} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"><X className="h-4 w-4" /></button>
-                            </>
-                          ) : (
-                            <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                              <Camera className="h-6 w-6 text-slate-300 mb-2 group-hover:text-blue-400 transition-colors" />
-                              <span className="text-[9px] font-black text-slate-400 uppercase">Ambil Foto Bukti</span>
-                              <input type="file" className="hidden" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; if(f) img.processImage(f); }} />
-                            </label>
-                          )}
-                        </div>
-                        {img.loading && <p className="text-[10px] text-blue-600 animate-pulse font-bold">Sedang memproses gambar...</p>}
-                      </div>
-                    )}
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-black">Catatan Tambahan</Label>
-                      <Input placeholder="Opsional..." className="h-11 bg-white border-slate-100 text-xs text-slate-600" value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Metode Pembayaran</Label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-slate-50 border border-slate-100 rounded-sm">
+                      <button 
+                        onClick={() => setPaymentMethod('CASH')} 
+                        className={cn(
+                          "h-10 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all", 
+                          paymentMethod === 'CASH' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-500"
+                        )}
+                      >
+                        Tunai
+                      </button>
+                      <button 
+                        onClick={() => setPaymentMethod('TRANSFER')} 
+                        className={cn(
+                          "h-10 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all", 
+                          paymentMethod === 'TRANSFER' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-500"
+                        )}
+                      >
+                        Transfer
+                      </button>
                     </div>
                   </div>
+
+                  {paymentMethod === 'TRANSFER' && (
+                    <div className="space-y-3 animate-in slide-in-from-top-4 duration-300">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Camera className="h-3.5 w-3.5 text-blue-500" /> Bukti Transfer
+                      </Label>
+                      <div className="aspect-video relative rounded-sm border border-dashed border-slate-200 bg-slate-50/50 overflow-hidden group hover:border-blue-300 transition-all">
+                        {img.preview ? (
+                          <>
+                            <img src={img.preview} className="w-full h-full object-cover" />
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); img.clearImage(); }} 
+                              className="absolute top-2 right-2 w-8 h-8 rounded-sm bg-red-600 text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                            <Camera className="h-6 w-6 text-slate-300 mb-2 group-hover:text-blue-400 transition-colors" />
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pilih / Ambil Foto</span>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*" 
+                              capture="environment" 
+                              onChange={(e) => { const f = e.target.files?.[0]; if(f) img.processImage(f); }} 
+                            />
+                          </label>
+                        )}
+                      </div>
+                      {img.loading && <p className="text-[9px] text-blue-600 animate-pulse font-black uppercase">Memproses Gambar...</p>}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Catatan Tambahan</Label>
+                    <Input 
+                      placeholder="Contoh: Titipan ke sales atau via outlet..." 
+                      className="h-10 bg-white border-slate-100 text-[11px] text-slate-600 rounded-sm" 
+                      value={paymentNotes} 
+                      onChange={(e) => setPaymentNotes(e.target.value)} 
+                    />
+                  </div>
                 </div>
-                <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-                  <Button onClick={() => setIsPaymentDialogOpen(false)} variant="ghost" className="flex-1 h-11 text-slate-400 font-black text-[10px] uppercase tracking-widest">Batal</Button>
-                  <Button onClick={handleAddPayment} disabled={submitting || !paymentAmount} className="flex-[2] h-11 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 active:scale-95 transition-all">{submitting ? 'Menyimpan...' : 'Simpan Pembayaran'}</Button>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+              </FormSection>
+            </div>
+
+            <FormSection padding="lg" dashed={false} className="bg-slate-50/50">
+               <div className="flex flex-col gap-2">
+                 <Button 
+                   onClick={handleAddPayment} 
+                   disabled={submitting || !paymentAmount} 
+                   className="w-full h-12 bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-sm shadow-xl shadow-slate-100 active:scale-95 transition-all"
+                 >
+                   {submitting ? 'MEMPROSES...' : 'SIMPAN PEMBAYARAN'}
+                 </Button>
+                 <Button 
+                   onClick={() => setIsPaymentDialogOpen(false)} 
+                   variant="ghost" 
+                   className="w-full h-10 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-sm"
+                 >
+                   BATALKAN
+                 </Button>
+               </div>
+            </FormSection>
+          </>
+        )}
+      </AppDialog>
     </div>
   );
 }
