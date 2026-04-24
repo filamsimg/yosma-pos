@@ -281,7 +281,7 @@ export default function AdminProfilesPage() {
         subtitle="Perbarui role akses, status identitas rute (Sales Code) karyawan ini."
         variant="receipt"
       >
-        <div className="min-h-0">
+        <div className="max-h-[80vh] overflow-y-auto custom-scrollbar p-1">
           <ProfileForm 
             initialData={selectedProfile}
             loading={isSubmitting}

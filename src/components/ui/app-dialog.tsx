@@ -28,7 +28,7 @@ export function AppDialog({
   subtitle,
   variant = "default",
   children,
-  maxWidth = "max-w-md",
+  maxWidth = "max-w-md lg:max-w-4xl",
   showStripe = true,
 }: AppDialogProps) {
   const stripeColor = {
@@ -52,7 +52,7 @@ export function AppDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
-        "w-[calc(100%-2rem)] p-0 rounded-sm overflow-hidden border-0 shadow-2xl bg-white",
+        "w-[calc(100%-2rem)] p-0 rounded-sm overflow-hidden border-0 shadow-2xl bg-white transition-all duration-300",
         maxWidth
       )}>
         {showStripe && <div className={cn("h-1.5 w-full shrink-0", stripeColor)} />}

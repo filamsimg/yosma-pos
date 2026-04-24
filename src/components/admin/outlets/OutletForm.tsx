@@ -406,7 +406,7 @@ export function OutletForm({
         <Button
           type="submit"
           disabled={loading || fetchingProfiles || fetchingTypes}
-          className="bg-slate-900 hover:bg-black text-white h-10 px-8 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-100 transition-all active:scale-95 rounded-sm flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-8 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95 rounded-sm flex items-center gap-2"
         >
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
           {initialData ? 'SIMPAN PERUBAHAN' : 'SELESAIKAN'}

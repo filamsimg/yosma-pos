@@ -331,21 +331,21 @@ export function ProductForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-4 pt-10 mt-6 border-t border-slate-100">
+      <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-slate-100">
         <Button
           type="button"
           variant="ghost"
           onClick={onCancel}
-          className="text-slate-500 hover:text-slate-800 hover:bg-slate-100 h-12 px-8 font-bold rounded-xl"
+          className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 h-10 px-6 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all"
         >
           Batal
         </Button>
         <Button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-10 font-black text-sm shadow-xl shadow-blue-200 transition-all active:scale-95 rounded-xl flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-8 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95 rounded-sm flex items-center gap-2"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
           {initialData ? 'SIMPAN PERUBAHAN' : 'TAMBAH PRODUK BARU'}
         </Button>
       </div>
