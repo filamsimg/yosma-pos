@@ -184,18 +184,21 @@ export default function AdminTransactionsPage() {
       </div>
 
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-              activeTab === tab ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-400 border-slate-100 font-bold"
-            )}
-          >
-            {tab === 'ALL' ? 'Semua' : tab}
-          </button>
-        ))}
+        {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map((tab) => {
+          const label = tab === 'ALL' ? 'Semua' : TRANSACTION_STATUS_MAP[tab].label;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
+                activeTab === tab ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-400 border-slate-100 font-bold"
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       <Card className="border border-slate-100 bg-white shadow-sm rounded-xl overflow-hidden">
