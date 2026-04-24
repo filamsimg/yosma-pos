@@ -52,6 +52,7 @@ import { updateTransactionStatus } from '@/lib/actions/transactions';
 import { toast } from 'sonner';
 
 import { StatCard } from '@/components/ui/stat-card';
+import { TransactionTable } from '@/components/admin/transactions/TransactionTable';
 import { cn } from '@/lib/utils';
 
 export default function AdminTransactionsPage() {
@@ -135,15 +136,6 @@ export default function AdminTransactionsPage() {
     printWindow.print();
   };
 
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':     return 'bg-amber-50 text-amber-600 border-amber-200';
-      case 'PROCESSING':  return 'bg-blue-50 text-blue-600 border-blue-200';
-      case 'COMPLETED':   return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-      case 'CANCELLED':   return 'bg-red-50 text-red-600 border-red-200';
-      default:            return 'bg-slate-50 text-slate-600 border-slate-200';
-    }
-  };
 
   const stats = {
     today: transactions.filter(t => format(new Date(t.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length,
@@ -207,36 +199,11 @@ export default function AdminTransactionsPage() {
       </div>
 
       <Card className="border border-slate-100 bg-white shadow-sm rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="border-slate-100 hover:bg-transparent">
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-10">Invoice</TableHead>
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest h-10">Outlet</TableHead>
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest h-10">Total</TableHead>
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest h-10">Status</TableHead>
-              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right px-6 h-10">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? Array.from({ length: 5 }).map((_, i) => <TableRow key={i}><TableCell colSpan={5} className="p-6"><Skeleton className="h-8 w-full rounded-lg" /></TableCell></TableRow>) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="py-20 text-center"><p className="text-sm font-black text-slate-300 uppercase italic">Tidak Ada Data</p></TableCell></TableRow>
-            ) : filtered.map(txn => (
-              <TableRow key={txn.id} className="border-slate-50 hover:bg-slate-50/30 transition-colors">
-                <TableCell className="px-6 py-3 font-black text-xs text-slate-800">{txn.invoice_number}</TableCell>
-                <TableCell className="py-3">
-                  <p className="text-xs font-black text-slate-700 uppercase truncate max-w-[150px]">{txn.outlet?.name}</p>
-                </TableCell>
-                <TableCell className="py-3 font-black text-xs text-blue-600">Rp {txn.total_price.toLocaleString('id-ID')}</TableCell>
-                <TableCell className="py-3">
-                  <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-5 border rounded-full uppercase tracking-tighter", statusColor(txn.status))}>{txn.status}</Badge>
-                </TableCell>
-                <TableCell className="px-6 py-3 text-right">
-                  <Button variant="ghost" size="sm" onClick={() => handleViewDetail(txn)} className="h-8 px-2 text-[10px] font-black text-blue-600 hover:bg-blue-50 bg-blue-50/30">DETAIL</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <TransactionTable 
+          data={filtered} 
+          loading={loading} 
+          onView={handleViewDetail} 
+        />
       </Card>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
@@ -248,7 +215,14 @@ export default function AdminTransactionsPage() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Invoice</p>
                     <h2 className="text-lg font-black text-slate-800 leading-none uppercase">{selectedTxn.invoice_number}</h2>
                  </div>
-                 <Badge variant="outline" className={cn("text-[9px] font-black px-3 py-1 border rounded-full uppercase", statusColor(selectedTxn.status))}>{selectedTxn.status}</Badge>
+                 <Badge variant="outline" className={cn(
+                   "text-[9px] font-black px-3 py-1 border rounded-full uppercase",
+                   selectedTxn.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                   selectedTxn.status === 'PROCESSING' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                   selectedTxn.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                   selectedTxn.status === 'CANCELLED' ? 'bg-red-50 text-red-600 border-red-200' :
+                   'bg-slate-50 text-slate-600 border-slate-200'
+                 )}>{selectedTxn.status}</Badge>
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto space-y-6">

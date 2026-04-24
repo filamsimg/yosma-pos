@@ -49,6 +49,9 @@ import { useImageCapture } from '@/hooks/use-image-capture';
 import { PAYMENT_METHODS, PAYMENT_STATUSES } from '@/lib/constants';
 import type { PaymentMethod } from '@/types';
 
+import { StatCard } from '@/components/ui/stat-card';
+import { ReceivableTable } from '@/components/admin/receivables/ReceivableTable';
+
 export default function ReceivablesPage() {
   const [loading, setLoading] = useState(true);
   const [receivables, setReceivables] = useState<any[]>([]);
@@ -72,19 +75,15 @@ export default function ReceivablesPage() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const activeReceivables = receivables.filter(r => r.payment_status !== 'PAID');
   const completedReceivables = receivables.filter(r => r.payment_status === 'PAID');
-
   const totalOutstanding = activeReceivables.reduce((sum, item) => sum + (item.total_price - item.paid_amount), 0);
+  const overdueCount = activeReceivables.filter(item => item.due_date && new Date(item.due_date) < new Date()).length;
   const totalBilled = activeReceivables.reduce((sum, item) => sum + item.total_price, 0);
   const totalPaid = activeReceivables.reduce((sum, item) => sum + item.paid_amount, 0);
   const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
-  
-  const overdueCount = activeReceivables.filter(item => item.due_date && new Date(item.due_date) < new Date()).length;
 
   const filterFn = (item: any) => 
     item.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -95,438 +94,167 @@ export default function ReceivablesPage() {
 
   async function handleAddPayment() {
     if (!selectedTxn || !paymentAmount) return;
-    
     setSubmitting(true);
     try {
       const amount = parseFloat(paymentAmount);
       if (isNaN(amount) || amount <= 0) throw new Error('Jumlah bayar tidak valid');
-      
       const balance = selectedTxn.total_price - selectedTxn.paid_amount;
       if (amount > balance) throw new Error('Jumlah bayar melebihi sisa piutang');
-
-      // Requirement: Proof of transfer if method is TRANSFER
-      if (paymentMethod === 'TRANSFER' && !img.compressedFile) {
-        throw new Error('Mohon unggah bukti transfer');
-      }
+      if (paymentMethod === 'TRANSFER' && !img.compressedFile) throw new Error('Mohon unggah bukti transfer');
 
       const formData = new FormData();
       formData.append('transactionId', selectedTxn.id);
       formData.append('amount', amount.toString());
       formData.append('paymentMethod', paymentMethod);
       formData.append('notes', paymentNotes);
-      if (img.compressedFile) {
-        formData.append('proofFile', img.compressedFile);
-      }
+      if (img.compressedFile) formData.append('proofFile', img.compressedFile);
 
       await addPayment(formData);
-
       toast.success('Pembayaran berhasil dicatat');
       setIsPaymentDialogOpen(false);
       resetForm();
       loadData();
     } catch (err: any) {
       toast.error(err.message || 'Gagal mencatat pembayaran');
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   }
 
   function resetForm() {
-    setPaymentAmount('');
-    setPaymentMethod('CASH');
-    setPaymentNotes('');
-    setSelectedTxn(null);
-    img.clearImage();
+    setPaymentAmount(''); setPaymentMethod('CASH'); setPaymentNotes('');
+    setSelectedTxn(null); img.clearImage();
+  }
+
+  function handleOpenPayment(item: any) {
+    setSelectedTxn(item);
+    setIsPaymentDialogOpen(true);
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-blue-700 uppercase tracking-tight">Manajemen Piutang</h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Pantau dan kelola penagihan outlet dengan tempo 14/30 hari.
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <Wallet className="h-6 w-6 text-blue-600" />
+            MANAJEMEN <span className="text-blue-600">PIUTANG</span>
+          </h1>
+          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-tight">
+            Pantau penagihan outlet dengan tempo 14/30 hari
+          </p>
+        </div>
       </div>
 
-      {/* Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            <Wallet className="h-5 w-5" />
-          </div>
-          <div className="mt-4">
-            <h4 className="text-2xl font-bold text-slate-900">
-              Rp {totalOutstanding.toLocaleString('id-ID')}
-            </h4>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Piutang Berjalan
-            </span>
-          </div>
-        </Card>
-
-        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
-            <AlertCircle className="h-5 w-5" />
-          </div>
-          <div className="mt-4">
-            <h4 className="text-2xl font-bold text-red-600">
-              {overdueCount} <span className="text-xs text-slate-400">Invoice</span>
-            </h4>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Lewat Jatuh Tempo
-            </span>
-          </div>
-        </Card>
-
-        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-            <CheckCircle2 className="h-5 w-5" />
-          </div>
-          <div className="mt-4">
-            <h4 className="text-2xl font-bold text-emerald-600">
-              {collectionRate}%
-            </h4>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Tingkat Penagihan
-            </span>
-          </div>
-        </Card>
-
-        <Card className="border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-            <TrendingUp className="h-5 w-5" />
-          </div>
-          <div className="mt-4">
-            <h4 className="text-2xl font-bold text-slate-900">
-              {receivables.length}
-            </h4>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Invoice Aktif
-            </span>
-          </div>
-        </Card>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Piutang Berjalan" value={`Rp ${totalOutstanding.toLocaleString('id-ID')}`} icon={Wallet} iconBgColor="bg-blue-50" iconColor="text-blue-600" />
+        <StatCard label="Lewat Tempo" value={overdueCount} icon={AlertCircle} iconBgColor="bg-red-50" iconColor="text-red-600" />
+        <StatCard label="Tingkat Tagih" value={`${collectionRate}%`} icon={CheckCircle2} iconBgColor="bg-emerald-50" iconColor="text-emerald-600" />
+        <StatCard label="Invoice Aktif" value={activeReceivables.length} icon={TrendingUp} iconBgColor="bg-indigo-50" iconColor="text-indigo-600" />
       </div>
 
-      {/* Main Table section */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Cari apotek atau nomor invoice..." 
-              className="pl-10 h-10 bg-white border-slate-200 text-slate-900 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <Input placeholder="Cari outlet atau nomor invoice..." className="pl-10 h-10 bg-white border-slate-100 text-slate-900 w-full" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
 
         <Tabs defaultValue="aktif" className="w-full">
-          <TabsList className="bg-slate-200/50 p-0 mb-8 h-20 w-full sm:w-auto grid grid-cols-2 sm:flex rounded-2xl border border-slate-200 shadow-sm">
-            <TabsTrigger 
-              value="aktif" 
-              className="font-black text-xs uppercase tracking-widest data-active:bg-blue-700 data-active:text-white data-active:hover:text-white hover:text-blue-600 data-active:shadow-xl data-active:shadow-blue-200/50 rounded-xl px-10 h-full transition-all active:scale-95"
-            >
-              Tagihan Aktif ({activeReceivables.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="selesai" 
-              className="font-black text-xs uppercase tracking-widest data-active:bg-blue-700 data-active:text-white data-active:hover:text-white hover:text-blue-600 data-active:shadow-xl data-active:shadow-blue-200/50 rounded-xl px-10 h-full transition-all active:scale-95"
-            >
-              Riwayat Selesai ({completedReceivables.length})
-            </TabsTrigger>
+          <TabsList className="bg-slate-100 p-1 mb-6 h-12 w-full sm:w-auto grid grid-cols-2 rounded-xl">
+            <TabsTrigger value="aktif" className="font-bold text-[10px] uppercase tracking-widest px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Aktif</TabsTrigger>
+            <TabsTrigger value="selesai" className="font-bold text-[10px] uppercase tracking-widest px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Selesai</TabsTrigger>
           </TabsList>
 
           <TabsContent value="aktif" className="mt-0">
-            <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
-              <div className="flex-1 overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-slate-50">
-                    <TableRow className="border-slate-200 hover:bg-transparent">
-                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Outlet & Invoice</TableHead>
-                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Nilai</TableHead>
-                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Terbayar</TableHead>
-                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Sisa Hutang</TableHead>
-                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Jatuh Tempo</TableHead>
-                      <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Status</TableHead>
-                      <TableHead className="text-right"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      Array.from({ length: 5 }).map((_, i) => (
-                        <TableRow key={i} className="border-slate-100">
-                          <TableCell colSpan={7} className="h-12 text-center text-slate-400 text-xs animate-pulse">Memuat data...</TableCell>
-                        </TableRow>
-                      ))
-                    ) : filteredActive.length === 0 ? (
-                       <TableRow className="border-slate-100 italic">
-                        <TableCell colSpan={7} className="h-24 text-center text-slate-400 font-medium">
-                          Tidak ada tagihan aktif ditemukan
-                        </TableCell>
-                       </TableRow>
-                    ) : filteredActive.map((item) => {
-                      const balance = item.total_price - item.paid_amount;
-                      const isOverdue = item.due_date && new Date(item.due_date) < new Date();
-                      const statusInfo = PAYMENT_STATUSES.find(s => s.value === item.payment_status);
+            <Card className="border border-slate-100 bg-white shadow-sm overflow-hidden rounded-xl">
+              <ReceivableTable 
+                data={filteredActive} 
+                loading={loading} 
+                onPay={handleOpenPayment} 
+                type="ACTIVE" 
+              />
+            </Card>
+          </TabsContent>
 
-                  return (
-                    <TableRow key={item.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-900 uppercase">
-                            {item.outlet?.type ? `${item.outlet.type} ${item.outlet.name}` : item.outlet?.name}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400 mt-0.5">{item.invoice_number}</span>
+          <TabsContent value="selesai" className="mt-0">
+            <Card className="border border-slate-100 bg-white shadow-sm overflow-hidden rounded-xl">
+              <ReceivableTable 
+                data={filteredCompleted} 
+                loading={loading} 
+                onPay={() => {}} 
+                type="COMPLETED" 
+              />
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Global Payment Dialog */}
+        <Dialog open={isPaymentDialogOpen} onOpenChange={(open) => { setIsPaymentDialogOpen(open); if (!open) resetForm(); }}>
+          <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white rounded-2xl shadow-3xl border-none p-0 overflow-hidden">
+            {selectedTxn && (
+              <>
+                <div className="p-6 bg-slate-50 border-b border-slate-100">
+                  <DialogTitle className="text-base font-black text-slate-800 uppercase tracking-tight">Catat Pembayaran</DialogTitle>
+                  <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase mt-1">Invoice: {selectedTxn.invoice_number} • {selectedTxn.outlet?.name}</DialogDescription>
+                </div>
+                <div className="p-6 space-y-6">
+                  <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Sisa Tagihan</p>
+                      <p className="text-xl font-black text-blue-600">Rp {(selectedTxn.total_price - selectedTxn.paid_amount).toLocaleString('id-ID')}</p>
+                    </div>
+                    <Wallet className="h-6 w-6 text-blue-200" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Jumlah Bayar (Rp)</Label>
+                      <Input type="number" placeholder="0" className="h-11 bg-white border-slate-100 text-base font-black text-slate-800 focus:ring-blue-500 transition-all" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Metode</Label>
+                      <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+                        <button onClick={() => setPaymentMethod('CASH')} className={cn("h-10 rounded-lg text-xs font-black uppercase tracking-widest transition-all", paymentMethod === 'CASH' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>Tunai</button>
+                        <button onClick={() => setPaymentMethod('TRANSFER')} className={cn("h-10 rounded-lg text-xs font-black uppercase tracking-widest transition-all", paymentMethod === 'TRANSFER' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>Transfer</button>
+                      </div>
+                    </div>
+                    {paymentMethod === 'TRANSFER' && (
+                      <div className="space-y-3 animate-in slide-in-from-top-4 duration-300">
+                        <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 italic">
+                          <Camera className="h-3 w-3" /> Bukti Transfer
+                        </Label>
+                        <div className="aspect-video relative rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden group hover:border-blue-300 transition-all">
+                          {img.preview ? (
+                            <>
+                              <img src={img.preview} className="w-full h-full object-cover" />
+                              <button onClick={(e) => { e.stopPropagation(); img.clearImage(); }} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"><X className="h-4 w-4" /></button>
+                            </>
+                          ) : (
+                            <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                              <Camera className="h-6 w-6 text-slate-300 mb-2 group-hover:text-blue-400 transition-colors" />
+                              <span className="text-[9px] font-black text-slate-400 uppercase">Ambil Foto Bukti</span>
+                              <input type="file" className="hidden" accept="image/*" capture="environment" onChange={(e) => { const f = e.target.files?.[0]; if(f) img.processImage(f); }} />
+                            </label>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right text-sm">Rp {item.total_price.toLocaleString('id-ID')}</TableCell>
-                      <TableCell className="text-right text-sm text-emerald-600 font-medium">Rp {item.paid_amount.toLocaleString('id-ID')}</TableCell>
-                      <TableCell className="text-right">
-                        <span className="text-sm font-black text-red-600">
-                          Rp {balance.toLocaleString('id-ID')}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className={`flex items-center gap-1.5 text-xs font-bold ${isOverdue ? 'text-red-500 underline' : 'text-slate-500'}`}>
-                          <Calendar className="h-3.5 w-3.5" />
-                          {item.due_date ? format(new Date(item.due_date), 'dd MMM yyyy') : '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`border-0 text-[10px] px-2 py-0.5 font-bold uppercase ${statusInfo?.color}`}>
-                          {statusInfo?.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Dialog open={isPaymentDialogOpen && selectedTxn?.id === item.id} onOpenChange={(open) => {
-                          setIsPaymentDialogOpen(open);
-                          if (open) setSelectedTxn(item);
-                          else resetForm();
-                        }}>
-                          <DialogTrigger render={
-                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 transition-all active:scale-95">
-                              <Plus className="h-3.5 w-3.5 mr-1" />
-                              CICIL
-                            </Button>
-                          } />
-                          <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white rounded-xl shadow-2xl border-slate-200">
-                            <DialogHeader>
-                              <DialogTitle className="text-xl font-bold text-slate-900">Catat Pelunasan/Cicilan</DialogTitle>
-                              <DialogDescription className="text-slate-500">
-                                {selectedTxn?.invoice_number} • {selectedTxn?.outlet?.name}
-                              </DialogDescription>
-                            </DialogHeader>
-
-                            <div className="space-y-5 py-4">
-                              <div className="p-4 bg-slate-50 border border-slate-100 rounded-lg space-y-2">
-                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                  <span>TAGIHAN</span>
-                                  <span>SISA PIUTANG</span>
-                                </div>
-                                <div className="flex justify-between items-baseline">
-                                  <span className="text-sm font-medium text-slate-600">Rp {selectedTxn?.total_price.toLocaleString('id-ID')}</span>
-                                  <span className="text-xl font-black text-red-600 underline">Rp {balance.toLocaleString('id-ID')}</span>
-                                </div>
-                              </div>
-
-                              <div className="space-y-4">
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-bold text-slate-700">Jumlah Bayar (Rp)</Label>
-                                  <Input 
-                                    type="number" 
-                                    placeholder="0"
-                                    className="h-11 bg-white border-slate-200 text-lg font-bold"
-                                    value={paymentAmount}
-                                    onChange={(e) => setPaymentAmount(e.target.value)}
-                                  />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-bold text-slate-700">Metode Bayar</Label>
-                                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
-                                    <button
-                                      type="button"
-                                      onClick={() => setPaymentMethod('CASH')}
-                                      className={cn(
-                                        "h-10 rounded-lg text-sm font-bold transition-all",
-                                        paymentMethod === 'CASH'
-                                          ? "bg-white text-blue-600 shadow-sm"
-                                          : "text-slate-400 hover:text-slate-600"
-                                      )}
-                                    >
-                                      Tunai
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setPaymentMethod('TRANSFER')}
-                                      className={cn(
-                                        "h-10 rounded-lg text-sm font-bold transition-all",
-                                        paymentMethod === 'TRANSFER'
-                                          ? "bg-white text-blue-600 shadow-sm"
-                                          : "text-slate-400 hover:text-slate-600"
-                                      )}
-                                    >
-                                      Transfer
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Proof of Transfer Upload */}
-                                {paymentMethod === 'TRANSFER' && (
-                                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300 px-1">
-                                    <Label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                      <Camera className="h-3 w-3 text-blue-600" /> UNGGAH BUKTI TRANSFER
-                                    </Label>
-                                    
-                                    {img.preview ? (
-                                      <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm group aspect-[4/3]">
-                                        <img
-                                          src={img.preview}
-                                          alt="Bukti transfer"
-                                          className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon"
-                                            onClick={() => img.clearImage()}
-                                            className="rounded-full w-10 h-10"
-                                          >
-                                            <X className="h-5 w-5" />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <label className="flex flex-col items-center justify-center w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-white hover:border-blue-400 transition-all group">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                            <Camera className="h-5 w-5" />
-                                          </div>
-                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Klik untuk pilih foto</p>
-                                        </div>
-                                        <input 
-                                          type="file" 
-                                          className="hidden" 
-                                          accept="image/*"
-                                          capture="environment"
-                                          onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) img.processImage(file);
-                                          }}
-                                        />
-                                      </label>
-                                    )}
-                                    {img.loading && (
-                                      <p className="text-[10px] text-blue-600 animate-pulse font-bold">Sedang memproses gambar...</p>
-                                    )}
-                                  </div>
-                                )}
-
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-bold text-slate-700">Catatan Tambahan</Label>
-                                  <Input 
-                                    placeholder="Opsional..."
-                                    className="h-11 bg-white border-slate-200 text-sm"
-                                    value={paymentNotes}
-                                    onChange={(e) => setPaymentNotes(e.target.value)}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <DialogFooter>
-                              <Button 
-                                onClick={handleAddPayment}
-                                disabled={submitting || !paymentAmount}
-                                className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-100"
-                              >
-                                {submitting ? 'Sedang Menyimpan...' : 'Simpan Pembayaran'}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="selesai" className="mt-0">
-        <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
-          <div className="flex-1 overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow className="border-slate-200 hover:bg-transparent">
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Outlet & Invoice</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Nilai</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Terbayar</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Tanggal Lunas</TableHead>
-                  <TableHead className="text-slate-500 font-bold text-xs uppercase tracking-wider">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i} className="border-slate-100">
-                      <TableCell colSpan={5} className="h-12 text-center text-slate-400 text-xs animate-pulse">Memuat riwayat...</TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredCompleted.length === 0 ? (
-                   <TableRow className="border-slate-100 italic">
-                    <TableCell colSpan={5} className="h-24 text-center text-slate-400 font-medium">
-                      Belum ada riwayat pelunasan
-                    </TableCell>
-                   </TableRow>
-                ) : filteredCompleted.map((item) => {
-                  const statusInfo = PAYMENT_STATUSES.find(s => s.value === item.payment_status);
-                  
-                  // Sort payments to get the latest date for 'Tanggal Lunas'
-                  const lastPayment = item.payments && item.payments.length > 0
-                    ? [...item.payments].sort((a: any, b: any) => 
-                        new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
-                      )[0]
-                    : null;
-
-                  return (
-                    <TableRow key={item.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors">
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-900 uppercase">
-                            {item.outlet?.type ? `${item.outlet.type} ${item.outlet.name}` : item.outlet?.name}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400 mt-0.5">{item.invoice_number}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right text-sm">Rp {item.total_price.toLocaleString('id-ID')}</TableCell>
-                      <TableCell className="text-right text-sm text-emerald-600 font-medium font-black">Rp {item.paid_amount.toLocaleString('id-ID')}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {lastPayment?.payment_date ? format(new Date(lastPayment.payment_date), 'dd MMM yyyy') : '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`border-0 text-[10px] px-2 py-0.5 font-bold uppercase ${statusInfo?.color}`}>
-                          {statusInfo?.label}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      </TabsContent>
-    </Tabs>
-  </div>
-</div>
+                        {img.loading && <p className="text-[10px] text-blue-600 animate-pulse font-bold">Sedang memproses gambar...</p>}
+                      </div>
+                    )}
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-black">Catatan Tambahan</Label>
+                      <Input placeholder="Opsional..." className="h-11 bg-white border-slate-100 text-xs text-slate-600" value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+                  <Button onClick={() => setIsPaymentDialogOpen(false)} variant="ghost" className="flex-1 h-11 text-slate-400 font-black text-[10px] uppercase tracking-widest">Batal</Button>
+                  <Button onClick={handleAddPayment} disabled={submitting || !paymentAmount} className="flex-[2] h-11 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 active:scale-95 transition-all">{submitting ? 'Menyimpan...' : 'Simpan Pembayaran'}</Button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
   );
 }
