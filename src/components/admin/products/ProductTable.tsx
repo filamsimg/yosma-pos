@@ -80,7 +80,7 @@ export function ProductTable({
     "Satuan",
     <div className="text-right cursor-pointer" onClick={() => onSort('price')}>Harga</div>,
     <div className="text-center">Stok</div>,
-    <div className="text-right">Aksi</div>
+    <div className="text-center">Aksi</div>
   ];
 
   return (
@@ -128,8 +128,8 @@ export function ProductTable({
                 {p.stock} {p.unit?.name}
               </Badge>
             </TableCell>
-            <TableCell className="px-4 text-right">
-              <div className="flex items-center justify-end gap-1">
+            <TableCell className="px-4 text-center">
+              <div className="flex items-center justify-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"

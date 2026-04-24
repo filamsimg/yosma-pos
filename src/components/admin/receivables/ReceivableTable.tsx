@@ -32,7 +32,7 @@ export function ReceivableTable({ data, loading, onPay, type }: ReceivableTableP
     <div className="text-right">Terbayar</div>,
     <div className="text-right">{type === 'ACTIVE' ? 'Sisa' : 'Total'}</div>,
     type === 'ACTIVE' ? 'Jatuh Tempo' : 'Tgl Lunas',
-    <div className="text-right">Aksi</div>
+    <div className="text-center">Aksi</div>
   ];
 
   return (
@@ -105,23 +105,25 @@ export function ReceivableTable({ data, loading, onPay, type }: ReceivableTableP
                 </Badge>
               </TableCell>
               
-              <TableCell className="px-4 text-right">
-                {type === 'ACTIVE' ? (
-                  <Button 
-                    size="sm" 
-                    onClick={() => onPay(item)}
-                    className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest rounded-sm transition-all active:scale-95 shadow-sm"
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Cicil
-                  </Button>
-                ) : (
-                  <Badge variant="outline" className={cn(
-                    "text-[9px] px-2.5 py-0.5 font-black border-none rounded-sm uppercase tracking-tighter",
-                    PAYMENT_STATUS_MAP.PAID.color
-                  )}>
-                    {PAYMENT_STATUS_MAP.PAID.label}
-                  </Badge>
-                )}
+              <TableCell className="px-4 text-center">
+                <div className="flex items-center justify-center">
+                  {type === 'ACTIVE' ? (
+                    <Button 
+                      size="sm" 
+                      onClick={() => onPay(item)}
+                      className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest rounded-sm transition-all active:scale-95 shadow-sm"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Cicil
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className={cn(
+                      "text-[9px] px-2.5 py-0.5 font-black border-none rounded-sm uppercase tracking-tighter",
+                      PAYMENT_STATUS_MAP.PAID.color
+                    )}>
+                      {PAYMENT_STATUS_MAP.PAID.label}
+                    </Badge>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           );

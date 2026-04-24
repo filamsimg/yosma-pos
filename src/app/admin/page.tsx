@@ -188,11 +188,11 @@ export default function AdminDashboardPage() {
                 <div className="overflow-x-auto scrollbar-none">
                     <table className="w-full text-left whitespace-nowrap">
                         <thead>
-                            <tr className="bg-slate-50/30 text-left border-b border-slate-50">
-                                <th className="py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Invoice</th>
-                                <th className="py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-50/50">Waktu</th>
-                                <th className="py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-50/50">Total</th>
-                                <th className="py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-50/50 text-right">Status</th>
+                            <tr className="bg-slate-100 text-left border-b-2 border-slate-200">
+                                <th className="py-3 px-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Invoice</th>
+                                <th className="py-3 px-4 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50">Waktu</th>
+                                <th className="py-3 px-4 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50">Total</th>
+                                <th className="py-3 px-6 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50 text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
                                     <td className="py-3 px-4 align-middle border-l border-slate-50/50">
                                         <p className="text-[11px] font-black text-blue-600 font-mono">Rp {txn.total_price.toLocaleString('id-ID')}</p>
                                     </td>
-                                    <td className="py-3 px-6 align-middle text-right border-l border-slate-50/50">
+                                    <td className="py-3 px-6 align-middle text-center border-l border-slate-50/50">
                                         <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-5 border rounded-sm uppercase tracking-widest", statusColor(txn.status))}>
                                             {txn.status === 'PENDING' ? 'MENUNGGU' : txn.status === 'PROCESSING' ? 'DIPROSES' : txn.status === 'COMPLETED' ? 'SELESAI' : 'BATAL'}
                                         </Badge>

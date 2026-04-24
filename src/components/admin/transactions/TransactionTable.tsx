@@ -38,7 +38,7 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
     <div className="text-right">Total</div>,
     <div className="text-center">Status</div>,
     "Waktu",
-    <div className="text-right">Aksi</div>
+    <div className="text-center">Aksi</div>
   ];
 
   return (
@@ -86,15 +86,17 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
               </div>
             </TableCell>
             
-            <TableCell className="px-4 text-right">
-              <Button 
-                size="sm" 
-                onClick={() => onView(item)}
-                variant="ghost"
-                className="text-slate-300 hover:text-blue-600 hover:bg-blue-50 h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-sm"
-              >
-                 Detail
-              </Button>
+            <TableCell className="px-4 text-center">
+              <div className="flex items-center justify-center">
+                <Button 
+                  size="sm" 
+                  onClick={() => onView(item)}
+                  variant="ghost"
+                  className="text-slate-300 hover:text-blue-600 hover:bg-blue-50 h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-sm"
+                >
+                   Detail
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))
