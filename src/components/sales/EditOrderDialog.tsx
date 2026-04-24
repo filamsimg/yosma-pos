@@ -75,15 +75,24 @@ export function EditOrderDialog({
   // Initialize items dari props
   useEffect(() => {
     if (open) {
-      setItems(
-        initialItems.map((i) => ({
-          product_id: i.product_id,
-          name: i.product?.name ?? 'Produk',
-          price_at_sale: i.price_at_sale,
-          quantity: i.quantity,
-          maxStock: (i.product?.stock ?? 0) + i.quantity, // stok sekarang + yang sudah dipakai
-        }))
-      );
+      // Consolidate initialItems in case of DB duplicates or previous bugs
+      const consolidated = initialItems.reduce((acc: EditItem[], i) => {
+        const existing = acc.find(item => item.product_id === i.product_id);
+        if (existing) {
+          existing.quantity += i.quantity;
+        } else {
+          acc.push({
+            product_id: i.product_id,
+            name: i.product?.name ?? 'Produk',
+            price_at_sale: i.price_at_sale,
+            quantity: i.quantity,
+            maxStock: (i.product?.stock ?? 0) + i.quantity,
+          });
+        }
+        return acc;
+      }, []);
+
+      setItems(consolidated);
       setSearchQuery('');
       setSearchResults([]);
     }
@@ -134,27 +143,28 @@ export function EditOrderDialog({
   }
 
   function addProduct(product: Product) {
-    const existing = items.find((i) => i.product_id === product.id);
-    if (existing) {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.product_id === product.id
-            ? { ...i, quantity: Math.min(i.maxStock, i.quantity + 1) }
-            : i
-        )
-      );
-    } else {
-      setItems((prev) => [
-        ...prev,
-        {
-          product_id: product.id,
-          name: product.name,
-          price_at_sale: product.price,
-          quantity: 1,
-          maxStock: product.stock,
-        },
-      ]);
-    }
+    setItems((prev) => {
+      const existingIndex = prev.findIndex((i) => i.product_id === product.id);
+      if (existingIndex > -1) {
+        const newItems = [...prev];
+        newItems[existingIndex] = {
+          ...newItems[existingIndex],
+          quantity: Math.min(newItems[existingIndex].maxStock, newItems[existingIndex].quantity + 1)
+        };
+        return newItems;
+      } else {
+        return [
+          ...prev,
+          {
+            product_id: product.id,
+            name: product.name,
+            price_at_sale: product.price,
+            quantity: 1,
+            maxStock: product.stock,
+          },
+        ];
+      }
+    });
     setSearchQuery('');
     setSearchResults([]);
   }

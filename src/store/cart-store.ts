@@ -28,24 +28,27 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   addItem: (product: Product) => {
     set((state) => {
-      const existingItem = state.items.find(
+      const existingItemIndex = state.items.findIndex(
         (item) => item.product.id === product.id
       );
 
-      if (existingItem) {
-        // Check stock availability
+      if (existingItemIndex > -1) {
+        // Consolidation: If somehow duplicates exist, we update all of them or just the first one?
+        // Standard practice: Update the first one and ensure no others exist.
+        // But for safety here, let's just update the quantity of the existing one.
+        const newItems = [...state.items];
+        const existingItem = newItems[existingItemIndex];
+        
         if (existingItem.quantity >= product.stock) return state;
-
-        return {
-          items: state.items.map((item) =>
-            item.product.id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          ),
+        
+        newItems[existingItemIndex] = {
+          ...existingItem,
+          quantity: existingItem.quantity + 1
         };
+
+        return { items: newItems };
       }
 
-      // Check stock availability
       if (product.stock <= 0) return state;
 
       return {
