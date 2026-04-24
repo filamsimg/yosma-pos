@@ -40,6 +40,10 @@ import { ImportDialog } from '@/components/admin/products/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { StockAdjustDialog } from '@/components/admin/products/StockAdjustDialog';
 import { StatCard } from '@/components/ui/stat-card';
+import { AdminPageHeader } from '@/components/ui/admin/page-header';
+import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
+import { AdminTable } from '@/components/ui/admin/data-table';
+import { cn } from '@/lib/utils';
 import { 
   createProduct, 
   updateProduct, 
@@ -233,18 +237,39 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Package className="h-6 w-6 text-blue-600" />
-            KATALOG <span className="text-blue-600">PRODUK</span>
-          </h1>
-          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-tight">
-            Kelola katalog barang dan monitoring stok gudang
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Katalog Produk"
+        description="Kelola katalog barang dan monitoring stok gudang secara real-time"
+        breadcrumbs={[{ label: 'Produk' }]}
+        action={
+          <div className="grid grid-cols-2 md:flex items-center gap-2 w-full md:w-auto">
+            <ExportButton 
+              fetcher={getAllProducts}
+              filename="Daftar_Produk"
+              className="w-full md:w-auto"
+              mapper={(p) => ({
+                'Nama': p.name,
+                'SKU': p.sku,
+                'Merk': p.brand?.name || '-',
+                'Kategori': p.category?.name || '-',
+                'Satuan': p.unit?.name || '-',
+                'Harga': p.price,
+                'Stok': p.stock,
+                'Min Stok': p.min_stock,
+                'Deskripsi': p.description || '-'
+              })}
+            />
+            <ImportDialog onSuccess={fetchData} className="w-full md:w-auto" />
+            <Button
+              onClick={() => handleOpenForm()}
+              className="col-span-2 md:col-auto bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 rounded-sm font-black text-[10px] uppercase tracking-widest w-full md:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Produk Baru
+            </Button>
+          </div>
+        }
+      />
 
       {/* Mini Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -278,118 +303,91 @@ export default function AdminProductsPage() {
         />
       </div>
 
-      {/* Actions section (Search, Import, Create) */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
+      <AdminToolbar>
+        <AdminToolbarSection grow>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <input
               placeholder="Cari produk, SKU, atau merk..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-9 bg-white border-slate-200 text-slate-900 h-10 w-full"
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
             />
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            <ExportButton 
-              fetcher={getAllProducts}
-              filename="Daftar_Produk"
-              mapper={(p) => ({
-                'Nama': p.name,
-                'SKU': p.sku,
-                'Merk': p.brand?.name || '-',
-                'Kategori': p.category?.name || '-',
-                'Satuan': p.unit?.name || '-',
-                'Harga': p.price,
-                'Stok': p.stock,
-                'Min Stok': p.min_stock,
-                'Deskripsi': p.description || '-'
-              })}
+        </AdminToolbarSection>
+        
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1 md:py-1">
+          <div className="flex items-center gap-2">
+            <DataTableFacetedFilter
+              title="Kategori"
+              options={categories.map(c => ({ label: c.name, value: c.id }))}
+              selectedValues={categoryFilter}
+              onSelect={(val) => { setCategoryFilter(val); setCurrentPage(1); }}
             />
-            <ImportDialog onSuccess={fetchData} />
-            <Button
-              onClick={() => handleOpenForm()}
-              className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 w-full sm:w-auto"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              <span>Produk Baru</span>
-            </Button>
+            <DataTableFacetedFilter
+              title="Merk"
+              options={brands.map(b => ({ label: b.name, value: b.id }))}
+              selectedValues={brandFilter}
+              onSelect={(val) => { setBrandFilter(val); setCurrentPage(1); }}
+            />
+            <Select value={stockFilter} onValueChange={(val) => { if (val) { setStockFilter(val); setCurrentPage(1); } }}>
+              <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-200 text-[10px] font-black text-slate-400 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-3 w-3" />
+                  <SelectValue placeholder="Status Stok" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-sm">
+                <SelectItem value="ALL" className="text-[10px] font-black uppercase">SEMUA STOK</SelectItem>
+                <SelectItem value="OUT_OF_STOCK" className="text-[10px] font-black uppercase">HABIS (0)</SelectItem>
+                <SelectItem value="LOW_STOCK" className="text-[10px] font-black uppercase">MENIPIS ({"<="}10)</SelectItem>
+                <SelectItem value="IN_STOCK" className="text-[10px] font-black uppercase">TERSEDIA ({'>'}10)</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {(categoryFilter.length > 0 || brandFilter.length > 0 || stockFilter !== 'ALL') && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setCategoryFilter([]);
+                  setBrandFilter([]);
+                  setStockFilter('ALL');
+                  setCurrentPage(1);
+                }}
+                className="h-8 px-2 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50 rounded-sm"
+              >
+                Reset
+              </Button>
+            )}
           </div>
-        </div>
-
-        {/* Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
-           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Filter:</div>
-           <DataTableFacetedFilter
-             title="Kategori"
-             options={categories.map(c => ({ label: c.name, value: c.id }))}
-             selectedValues={categoryFilter}
-             onSelect={(val) => { setCategoryFilter(val); setCurrentPage(1); }}
-           />
-           <DataTableFacetedFilter
-             title="Merk"
-             options={brands.map(b => ({ label: b.name, value: b.id }))}
-             selectedValues={brandFilter}
-             onSelect={(val) => { setBrandFilter(val); setCurrentPage(1); }}
-           />
-           <Select value={stockFilter} onValueChange={(val) => { if (val) { setStockFilter(val); setCurrentPage(1); } }}>
-             <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-slate-50 px-3">
-               <div className="flex items-center gap-2">
-                 <Filter className="h-3 w-3 text-slate-400" />
-                 <SelectValue placeholder="Status Stok" />
-               </div>
-             </SelectTrigger>
-             <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl">
-               <SelectItem value="ALL" className="text-xs">SEMUA STOK</SelectItem>
-               <SelectItem value="OUT_OF_STOCK" className="text-xs">HABIS (0)</SelectItem>
-               <SelectItem value="LOW_STOCK" className="text-xs">MENIPIS ({"<="}10)</SelectItem>
-               <SelectItem value="IN_STOCK" className="text-xs">TERSEDIA ({'>'}10)</SelectItem>
-             </SelectContent>
-           </Select>
-           
-           {(categoryFilter.length > 0 || brandFilter.length > 0 || stockFilter !== 'ALL') && (
-             <Button 
-               variant="ghost" 
-               size="sm" 
-               onClick={() => {
-                 setCategoryFilter([]);
-                 setBrandFilter([]);
-                 setStockFilter('ALL');
-                 setCurrentPage(1);
-               }}
-               className="h-8 px-2 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50"
-             >
-               Hapus Filter
-             </Button>
-           )}
-        </div>
-      </div>
+        </AdminToolbarSection>
+      </AdminToolbar>
 
       {/* Bulk Actions Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
-          <div className="text-blue-700 text-sm font-medium px-2">
-            <span className="font-bold">{selectedIds.length}</span> produk dipilih
+        <div className="bg-red-50 border border-red-100 p-3 rounded-sm flex items-center justify-between animate-in slide-in-from-top-2 duration-300 shadow-sm mb-4">
+          <div className="text-red-700 text-[10px] font-black uppercase tracking-widest px-2">
+            <span className="bg-red-600 text-white px-2 py-0.5 rounded-sm mr-2">{selectedIds.length}</span> PRODUK DIPILIH
           </div>
           <Button 
             variant="destructive" 
             size="sm" 
             onClick={handleBulkDelete}
-            className="bg-red-600 text-white hover:bg-white hover:text-red-600 border border-red-600 h-9 font-bold transition-all px-4"
+            className="bg-red-600 text-white hover:bg-red-700 h-9 font-black text-[10px] uppercase tracking-widest transition-all px-4 rounded-sm shadow-lg shadow-red-100"
             disabled={isSubmitting}
           >
             <TrashIcon className="h-4 w-4 mr-2" />
-            Hapus Terpilih
+            Hapus Masal
           </Button>
         </div>
       )}
 
       {/* Main Table Container */}
-      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden rounded-md flex flex-col">
-        <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 min-h-0 flex flex-col">
           <ProductTable 
             products={products}
             loading={loading}
@@ -407,18 +405,16 @@ export default function AdminProductsPage() {
               setCurrentPage(1);
             }}
           />
-        </div>
-
-        {/* Pagination Footer */}
+      </div>        {/* Pagination Footer */}
         {totalPages > 0 && (
-          <div className="border-t border-slate-100 p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                Menampilkan <span className="text-slate-900 font-bold">{products.length}</span> dari <span className="text-slate-900 font-bold">{totalCount}</span> produk
+          <div className="p-4 bg-white border border-slate-100 rounded-sm mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-6">
+              <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest whitespace-nowrap">
+                Showing <span className="text-slate-900">{products.length}</span> of <span className="text-slate-900">{totalCount}</span> Products
               </div>
               
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Baris:</span>
+                <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Rows:</span>
                 <Select 
                   value={pageSize.toString()} 
                   onValueChange={(val) => {
@@ -428,12 +424,12 @@ export default function AdminProductsPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className="h-8 w-16 bg-white border-slate-200 text-xs font-bold text-slate-700 focus:ring-blue-600 transition-all">
+                  <SelectTrigger className="h-7 w-16 bg-slate-50 border-slate-100 text-[10px] font-black text-slate-600 rounded-sm">
                     <SelectValue placeholder={pageSize.toString()} />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl min-w-[4rem]">
+                  <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl min-w-[4rem] rounded-sm">
                     {[10, 25, 50, 100].map(size => (
-                      <SelectItem key={size} value={size.toString()} className="text-xs cursor-pointer focus:bg-blue-50 focus:text-blue-600">
+                      <SelectItem key={size} value={size.toString()} className="text-[10px] font-black uppercase">
                         {size}
                       </SelectItem>
                     ))}
@@ -442,13 +438,13 @@ export default function AdminProductsPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1 || loading}
-                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+                className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -460,17 +456,18 @@ export default function AdminProductsPage() {
                     const showDots = idx > 0 && p - arr[idx - 1] > 1;
                     return (
                       <div key={p} className="flex items-center gap-1">
-                        {showDots && <span className="text-slate-300 px-1">...</span>}
+                        {showDots && <span className="text-slate-200 px-1 text-[10px] font-black">...</span>}
                         <Button
                           variant={currentPage === p ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setCurrentPage(p)}
                           disabled={loading}
-                          className={`h-8 w-8 p-0 text-xs font-bold ${
+                          className={cn(
+                            "h-8 w-8 p-0 text-[10px] font-black rounded-sm transition-all",
                             currentPage === p 
-                              ? 'bg-blue-600 text-white border-blue-600' 
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
-                          }`}
+                              ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" 
+                              : "border-slate-100 text-slate-400 hover:bg-slate-50"
+                          )}
                         >
                           {p}
                         </Button>
@@ -478,20 +475,19 @@ export default function AdminProductsPage() {
                     );
                   })}
               </div>
-
+ 
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages || loading}
-                className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-white disabled:opacity-30"
+                className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         )}
-      </Card>
 
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
         <DialogContent className="max-w-5xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden max-h-[96vh] flex flex-col shadow-2xl rounded-xl">

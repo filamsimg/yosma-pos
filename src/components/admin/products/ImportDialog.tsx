@@ -17,9 +17,10 @@ import { toast } from 'sonner';
 
 interface ImportDialogProps {
   onSuccess: () => void;
+  className?: string;
 }
 
-export function ImportDialog({ onSuccess }: ImportDialogProps) {
+export function ImportDialog({ onSuccess, className = "" }: ImportDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ProductImportItem[]>([]);
@@ -104,7 +105,7 @@ export function ImportDialog({ onSuccess }: ImportDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2 h-10 px-4 w-full sm:w-auto">
+          <Button variant="outline" className={`border-slate-200 text-slate-600 hover:bg-slate-50 gap-2 h-10 px-4 w-full sm:w-auto ${className}`}>
             <FileUp className="h-4 w-4" />
             Import Excel
           </Button>

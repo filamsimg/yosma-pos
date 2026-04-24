@@ -53,6 +53,10 @@ import { toast } from 'sonner';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { TransactionTable } from '@/components/admin/transactions/TransactionTable';
+import { AdminPageHeader } from '@/components/ui/admin/page-header';
+import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
+import { AppDialog } from '@/components/ui/app-dialog';
+import { FormSection } from '@/components/ui/form-section';
 import { cn } from '@/lib/utils';
 
 export default function AdminTransactionsPage() {
@@ -151,26 +155,16 @@ export default function AdminTransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Receipt className="h-6 w-6 text-blue-600" />
-            MONITORING <span className="text-blue-600">TRANSAKSI</span>
-          </h1>
-          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-tight">
-            Monitoring arus pesanan dan status pengiriman harian
-          </p>
-        </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Cari invoice/outlet..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-white border-slate-100 rounded-xl h-10 shadow-sm"
-          />
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Monitoring Transaksi"
+        description="Monitoring arus pesanan dan status pengiriman harian secara real-time"
+        breadcrumbs={[{ label: 'Transaksi' }]}
+        action={
+          <Button variant="outline" className="h-10 px-4 border-slate-200 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50">
+            <Download className="h-4 w-4 mr-2" /> Export PDF
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {loading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl bg-white border border-slate-100" />) : (
@@ -183,102 +177,132 @@ export default function AdminTransactionsPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map((tab) => {
-          const label = tab === 'ALL' ? 'Semua' : TRANSACTION_STATUS_MAP[tab].label;
-          return (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                activeTab === tab ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-400 border-slate-100 font-bold"
-              )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      <AdminToolbar>
+        <AdminToolbarSection grow>
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <input
+              placeholder="Cari invoice atau outlet..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+            />
+          </div>
+        </AdminToolbarSection>
 
-      <Card className="border border-slate-100 bg-white shadow-sm rounded-xl overflow-hidden">
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-50/50 rounded-sm overflow-x-auto scrollbar-none">
+            {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map((tab) => {
+              const label = tab === 'ALL' ? 'Semua' : TRANSACTION_STATUS_MAP[tab].label;
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all",
+                    isActive 
+                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200" 
+                      : "text-slate-400 hover:text-slate-600 hover:bg-white"
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </AdminToolbarSection>
+      </AdminToolbar>
+
+      <div className="flex-1 min-h-0">
         <TransactionTable 
           data={filtered} 
           loading={loading} 
           onView={handleViewDetail} 
         />
-      </Card>
+      </div>
 
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white p-0 rounded-2xl overflow-hidden border border-slate-100 shadow-2xl">
-          {selectedTxn && (
-            <div className="flex flex-col h-full max-h-[90vh]">
-              <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                 <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Invoice</p>
-                    <h2 className="text-lg font-black text-slate-800 leading-none uppercase">{selectedTxn.invoice_number}</h2>
-                 </div>
-                 <Badge variant="outline" className={cn(
-                   "text-[9px] font-black px-3 py-1 border rounded-full uppercase tracking-widest",
-                   TRANSACTION_STATUS_MAP[selectedTxn.status as keyof typeof TRANSACTION_STATUS_MAP]?.color || 'bg-slate-50 text-slate-600 border-slate-200'
-                 )}>
-                   {TRANSACTION_STATUS_MAP[selectedTxn.status as keyof typeof TRANSACTION_STATUS_MAP]?.label || selectedTxn.status}
-                 </Badge>
-              </div>
-
-              <div className="p-6 flex-1 overflow-y-auto space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet</p>
-                      <p className="text-xs font-black text-slate-800 leading-tight uppercase">{selectedTxn.outlet?.name}</p>
-                   </div>
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal</p>
-                      <p className="text-xs font-black text-slate-800 leading-tight">{format(new Date(selectedTxn.created_at), 'dd MMM yyyy')}</p>
-                   </div>
-                </div>
-
-                <div className="space-y-3">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Item Pesanan</p>
-                   <div className="space-y-2">
-                     {txnItems.map(item => (
-                       <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                          <div className="flex-1 pr-2">
-                            <p className="text-[11px] font-black text-slate-800 leading-tight uppercase truncate">{item.product?.name}</p>
-                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">{item.quantity} Unit × Rp {item.price_at_sale.toLocaleString('id-ID')}</p>
-                          </div>
-                          <p className="text-xs font-black text-blue-600">Rp {item.subtotal.toLocaleString('id-ID')}</p>
-                       </div>
-                     ))}
-                   </div>
-                </div>
-              </div>
-
-              <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-4">
-                 <div className="flex justify-between items-end">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Bayar</p>
-                        <p className="text-xl font-black text-blue-600 leading-none">Rp {selectedTxn.total_price.toLocaleString('id-ID')}</p>
-                    </div>
-                    <Button variant="outline" size="icon" onClick={() => handlePrint(selectedTxn)} className="h-10 w-10 rounded-xl bg-white border-slate-200"><Printer className="h-4 w-4 text-slate-400" /></Button>
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-2">
-                    {selectedTxn.status === 'PENDING' && (
-                        <Button className="col-span-2 h-11 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl" onClick={() => handleStatusUpdate(selectedTxn.id, 'PROCESSING')}>PROSES PENGIRIMAN</Button>
-                    )}
-                    {selectedTxn.status === 'PROCESSING' && (
-                        <Button className="col-span-2 h-11 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-xl" onClick={() => handleStatusUpdate(selectedTxn.id, 'COMPLETED')}>KONFIRMASI SELESAI</Button>
-                    )}
-                    {(selectedTxn.status === 'PENDING' || selectedTxn.status === 'PROCESSING') && (
-                        <Button variant="ghost" className="col-span-2 h-11 text-red-500 font-black text-xs uppercase tracking-widest rounded-xl bg-red-50/50 hover:bg-red-50" onClick={() => handleStatusUpdate(selectedTxn.id, 'CANCELLED')}>BATALKAN ORDER</Button>
-                    )}
-                 </div>
-              </div>
+      <AppDialog 
+        open={detailOpen} 
+        onOpenChange={setDetailOpen}
+        variant="receipt"
+        title={selectedTxn?.invoice_number}
+        subtitle="Order Detail Monitoring"
+      >
+        {selectedTxn && (
+          <>
+            <div className="absolute top-6 right-16">
+               <Badge variant="outline" className={cn(
+                 "text-[9px] font-black px-3 py-1 border rounded-sm uppercase tracking-widest bg-white shadow-sm",
+                 TRANSACTION_STATUS_MAP[selectedTxn.status as keyof typeof TRANSACTION_STATUS_MAP]?.color || 'bg-slate-50 text-slate-600 border-slate-200'
+               )}>
+                 {TRANSACTION_STATUS_MAP[selectedTxn.status as keyof typeof TRANSACTION_STATUS_MAP]?.label || selectedTxn.status}
+               </Badge>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+            <FormSection padding="md" className="grid grid-cols-2 gap-6">
+               <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet</p>
+                  <div className="flex items-center gap-2">
+                    <Store className="h-3 w-3 text-blue-500" />
+                    <p className="text-xs font-black text-slate-800 uppercase leading-none">{selectedTxn.outlet?.name}</p>
+                  </div>
+               </div>
+               <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Order</p>
+                  <p className="text-xs font-black text-slate-800 leading-none">{format(new Date(selectedTxn.created_at), 'dd MMM yyyy, HH:mm')}</p>
+               </div>
+            </FormSection>
+
+            <div className="flex-1 overflow-y-auto">
+              <FormSection 
+                title="Item Pesanan" 
+                subtitle={`${txnItems.length} Items`}
+                dashed={false}
+              >
+                 <div className="space-y-2">
+                   {txnItems.map(item => (
+                     <div key={item.id} className="flex justify-between items-center p-3 rounded-sm bg-slate-50/50 border border-slate-100">
+                        <div className="flex-1 pr-2">
+                          <p className="text-[11px] font-black text-slate-800 leading-tight uppercase truncate">{item.product?.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 mt-0.5">{item.quantity} Unit × Rp {item.price_at_sale.toLocaleString('id-ID')}</p>
+                        </div>
+                        <p className="text-xs font-black text-slate-900 tabular-nums">Rp {item.subtotal.toLocaleString('id-ID')}</p>
+                     </div>
+                   ))}
+                 </div>
+              </FormSection>
+            </div>
+
+            <FormSection padding="lg" className="bg-slate-50/50" dashed={false}>
+               <div className="flex justify-between items-end mb-6">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Total Bayar</p>
+                    <div className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-black rounded-sm uppercase tracking-tighter">IDR</span>
+                      <p className="text-2xl font-black text-blue-600 tracking-tighter tabular-nums">
+                        {selectedTxn.total_price.toLocaleString('id-ID')}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="icon" onClick={() => handlePrint(selectedTxn)} className="h-10 w-10 rounded-sm bg-white border-slate-200 shadow-sm"><Printer className="h-4 w-4 text-slate-400" /></Button>
+               </div>
+
+               <div className="grid grid-cols-1 gap-2">
+                  {selectedTxn.status === 'PENDING' && (
+                      <Button className="h-12 bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-sm shadow-xl shadow-slate-200 active:scale-95 transition-all" onClick={() => handleStatusUpdate(selectedTxn.id, 'PROCESSING')}>PROSES PENGIRIMAN</Button>
+                  )}
+                  {selectedTxn.status === 'PROCESSING' && (
+                      <Button className="h-12 bg-emerald-600 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-sm shadow-xl shadow-emerald-100 active:scale-95 transition-all" onClick={() => handleStatusUpdate(selectedTxn.id, 'COMPLETED')}>KONFIRMASI SELESAI</Button>
+                  )}
+                  {(selectedTxn.status === 'PENDING' || selectedTxn.status === 'PROCESSING') && (
+                      <Button variant="ghost" className="h-10 text-red-500 font-black text-[10px] uppercase tracking-widest rounded-sm bg-red-50/50 hover:bg-red-50 mt-2" onClick={() => handleStatusUpdate(selectedTxn.id, 'CANCELLED')}>BATALKAN ORDER</Button>
+                  )}
+               </div>
+            </FormSection>
+          </>
+        )}
+      </AppDialog>
     </div>
   );
 }
