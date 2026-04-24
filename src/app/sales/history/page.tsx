@@ -41,6 +41,7 @@ import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { cn } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function SalesHistoryPage() {
   const { user } = useAuth();
@@ -102,6 +103,8 @@ export default function SalesHistoryPage() {
       }
     } finally { setCancelling(false); }
   }
+
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   function handleEditSaved() {
     if (selectedTxn) handleViewDetail(selectedTxn);
@@ -266,7 +269,7 @@ export default function SalesHistoryPage() {
                     {selectedTxn.status === 'PENDING' && (
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)} 
+                          onClick={() => setConfirmCancelOpen(true)} 
                           disabled={cancelling}
                           className="h-10 w-10 rounded-sm bg-red-50 text-red-500 border border-red-100 flex items-center justify-center transition-all hover:bg-red-100 disabled:opacity-50"
                           title="Batalkan Pesanan"
@@ -301,6 +304,19 @@ export default function SalesHistoryPage() {
           paymentMethod={(selectedTxn as any).payment_method ?? 'CASH'}
           initialItems={txnItems as any}
           onSaved={handleEditSaved}
+        />
+      )}
+
+      {selectedTxn && (
+        <ConfirmDialog
+          open={confirmCancelOpen}
+          onOpenChange={setConfirmCancelOpen}
+          title="Batalkan Pesanan?"
+          description={`Apakah Anda yakin ingin membatalkan pesanan ${selectedTxn.invoice_number}? Stok akan dikembalikan otomatis.`}
+          onConfirm={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)}
+          confirmText="Ya, Batalkan"
+          variant="danger"
+          loading={cancelling}
         />
       )}
     </div>

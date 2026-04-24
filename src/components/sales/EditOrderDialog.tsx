@@ -22,6 +22,7 @@ import {
   Package,
   CheckCircle2,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface EditItem {
   product_id: string;
@@ -71,6 +72,8 @@ export function EditOrderDialog({
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+  const [confirmRemoveItem, setConfirmRemoveItem] = useState<{ id: string; name: string } | null>(null);
 
   // Initialize items dari props
   useEffect(() => {
@@ -138,8 +141,15 @@ export function EditOrderDialog({
     );
   }
 
-  function removeItem(product_id: string) {
-    setItems((prev) => prev.filter((i) => i.product_id !== product_id));
+  function removeItem(product_id: string, name: string) {
+    setConfirmRemoveItem({ id: product_id, name });
+  }
+
+  function executeRemoveItem() {
+    if (confirmRemoveItem) {
+      setItems((prev) => prev.filter((i) => i.product_id !== confirmRemoveItem.id));
+      setConfirmRemoveItem(null);
+    }
   }
 
   function addProduct(product: Product) {
@@ -305,7 +315,7 @@ export function EditOrderDialog({
 
                     {/* Hapus */}
                     <button
-                      onClick={() => removeItem(item.product_id)}
+                      onClick={() => removeItem(item.product_id, item.name)}
                       className="w-7 h-7 rounded-sm bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors ml-1"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -343,7 +353,7 @@ export function EditOrderDialog({
 
           {/* Simpan */}
           <button
-            onClick={handleSave}
+            onClick={() => setConfirmSaveOpen(true)}
             disabled={saving || items.length === 0}
             className="w-full h-12 rounded-sm bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-200"
           >
@@ -354,6 +364,27 @@ export function EditOrderDialog({
             )}
           </button>
         </div>
+
+        <ConfirmDialog
+          open={confirmSaveOpen}
+          onOpenChange={setConfirmSaveOpen}
+          title="Simpan Perubahan?"
+          description="Apakah Anda yakin ingin memperbarui pesanan ini? Perubahan akan langsung disimpan ke database."
+          onConfirm={handleSave}
+          confirmText="Ya, Simpan"
+          variant="info"
+          loading={saving}
+        />
+
+        <ConfirmDialog
+          open={!!confirmRemoveItem}
+          onOpenChange={(open) => !open && setConfirmRemoveItem(null)}
+          title="Hapus Item?"
+          description={`Hapus ${confirmRemoveItem?.name} dari pesanan?`}
+          onConfirm={executeRemoveItem}
+          confirmText="Ya, Hapus"
+          variant="danger"
+        />
       </DialogContent>
     </Dialog>
   );

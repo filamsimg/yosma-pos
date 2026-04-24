@@ -32,6 +32,8 @@ import {
   Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useState } from 'react';
 import { PAYMENT_METHODS } from '@/lib/constants';
 import type { PaymentMethod } from '@/types';
 
@@ -64,6 +66,9 @@ export function CartSheet({
     getTotalDiscount,
     getItemCount,
   } = useCartStore();
+
+  const [confirmCheckoutOpen, setConfirmCheckoutOpen] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   const itemCount = getItemCount();
   const subtotal = getSubtotal();
@@ -120,7 +125,7 @@ export function CartSheet({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearCart}
+                onClick={() => setConfirmClearOpen(true)}
                 className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 rounded-sm font-bold text-xs"
               >
                 <Trash2 className="h-4 w-4 mr-1.5" />
@@ -299,7 +304,7 @@ export function CartSheet({
 
               {/* Checkout Button */}
               <Button
-                onClick={onCheckout}
+                onClick={() => setConfirmCheckoutOpen(true)}
                 disabled={checkoutLoading || disabled || items.length === 0}
                 className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow-xl shadow-blue-200 rounded-sm active:scale-95 transition-all"
               >
@@ -320,6 +325,26 @@ export function CartSheet({
         )}
       </SheetContent>
     </Sheet>
+      <ConfirmDialog
+        open={confirmCheckoutOpen}
+        onOpenChange={setConfirmCheckoutOpen}
+        title="Konfirmasi Pesanan?"
+        description={`Buat transaksi baru senilai Rp ${totalPrice.toLocaleString('id-ID')} dengan metode ${paymentMethod === 'CREDIT' ? 'TEMPO' : paymentMethod}?`}
+        onConfirm={onCheckout}
+        confirmText="Ya, Proses"
+        variant="info"
+        loading={checkoutLoading}
+      />
+
+      <ConfirmDialog
+        open={confirmClearOpen}
+        onOpenChange={setConfirmClearOpen}
+        title="Kosongkan Keranjang?"
+        description="Semua produk yang telah Anda pilih akan dihapus dari keranjang."
+        onConfirm={clearCart}
+        confirmText="Ya, Kosongkan"
+        variant="danger"
+      />
     </>
   );
 }
