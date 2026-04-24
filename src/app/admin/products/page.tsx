@@ -19,7 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Search, Plus, Package, ChevronLeft, ChevronRight, Trash2 as TrashIcon } from 'lucide-react';
+import { 
+  Search, 
+  Plus, 
+  Package, 
+  ChevronLeft, 
+  ChevronRight, 
+  Trash2 as TrashIcon, 
+  XCircle, 
+  AlertTriangle, 
+  TrendingUp 
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ProductTable } from '@/components/admin/products/ProductTable';
@@ -27,6 +37,7 @@ import { ProductForm } from '@/components/admin/products/ProductForm';
 import { ImportDialog } from '@/components/admin/products/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { StockAdjustDialog } from '@/components/admin/products/StockAdjustDialog';
+import { StatCard } from '@/components/ui/stat-card';
 import { 
   createProduct, 
   updateProduct, 
@@ -219,13 +230,50 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header section */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Produk & Stok</h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Kelola katalog produk dengan Merk, Satuan, dan Harga Diskon.
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <Package className="h-6 w-6 text-blue-600" />
+            KATALOG <span className="text-blue-600">PRODUK</span>
+          </h1>
+          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-tight">
+            Kelola katalog barang dan monitoring stok gudang
+          </p>
+        </div>
+      </div>
+
+      {/* Mini Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard 
+            label="Total Produk" 
+            value={totalCount} 
+            icon={Package} 
+            iconBgColor="bg-blue-50" 
+            iconColor="text-blue-600" 
+        />
+        <StatCard 
+            label="Stok Habis" 
+            value={products.filter(p => (p.stock || 0) <= 0).length} 
+            icon={XCircle} 
+            iconBgColor="bg-red-50" 
+            iconColor="text-red-600" 
+        />
+        <StatCard 
+            label="Stok Menipis" 
+            value={products.filter(p => (p.stock || 0) > 0 && (p.stock || 0) <= (p.min_stock || 5)).length} 
+            icon={AlertTriangle} 
+            iconBgColor="bg-amber-50" 
+            iconColor="text-amber-600" 
+        />
+        <StatCard 
+            label="Kategori Aktif" 
+            value={Array.from(new Set(products.map(p => p.category))).length} 
+            icon={TrendingUp} 
+            iconBgColor="bg-emerald-50" 
+            iconColor="text-emerald-600" 
+        />
       </div>
 
       {/* Actions section (Search, Import, Create) */}

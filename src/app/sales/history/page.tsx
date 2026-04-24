@@ -27,7 +27,8 @@ import {
   ExternalLink,
   AlertTriangle,
   Loader2,
-  Pencil
+  Pencil,
+  X
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
@@ -36,6 +37,9 @@ import type { Transaction, TransactionItem } from '@/types';
 import { cancelTransaction } from '@/lib/actions/transactions';
 import { toast } from 'sonner';
 import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
+
+import { StatCard } from '@/components/ui/stat-card';
+import { cn } from '@/lib/utils';
 
 export default function SalesHistoryPage() {
   const { user } = useAuth();
@@ -57,29 +61,31 @@ export default function SalesHistoryPage() {
         .eq('sales_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
-
       if (data) setTransactions(data);
       setLoading(false);
     }
     fetchHistory();
   }, [user]);
 
+  const todayTransactions = transactions.filter(t => 
+    format(new Date(t.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+  );
+  
+  const stats = {
+    today_count: todayTransactions.length,
+    today_omzet: todayTransactions.reduce((sum, t) => sum + t.total_price, 0),
+    pending_count: transactions.filter(t => t.status === 'PENDING').length
+  };
+
   async function handleViewDetail(txn: Transaction) {
     setSelectedTxn(txn);
     setDetailOpen(true);
-
     const supabase = createClient();
     const { data } = await supabase
       .from('transaction_items')
       .select('*, product:products(*)')
       .eq('transaction_id', txn.id);
-
     if (data) setTxnItems(data);
-  }
-
-  function isWithin15Min(createdAt: string) {
-    const diffMinutes = (Date.now() - new Date(createdAt).getTime()) / 1000 / 60;
-    return diffMinutes <= 15;
   }
 
   async function handleCancelFromHistory(txnId: string, invoiceNumber: string) {
@@ -89,306 +95,151 @@ export default function SalesHistoryPage() {
       if (result.error) {
         toast.error('Gagal membatalkan transaksi', { description: result.error });
       } else {
-        toast.success('Pesanan berhasil dibatalkan', {
-          description: `${invoiceNumber} — Stok produk telah dikembalikan.`,
-        });
-        setTransactions(prev =>
-          prev.map(t => t.id === txnId ? { ...t, status: 'CANCELLED' } : t)
-        );
+        toast.success('Pesanan berhasil dibatalkan');
+        setTransactions(prev => prev.map(t => t.id === txnId ? { ...t, status: 'CANCELLED' } : t));
         setSelectedTxn(prev => prev ? { ...prev, status: 'CANCELLED' } : null);
       }
-    } finally {
-      setCancelling(false);
-    }
+    } finally { setCancelling(false); }
   }
 
   function handleEditSaved() {
-    // Refresh detail items setelah edit
-    if (selectedTxn) {
-      handleViewDetail(selectedTxn);
-    }
+    if (selectedTxn) handleViewDetail(selectedTxn);
   }
 
-  // Label & warna berdasarkan transaction status + payment_status
   function getStatusInfo(txn: { status: string; payment_status: string }) {
-    if (txn.status === 'CANCELLED') {
-      return { label: 'BATAL', style: 'bg-red-50 text-red-600 border-red-100' };
-    }
-    if (txn.status === 'PENDING') {
-      return { label: 'MENUNGGU', style: 'bg-amber-50 text-amber-600 border-amber-100' };
-    }
-    if (txn.status === 'PROCESSING') {
-      return { label: 'DIPROSES', style: 'bg-blue-50 text-blue-600 border-blue-100' };
-    }
-    // COMPLETED — cek payment_status
+    if (txn.status === 'CANCELLED') return { label: 'BATAL', style: 'bg-red-50 text-red-600 border-red-100' };
+    if (txn.status === 'PENDING') return { label: 'MENUNGGU', style: 'bg-amber-50 text-amber-600 border-amber-100' };
+    if (txn.status === 'PROCESSING') return { label: 'DIPROSES', style: 'bg-blue-50 text-blue-600 border-blue-100' };
     switch (txn.payment_status) {
-      case 'PAID':
-        return { label: 'LUNAS', style: 'bg-emerald-50 text-emerald-600 border-emerald-100' };
-      case 'PARTIAL':
-        return { label: 'CICILAN', style: 'bg-blue-50 text-blue-600 border-blue-100' };
-      case 'UNPAID':
-        return { label: 'TEMPO', style: 'bg-amber-50 text-amber-600 border-amber-100' };
-      default:
-        return { label: 'SELESAI', style: 'bg-slate-50 text-slate-500 border-slate-100' };
+      case 'PAID': return { label: 'LUNAS', style: 'bg-emerald-50 text-emerald-600 border-emerald-100' };
+      case 'PARTIAL': return { label: 'CICILAN', style: 'bg-blue-50 text-blue-600 border-blue-100' };
+      case 'UNPAID': return { label: 'TEMPO', style: 'bg-amber-50 text-amber-600 border-amber-100' };
+      default: return { label: 'SELESAI', style: 'bg-slate-50 text-slate-500 border-slate-100' };
     }
   }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-5 py-6 shadow-sm sticky top-0 z-10">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-slate-100 px-5 py-6 shadow-sm sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <History className="h-5 w-5 text-blue-600" />
               RIWAYAT <span className="text-blue-600">SALES</span>
             </h1>
-            <p className="text-xs font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
-              50 Transaksi Terakhir Anda
+            <p className="text-[10px] font-black text-slate-400 mt-0.5 uppercase tracking-widest leading-none">
+              Monitoring Transaksi Anda
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shadow-blue-50">
-             <Receipt className="h-5 w-5" />
-          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="Order Hari Ini" value={stats.today_count} icon={History} iconBgColor="bg-blue-50" iconColor="text-blue-600" className="border-slate-100 p-3" />
+          <StatCard label="Pending" value={stats.pending_count} icon={Clock} iconBgColor="bg-amber-50" iconColor="text-amber-600" className="border-slate-100 p-3" />
         </div>
       </div>
 
       <div className="p-5 space-y-3">
         {loading ? (
           <div className="space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-5 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-3">
-                <div className="flex justify-between">
-                  <Skeleton className="h-5 w-1/2 bg-slate-50" />
-                  <Skeleton className="h-5 w-1/4 bg-slate-50" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-3/4 bg-slate-50" />
-                  <Skeleton className="h-3 w-1/2 bg-slate-50" />
-                </div>
-              </div>
-            ))}
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl bg-white border border-slate-100" />)}
           </div>
         ) : transactions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm">
-            <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-6">
-              <Receipt className="h-10 w-10 text-slate-200" />
-            </div>
-            <h3 className="text-lg font-black text-slate-800">Belum Ada Transaksi</h3>
-            <p className="text-sm text-slate-400 mt-2 leading-relaxed max-w-[240px] font-medium">
-              Selesaikan kunjungan dan buat pesanan untuk melihat riwayat di sini.
-            </p>
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100 shadow-sm text-center px-6">
+             <Receipt className="h-10 w-10 text-slate-200 mb-4" />
+             <p className="text-sm font-black text-slate-300 uppercase italic">Belum Ada Transaksi</p>
           </div>
         ) : (
           <div className="space-y-3">
             {transactions.map((txn) => (
-              <button
-                key={txn.id}
-                onClick={() => handleViewDetail(txn)}
-                className="w-full text-left transition-all active:scale-[0.98] focus:outline-none"
-              >
-                <Card className="border-slate-100 bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50 transition-all rounded-[28px] overflow-hidden group">
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                              <Receipt className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-black text-slate-900 tracking-tight">
-                                {txn.invoice_number}
-                              </p>
-                              <Badge
-                                className={`text-[9px] font-black px-2 py-0 h-4 border-none uppercase tracking-tighter mt-0.5 ${getStatusInfo(txn).style}`}
-                              >
-                                {getStatusInfo(txn).label}
-                              </Badge>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                              <Store className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="text-xs font-bold text-slate-600 truncate">
-                              {txn.outlet?.name || '-'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                              <Calendar className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="text-xs font-bold text-slate-600 truncate">
-                              {format(new Date(txn.created_at), 'dd MMM yyyy', { locale: idLocale })}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TOTAL TRANSAKSI</p>
-                           <p className="text-base font-black text-blue-600">
-                            Rp {txn.total_price.toLocaleString('id-ID')}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </button>
+              <button key={txn.id} onClick={() => handleViewDetail(txn)} className="w-full text-left active:scale-[0.98] transition-transform">
+                <Card className="border border-slate-100 bg-white shadow-sm rounded-xl overflow-hidden group">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                         <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black"><Receipt className="h-4 w-4" /></div>
+                         <div>
+                            <p className="font-black text-xs text-slate-800 leading-tight uppercase">{txn.invoice_number}</p>
+                            <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-4 border rounded-full uppercase mt-1", getStatusInfo(txn).style)}>{getStatusInfo(txn).label}</Badge>
+                         </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-t border-slate-50 pt-3">
+                       <span className="flex items-center gap-1 shrink-0"><Store className="h-3 w-3" /> {txn.outlet?.name}</span>
+                       <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {format(new Date(txn.created_at), 'dd MMM')}</span>
+                       <span className="ml-auto font-black text-xs text-blue-600">Rp {txn.total_price.toLocaleString('id-ID')}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Transaction Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent
-          className="max-w-[420px] w-[calc(100%-2rem)] max-h-[90vh] overflow-hidden flex flex-col bg-white border-slate-200 p-0 rounded-[40px] shadow-2xl"
-        >
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white p-0 rounded-2xl overflow-hidden border border-slate-100 shadow-2xl">
           {selectedTxn && (
-            <>
-              <DialogHeader className="p-8 pb-4 bg-slate-50/50 border-b border-slate-100">
-                <div className="flex justify-between items-start">
-                   <div>
-                    <div className="flex items-center gap-2 mb-1">
-                       <Badge className="bg-blue-600 text-white border-none font-black text-[10px] px-2 py-0.5 rounded-lg">INV</Badge>
-                       <DialogTitle className="text-xl font-black text-slate-900 tracking-tighter">
-                        {selectedTxn.invoice_number}
-                      </DialogTitle>
-                    </div>
-                    <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <Clock className="h-3 w-3" /> {format(new Date(selectedTxn.created_at), 'dd MMMM yyyy, HH:mm', { locale: idLocale })}
-                    </DialogDescription>
-                  </div>
-                </div>
-              </DialogHeader>
+            <div className="flex flex-col h-full max-h-[90vh]">
+              <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                 <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Receipt</p>
+                    <h2 className="text-base font-black text-slate-800 leading-none uppercase">{selectedTxn.invoice_number}</h2>
+                 </div>
+                 <Badge variant="outline" className={cn("text-[9px] font-black px-3 py-1 border rounded-full uppercase", getStatusInfo(selectedTxn).style)}>{getStatusInfo(selectedTxn).label}</Badge>
+              </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                {/* Meta Info */}
-                <div className="grid grid-cols-2 gap-6 bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">OUTLET</label>
-                    <div className="flex items-center gap-1.5">
-                       <Store className="h-3.5 w-3.5 text-blue-500" />
-                       <span className="text-sm font-black text-slate-800 leading-tight">{selectedTxn.outlet?.name}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1 text-right">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">PEMBAYARAN</label>
-                    <div className="flex items-center gap-1.5 justify-end">
-                       <span className="text-sm font-black text-slate-800">{selectedTxn.payment_method}</span>
-                    </div>
-                  </div>
+              <div className="p-5 flex-1 overflow-y-auto space-y-5">
+                <div className="grid grid-cols-2 gap-3">
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet</p>
+                      <p className="text-xs font-black text-slate-800 leading-tight uppercase">{selectedTxn.outlet?.name}</p>
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu</p>
+                      <p className="text-xs font-black text-slate-800 leading-tight">{format(new Date(selectedTxn.created_at), 'dd MMM yyyy, HH:mm')}</p>
+                   </div>
                 </div>
 
-                {/* Status */}
-                <div className="px-2">
-                   <Badge
-                      className={`font-black text-[10px] border-none uppercase px-3 py-1 rounded-full ${getStatusInfo(selectedTxn).style}`}
-                    >
-                      {getStatusInfo(selectedTxn).label}
-                    </Badge>
-                </div>
-
-                {/* Items List */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between px-2">
-                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PESANAN BARANG</p>
-                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{txnItems.length} ITEM</p>
-                  </div>
-                  <div className="space-y-2.5">
-                    {txnItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between p-4 rounded-[20px] bg-slate-50 border border-slate-100 group hover:bg-white hover:border-blue-200 transition-all shadow-sm"
-                      >
-                        <div className="flex-1 min-w-0 pr-4">
-                          <p className="text-sm font-black text-slate-900 leading-tight">
-                            {item.product?.name}
-                          </p>
-                          <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1.5 uppercase">
-                            {item.quantity} Unit <span className="text-slate-200">|</span> Rp {item.price_at_sale.toLocaleString('id-ID')}
-                          </p>
-                        </div>
-                        <p className="text-sm font-black text-blue-600 whitespace-nowrap">
-                          Rp {item.subtotal.toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detail Item</p>
+                   <div className="space-y-2">
+                     {txnItems.map(item => (
+                       <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                          <div className="flex-1 pr-2">
+                             <p className="font-black text-[11px] text-slate-800 uppercase truncate leading-tight">{item.product?.name}</p>
+                             <p className="text-[9px] font-bold text-slate-400 mt-0.5">{item.quantity} Unit x Rp {item.price_at_sale.toLocaleString('id-ID')}</p>
+                          </div>
+                          <p className="text-xs font-black text-blue-600">Rp {item.subtotal.toLocaleString('id-ID')}</p>
+                       </div>
+                     ))}
+                   </div>
                 </div>
               </div>
 
-              {/* Bottom Totals */}
-              <div className="p-8 bg-slate-50 border-t border-slate-100 rounded-t-[40px] shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-                <div className="space-y-2.5">
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 px-1">
-                    <span>SUBTOTAL</span>
-                    <span className="text-slate-600 font-black">
-                      Rp {selectedTxn.subtotal.toLocaleString('id-ID')}
-                    </span>
-                  </div>
-                  {selectedTxn.discount > 0 && (
-                    <div className="flex justify-between items-center text-xs font-bold text-red-500 px-1">
-                      <span>DISCOUNT</span>
-                      <span className="font-black">
-                        - Rp {selectedTxn.discount.toLocaleString('id-ID')}
-                      </span>
-                    </div>
-                  )}
-                  <Separator className="bg-slate-200 my-4" />
-                  <div className="flex justify-between items-center">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">TOTAL AKHIR</p>
-                        <p className="text-2xl font-black text-blue-600 tracking-tighter leading-none">
-                          Rp {selectedTxn.total_price.toLocaleString('id-ID')}
-                        </p>
-                    </div>
-                    {/* View Photo if exists */}
-                    {selectedTxn.photo_url && (
-                       <a 
-                        href={selectedTxn.photo_url} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all shadow-sm active:scale-95"
-                       >
-                         <ExternalLink className="h-5 w-5" />
-                       </a>
-                    )}
-                  </div>
-                </div>
+              <div className="p-5 bg-slate-50 border-t border-slate-100">
+                 <div className="flex justify-between items-center mb-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Pesanan</p>
+                    <p className="text-lg font-black text-blue-600 tracking-tight">Rp {selectedTxn.total_price.toLocaleString('id-ID')}</p>
+                 </div>
 
-                {/* Tombol Edit & Batalkan — hanya jika status PENDING */}
-                {selectedTxn.status === 'PENDING' && (
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={() => setEditOpen(true)}
-                      className="flex-1 h-11 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edit Pesanan
+                 {selectedTxn.status === 'PENDING' && (
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditOpen(true)} className="flex-1 h-11 rounded-xl bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                      <Pencil className="h-4 w-4" /> Edit Pesanan
                     </button>
-                    <button
-                      onClick={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)}
-                      disabled={cancelling}
-                      className="h-11 px-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 disabled:opacity-50"
-                    >
-                      {cancelling ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                      )}
+                    <button onClick={() => handleCancelFromHistory(selectedTxn.id, selectedTxn.invoice_number)} disabled={cancelling} className="h-11 w-11 rounded-xl bg-red-50 text-red-500 border border-red-100 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50">
+                      {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                     </button>
                   </div>
-                )}
+                 )}
               </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Edit Order Dialog */}
       {selectedTxn && (
         <EditOrderDialog
           open={editOpen}
@@ -404,5 +255,6 @@ export default function SalesHistoryPage() {
     </div>
   );
 }
+
 
 

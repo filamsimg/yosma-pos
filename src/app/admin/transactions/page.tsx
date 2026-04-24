@@ -38,7 +38,11 @@ import {
   Truck,
   CheckCircle2,
   XCircle,
+  Clock,
+  History,
+  Receipt,
   ChevronDown,
+  TrendingUp,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -46,6 +50,9 @@ import { PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import type { Transaction, TransactionItem } from '@/types';
 import { updateTransactionStatus } from '@/lib/actions/transactions';
 import { toast } from 'sonner';
+
+import { StatCard } from '@/components/ui/stat-card';
+import { cn } from '@/lib/utils';
 
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -55,6 +62,7 @@ export default function AdminTransactionsPage() {
   const [txnItems, setTxnItems] = useState<TransactionItem[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED'>('ALL');
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -70,379 +78,233 @@ export default function AdminTransactionsPage() {
     }
     fetchTransactions();
 
-    // Real-time subscription
     const supabase = createClient();
     const channel = supabase
       .channel('admin-transactions')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'transactions' },
-        async (payload) => {
-          // Fetch the complete transaction with joins
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, async (payload) => {
           const { data } = await supabase
             .from('transactions')
             .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)')
             .eq('id', payload.new.id)
             .single();
-
-          if (data) {
-            setTransactions((prev) => [data, ...prev]);
-          }
+          if (data) setTransactions((prev) => [data, ...prev]);
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   async function handleViewDetail(txn: Transaction) {
     setSelectedTxn(txn);
     setDetailOpen(true);
-
     const supabase = createClient();
     const { data } = await supabase
       .from('transaction_items')
       .select('*, product:products(name, sku)')
       .eq('transaction_id', txn.id);
-
     if (data) setTxnItems(data);
   }
 
-  async function handleStatusUpdate(
-    txnId: string,
-    newStatus: 'PROCESSING' | 'COMPLETED' | 'CANCELLED'
-  ) {
+  async function handleStatusUpdate(txnId: string, newStatus: 'PROCESSING' | 'COMPLETED' | 'CANCELLED') {
     setUpdatingStatus(txnId + newStatus);
     try {
       const result = await updateTransactionStatus(txnId, newStatus);
       if (result.error) {
         toast.error('Gagal mengubah status', { description: result.error });
       } else {
-        const labels: Record<string, string> = {
-          PROCESSING: 'Sedang diproses',
-          COMPLETED: 'Selesai / Terkirim',
-          CANCELLED: 'Dibatalkan',
-        };
-        toast.success(`Status diperbarui: ${labels[newStatus]}`);
-        setTransactions(prev =>
-          prev.map(t => t.id === txnId ? { ...t, status: newStatus } : t)
-        );
-        if (selectedTxn?.id === txnId) {
-          setSelectedTxn(prev => prev ? { ...prev, status: newStatus } : null);
-        }
+        const labels: Record<string, string> = { PROCESSING: 'Diproses', COMPLETED: 'Selesai', CANCELLED: 'Batal' };
+        toast.success(`Status: ${labels[newStatus]}`);
+        setTransactions(prev => prev.map(t => t.id === txnId ? { ...t, status: newStatus } : t));
+        if (selectedTxn?.id === txnId) setSelectedTxn(prev => prev ? { ...prev, status: newStatus } : null);
       }
-    } finally {
-      setUpdatingStatus(null);
-    }
+    } finally { setUpdatingStatus(null); }
   }
 
-  function handlePrint(txn: Transaction) {
+  const handlePrint = (txn: Transaction) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
-
-    const itemRows = txnItems
-      .map(
-        (item) => `
+    const itemRows = txnItems.map(item => `
       <tr>
         <td style="padding:6px 0;border-bottom:1px solid #eee">${item.product?.name || '-'}</td>
         <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
-        <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">Rp ${item.price_at_sale.toLocaleString('id-ID')}</td>
         <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
-      </tr>`
-      )
-      .join('');
-
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Invoice ${txn.invoice_number}</title>
-    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;padding:24px;max-width:400px;margin:0 auto;color:#1a1a1a}
-    .header{text-align:center;margin-bottom:24px;border-bottom:2px solid #333;padding-bottom:16px}.header h1{font-size:20px;font-weight:700}.header p{font-size:11px;color:#666;margin-top:2px}
-    .info{margin-bottom:16px}.info-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}.info-row .label{color:#666}.info-row .value{font-weight:500}
-    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px}th{text-align:left;padding:8px 0;border-bottom:2px solid #333;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
-    .totals{border-top:2px solid #333;padding-top:12px}.total-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
-    .total-row.grand{font-size:16px;font-weight:700;border-top:1px solid #ddd;padding-top:8px;margin-top:4px}
-    .footer{text-align:center;margin-top:24px;padding-top:16px;border-top:1px dashed #ccc}.footer p{font-size:11px;color:#999}
-    @media print{body{padding:0}}</style></head><body>
-    <div class="header"><h1>YOSMA POS</h1><p>Sales Monitoring & Point of Sale</p></div>
-    <div class="info">
-      <div class="info-row"><span class="label">Invoice</span><span class="value">${txn.invoice_number}</span></div>
-      <div class="info-row"><span class="label">Tanggal</span><span class="value">${format(new Date(txn.created_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}</span></div>
-      <div class="info-row"><span class="label">Outlet</span><span class="value">${txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || '-'}</span></div>
-      <div class="info-row"><span class="label">Sales</span><span class="value">${txn.sales?.full_name || '-'}</span></div>
-      <div class="info-row"><span class="label">Pembayaran</span><span class="value">${PAYMENT_METHODS.find(m => m.value === txn.payment_method)?.label || txn.payment_method}</span></div>
-    </div>
-    <table><thead><tr><th>Produk</th><th style="text-align:center">Qty</th><th style="text-align:right">Harga</th><th style="text-align:right">Subtotal</th></tr></thead>
-    <tbody>${itemRows}</tbody></table>
-    <div class="totals">
-      <div class="total-row"><span>Subtotal</span><span>Rp ${txn.subtotal.toLocaleString('id-ID')}</span></div>
-      ${txn.discount > 0 ? `<div class="total-row"><span>Diskon</span><span>-Rp ${txn.discount.toLocaleString('id-ID')}</span></div>` : ''}
-      <div class="total-row"><span>Status</span><span style="color: ${txn.payment_status === 'PAID' ? '#10b981' : '#ef4444'}">${PAYMENT_STATUSES.find(s => s.value === (txn.payment_status || 'UNPAID'))?.label}</span></div>
-      <div class="total-row grand"><span>TOTAL</span><span>Rp ${txn.total_price.toLocaleString('id-ID')}</span></div>
-    </div>
-    <div class="footer"><p>Terima kasih!</p><p style="margin-top:4px">YOSMA POS © ${new Date().getFullYear()}</p></div>
-    <script>window.onload=function(){window.print()}</script></body></html>`);
+      </tr>`).join('');
+    printWindow.document.write(`<html><head><title>Invoice</title><style>body{font-family:sans-serif;padding:20px;font-size:12px}table{width:100%;border-collapse:collapse;margin:10px 0}.header{text-align:center;margin-bottom:20px}</style></head><body><div class="header"><h2>YOSMA POS</h2><p>${txn.invoice_number}</p></div><table><thead><tr><th>Produk</th><th>Qty</th><th style="text-align:right">Total</th></tr></thead><tbody>${itemRows}</tbody></table><div style="text-align:right;font-weight:bold;margin-top:10px">TOTAL: Rp ${txn.total_price.toLocaleString('id-ID')}</div></body></html>`);
     printWindow.document.close();
-  }
+    printWindow.print();
+  };
 
-  const txnStatusStyle = (status: string) => {
+  const statusColor = (status: string) => {
     switch (status) {
-      case 'PENDING':     return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'PROCESSING':  return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'COMPLETED':   return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'CANCELLED':   return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default:            return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      case 'PENDING':     return 'bg-amber-50 text-amber-600 border-amber-200';
+      case 'PROCESSING':  return 'bg-blue-50 text-blue-600 border-blue-200';
+      case 'COMPLETED':   return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+      case 'CANCELLED':   return 'bg-red-50 text-red-600 border-red-200';
+      default:            return 'bg-slate-50 text-slate-600 border-slate-200';
     }
   };
 
-  const txnStatusLabel = (status: string) => {
-    switch (status) {
-      case 'PENDING':    return 'Menunggu';
-      case 'PROCESSING': return 'Diproses';
-      case 'COMPLETED':  return 'Selesai';
-      case 'CANCELLED':  return 'Batal';
-      default:           return status;
-    }
+  const stats = {
+    today: transactions.filter(t => format(new Date(t.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length,
+    pending: transactions.filter(t => t.status === 'PENDING').length,
+    processing: transactions.filter(t => t.status === 'PROCESSING').length,
+    amount: transactions.reduce((sum, t) => sum + t.total_price, 0)
   };
 
-  const filtered = transactions.filter(
-    (txn) =>
-      !searchQuery.trim() ||
-      txn.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      txn.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      txn.outlet?.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      txn.sales?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = transactions.filter(txn => {
+    const match = !searchQuery.trim() || txn.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || txn.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return match && (activeTab === 'ALL' || txn.status === activeTab);
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Transaksi</h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Semua transaksi dari tim sales ({transactions.length} total)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <Receipt className="h-6 w-6 text-blue-600" />
+            MONITORING <span className="text-blue-600">TRANSAKSI</span>
+          </h1>
+          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-tight">
+            Monitoring arus pesanan dan status pengiriman harian
           </p>
         </div>
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Cari invoice, outlet, sales..."
+            placeholder="Cari invoice/outlet..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-slate-500 h-9"
+            className="pl-9 bg-white border-slate-100 rounded-xl h-10 shadow-sm"
           />
         </div>
       </div>
 
-      {/* Desktop Table */}
-      <Card className="border-white/5 bg-white/[0.03] hidden md:block">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="text-slate-400">Invoice</TableHead>
-                <TableHead className="text-slate-400">Sales</TableHead>
-                <TableHead className="text-slate-400">Outlet</TableHead>
-                <TableHead className="text-slate-400">Total</TableHead>
-                <TableHead className="text-slate-400">Bayar</TableHead>
-                <TableHead className="text-slate-400">Status</TableHead>
-                <TableHead className="text-slate-400">Tanggal</TableHead>
-                <TableHead className="text-slate-400 text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i} className="border-white/5">
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-20 bg-white/10" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : filtered.length === 0 ? (
-                <TableRow className="border-white/5">
-                  <TableCell colSpan={8} className="text-center text-slate-500 py-8">
-                    Tidak ada transaksi ditemukan
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((txn) => (
-                  <TableRow key={txn.id} className="border-white/5 hover:bg-white/[0.02]">
-                    <TableCell className="font-medium text-white text-sm">
-                      {txn.invoice_number}
-                    </TableCell>
-                    <TableCell className="text-slate-300 text-sm">
-                      {txn.sales?.full_name || '-'}
-                    </TableCell>
-                    <TableCell className="text-slate-300 text-sm uppercase font-bold">
-                      {txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name || '-'}
-                    </TableCell>
-                    <TableCell className="text-blue-400 font-semibold text-sm">
-                      Rp {txn.total_price.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-slate-300 text-sm">
-                      {PAYMENT_METHODS.find(m => m.value === txn.payment_method)?.label || txn.payment_method}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] border ${txnStatusStyle(txn.status)}`}
-                        >
-                          {txnStatusLabel(txn.status)}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-400 text-xs">
-                      {format(new Date(txn.created_at), 'dd MMM HH:mm', { locale: idLocale })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(txn)}
-                          className="text-slate-400 hover:text-white h-7 w-7 p-0"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {txn.status === 'PENDING' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(txn.id, 'PROCESSING')}
-                            disabled={updatingStatus === txn.id + 'PROCESSING'}
-                            className="text-blue-400 hover:text-blue-300 h-7 w-7 p-0"
-                            title="Tandai Diproses"
-                          >
-                            <Truck className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {txn.status === 'PROCESSING' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(txn.id, 'COMPLETED')}
-                            disabled={updatingStatus === txn.id + 'COMPLETED'}
-                            className="text-green-400 hover:text-green-300 h-7 w-7 p-0"
-                            title="Tandai Selesai"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {(txn.status === 'PENDING' || txn.status === 'PROCESSING') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(txn.id, 'CANCELLED')}
-                            disabled={updatingStatus === txn.id + 'CANCELLED'}
-                            className="text-red-400 hover:text-red-300 h-7 w-7 p-0"
-                            title="Batalkan"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-2">
-        {loading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="p-4 rounded-xl bg-white/5 space-y-2">
-                <Skeleton className="h-4 w-1/3 bg-white/10" />
-                <Skeleton className="h-3 w-1/2 bg-white/10" />
-              </div>
-            ))
-          : filtered.map((txn) => (
-              <button
-                key={txn.id}
-                onClick={() => handleViewDetail(txn)}
-                className="w-full text-left"
-              >
-                <Card className="border-white/5 bg-white/5 hover:bg-white/[0.08] transition-colors">
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-semibold text-white">
-                            {txn.invoice_number}
-                          </p>
-                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border-0 ${PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'))?.color}`}>
-                            {PAYMENT_STATUSES.find(ps => ps.value === (txn.payment_status || 'UNPAID'))?.label}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-slate-500 uppercase font-bold">
-                          {txn.sales?.full_name} • {txn.outlet?.type ? `${txn.outlet.type} ${txn.outlet.name}` : txn.outlet?.name} • {format(new Date(txn.created_at), 'dd MMM HH:mm', { locale: idLocale })}
-                        </p>
-                      </div>
-                      <p className="text-sm font-bold text-blue-400 shrink-0 ml-2">
-                        Rp {txn.total_price.toLocaleString('id-ID')}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </button>
-            ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {loading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl bg-white border border-slate-100" />) : (
+          <>
+            <StatCard label="Order Hari Ini" value={stats.today} icon={History} iconBgColor="bg-blue-50" iconColor="text-blue-600" />
+            <StatCard label="Menunggu" value={stats.pending} icon={Clock} iconBgColor="bg-amber-50" iconColor="text-amber-600" />
+            <StatCard label="Diproses" value={stats.processing} icon={Truck} iconBgColor="bg-indigo-50" iconColor="text-indigo-600" />
+            <StatCard label="Total Omzet" value={`Rp ${stats.amount.toLocaleString('id-ID')}`} icon={TrendingUp} iconBgColor="bg-emerald-50" iconColor="text-emerald-600" />
+          </>
+        )}
       </div>
 
-      {/* Detail Dialog */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
+              activeTab === tab ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-400 border-slate-100 font-bold"
+            )}
+          >
+            {tab === 'ALL' ? 'Semua' : tab}
+          </button>
+        ))}
+      </div>
+
+      <Card className="border border-slate-100 bg-white shadow-sm rounded-xl overflow-hidden">
+        <Table>
+          <TableHeader className="bg-slate-50/50">
+            <TableRow className="border-slate-100 hover:bg-transparent">
+              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 h-10">Invoice</TableHead>
+              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest h-10">Outlet</TableHead>
+              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest h-10">Total</TableHead>
+              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest h-10">Status</TableHead>
+              <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right px-6 h-10">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? Array.from({ length: 5 }).map((_, i) => <TableRow key={i}><TableCell colSpan={5} className="p-6"><Skeleton className="h-8 w-full rounded-lg" /></TableCell></TableRow>) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={5} className="py-20 text-center"><p className="text-sm font-black text-slate-300 uppercase italic">Tidak Ada Data</p></TableCell></TableRow>
+            ) : filtered.map(txn => (
+              <TableRow key={txn.id} className="border-slate-50 hover:bg-slate-50/30 transition-colors">
+                <TableCell className="px-6 py-3 font-black text-xs text-slate-800">{txn.invoice_number}</TableCell>
+                <TableCell className="py-3">
+                  <p className="text-xs font-black text-slate-700 uppercase truncate max-w-[150px]">{txn.outlet?.name}</p>
+                </TableCell>
+                <TableCell className="py-3 font-black text-xs text-blue-600">Rp {txn.total_price.toLocaleString('id-ID')}</TableCell>
+                <TableCell className="py-3">
+                  <Badge variant="outline" className={cn("text-[8px] font-black px-2 py-0 h-5 border rounded-full uppercase tracking-tighter", statusColor(txn.status))}>{txn.status}</Badge>
+                </TableCell>
+                <TableCell className="px-6 py-3 text-right">
+                  <Button variant="ghost" size="sm" onClick={() => handleViewDetail(txn)} className="h-8 px-2 text-[10px] font-black text-blue-600 hover:bg-blue-50 bg-blue-50/30">DETAIL</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent showCloseButton={true} className="max-w-lg w-[calc(100%-2rem)] bg-slate-900 border-white/10 p-0">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] bg-white p-0 rounded-2xl overflow-hidden border border-slate-100 shadow-2xl">
           {selectedTxn && (
-            <>
-              <DialogHeader className="p-4 border-b border-white/5">
-                <DialogTitle className="text-lg font-semibold text-white">
-                  {selectedTxn.invoice_number}
-                </DialogTitle>
-                <DialogDescription className="text-sm text-slate-400 font-bold uppercase">
-                  {selectedTxn.sales?.full_name} • {selectedTxn.outlet?.type ? `${selectedTxn.outlet.type} ${selectedTxn.outlet.name}` : selectedTxn.outlet?.name}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-400">Tanggal</span><span className="text-white">{format(new Date(selectedTxn.created_at), 'dd MMMM yyyy, HH:mm', { locale: idLocale })}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Pembayaran</span><span className="text-white">{PAYMENT_METHODS.find(m => m.value === selectedTxn.payment_method)?.label || selectedTxn.payment_method}</span></div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Status</span>
-                    <Badge variant="outline" className={`text-xs border-0 ${PAYMENT_STATUSES.find(ps => ps.value === (selectedTxn.payment_status || 'UNPAID'))?.color}`}>
-                      {PAYMENT_STATUSES.find(ps => ps.value === (selectedTxn.payment_status || 'UNPAID'))?.label}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Item Pesanan</p>
-                  {txnItems.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/5">
-                      <div>
-                        <p className="text-sm text-white">{item.product?.name}</p>
-                        <p className="text-xs text-slate-500">{item.quantity} × Rp {item.price_at_sale.toLocaleString('id-ID')}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-white">Rp {item.subtotal.toLocaleString('id-ID')}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-white/5 pt-3 space-y-1">
-                  <div className="flex justify-between text-sm"><span className="text-slate-400">Subtotal</span><span className="text-white">Rp {selectedTxn.subtotal.toLocaleString('id-ID')}</span></div>
-                  {selectedTxn.discount > 0 && <div className="flex justify-between text-sm"><span className="text-slate-400">Diskon</span><span className="text-red-400">- Rp {selectedTxn.discount.toLocaleString('id-ID')}</span></div>}
-                  <div className="flex justify-between text-base font-bold"><span className="text-white">Total</span><span className="text-blue-400">Rp {selectedTxn.total_price.toLocaleString('id-ID')}</span></div>
-                </div>
-                <Button onClick={() => handlePrint(selectedTxn)} variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
-                  <Printer className="mr-2 h-4 w-4" /> Cetak Invoice
-                </Button>
+            <div className="flex flex-col h-full max-h-[90vh]">
+              <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                 <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Invoice</p>
+                    <h2 className="text-lg font-black text-slate-800 leading-none uppercase">{selectedTxn.invoice_number}</h2>
+                 </div>
+                 <Badge variant="outline" className={cn("text-[9px] font-black px-3 py-1 border rounded-full uppercase", statusColor(selectedTxn.status))}>{selectedTxn.status}</Badge>
               </div>
-            </>
+
+              <div className="p-6 flex-1 overflow-y-auto space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Outlet</p>
+                      <p className="text-xs font-black text-slate-800 leading-tight uppercase">{selectedTxn.outlet?.name}</p>
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal</p>
+                      <p className="text-xs font-black text-slate-800 leading-tight">{format(new Date(selectedTxn.created_at), 'dd MMM yyyy')}</p>
+                   </div>
+                </div>
+
+                <div className="space-y-3">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Item Pesanan</p>
+                   <div className="space-y-2">
+                     {txnItems.map(item => (
+                       <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                          <div className="flex-1 pr-2">
+                            <p className="text-[11px] font-black text-slate-800 leading-tight uppercase truncate">{item.product?.name}</p>
+                            <p className="text-[9px] font-bold text-slate-400 mt-0.5">{item.quantity} Unit × Rp {item.price_at_sale.toLocaleString('id-ID')}</p>
+                          </div>
+                          <p className="text-xs font-black text-blue-600">Rp {item.subtotal.toLocaleString('id-ID')}</p>
+                       </div>
+                     ))}
+                   </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-4">
+                 <div className="flex justify-between items-end">
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Bayar</p>
+                        <p className="text-xl font-black text-blue-600 leading-none">Rp {selectedTxn.total_price.toLocaleString('id-ID')}</p>
+                    </div>
+                    <Button variant="outline" size="icon" onClick={() => handlePrint(selectedTxn)} className="h-10 w-10 rounded-xl bg-white border-slate-200"><Printer className="h-4 w-4 text-slate-400" /></Button>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-2">
+                    {selectedTxn.status === 'PENDING' && (
+                        <Button className="col-span-2 h-11 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl" onClick={() => handleStatusUpdate(selectedTxn.id, 'PROCESSING')}>PROSES PENGIRIMAN</Button>
+                    )}
+                    {selectedTxn.status === 'PROCESSING' && (
+                        <Button className="col-span-2 h-11 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-xl" onClick={() => handleStatusUpdate(selectedTxn.id, 'COMPLETED')}>KONFIRMASI SELESAI</Button>
+                    )}
+                    {(selectedTxn.status === 'PENDING' || selectedTxn.status === 'PROCESSING') && (
+                        <Button variant="ghost" className="col-span-2 h-11 text-red-500 font-black text-xs uppercase tracking-widest rounded-xl bg-red-50/50 hover:bg-red-50" onClick={() => handleStatusUpdate(selectedTxn.id, 'CANCELLED')}>BATALKAN ORDER</Button>
+                    )}
+                 </div>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+
