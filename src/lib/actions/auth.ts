@@ -61,8 +61,8 @@ export async function register(formData: FormData) {
   }
 
   // Verify Invite Code
-  const expectedAdminCode = process.env.ADMIN_INVITE_CODE || 'YOSMA-ADMIN-2026';
-  const expectedSalesCode = process.env.SALES_INVITE_CODE || 'YOSMA-SALES-2026';
+  const expectedAdminCode = process.env.ADMIN_INVITE_CODE;
+  const expectedSalesCode = process.env.SALES_INVITE_CODE;
 
   if (role === 'ADMIN' && inviteCode !== expectedAdminCode) {
     return { error: 'Kode Akses Admin salah atau tidak valid.' };
