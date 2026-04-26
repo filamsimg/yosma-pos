@@ -25,6 +25,7 @@ export interface OutletImportItem {
   owner_name?: string;
   visit_day?: string;
   visit_frequency?: string;
+  city?: string;
   assigned_sales?: string;
 }
 
@@ -160,6 +161,7 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
     // But usually we map it to the name.
     address: item.address || null,
     phone: item.phone || null,
+    city: item.city || null,
     owner_name: item.owner_name || null,
     visit_day: item.visit_day || null,
     visit_frequency: item.visit_frequency || 'Seminggu Sekali',

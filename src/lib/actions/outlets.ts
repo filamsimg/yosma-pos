@@ -23,7 +23,7 @@ export async function getPaginatedOutlets(
     .order(orderBy, { ascending: orderDir === 'asc' });
 
   if (search.trim()) {
-    query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%`);
+    query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%,city.ilike.%${search}%`);
   }
 
   if (filters?.type && filters.type.length > 0) {
@@ -62,6 +62,7 @@ export async function upsertOutlet(values: OutletFormValues, id?: string) {
     phone: values.phone || null,
     visit_day: values.visit_day || null,
     visit_frequency: values.visit_frequency || 'Seminggu Sekali',
+    city: values.city || null,
     assigned_sales: values.assigned_sales || null,
     updated_at: new Date().toISOString(),
   };
