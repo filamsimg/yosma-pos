@@ -49,6 +49,7 @@ interface OutletCheckinProps {
     photoUrl: string;
     mode: 'ORDER' | 'VISIT_ONLY';
   }) => void;
+  onReset?: () => void;
   checkedIn: boolean;
   checkinData: {
     outlet: Outlet;
@@ -60,6 +61,7 @@ interface OutletCheckinProps {
 
 export function OutletCheckin({
   onCheckin,
+  onReset,
   checkedIn,
   checkinData,
 }: OutletCheckinProps) {
@@ -234,8 +236,9 @@ export function OutletCheckin({
       });
 
       setDialogOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Check-in failed:', err);
+      toast.error(err.message || 'Gagal melakukan check-in. Silakan coba lagi.');
     } finally {
       setUploading(false);
     }
@@ -265,7 +268,7 @@ export function OutletCheckin({
             variant="ghost" 
             size="sm" 
             className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 h-8 font-bold text-[10px]"
-            onClick={() => window.location.reload()} // Quick way to 'reset' session if needed
+            onClick={() => onReset ? onReset() : window.location.reload()}
           >
             GANTI
           </Button>
@@ -470,7 +473,7 @@ export function OutletCheckin({
                 <span className="flex items-center justify-center w-6 h-6 rounded-sm bg-blue-100 text-blue-700 text-xs font-bold">
                   03
                 </span>
-                On-site Verification Photo
+                Verifikasi Kunjungan
               </div>
 
               {photoPreview ? (

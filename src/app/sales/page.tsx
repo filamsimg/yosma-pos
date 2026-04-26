@@ -9,7 +9,7 @@ import { ProductCatalog } from '@/components/sales/product-catalog';
 import { CartSheet } from '@/components/sales/cart-sheet';
 import { AddOutletDialog } from '@/components/sales/AddOutletDialog';
 import { toast } from 'sonner';
-import { Terminal, ShoppingBag, RefreshCw, MapPin, Plus, CheckCircle2 } from 'lucide-react';
+import { Terminal, ShoppingBag, RefreshCw, MapPin, Plus, CheckCircle2, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { addDays } from 'date-fns';
 import { useOfflineSync } from '@/hooks/use-offline-sync';
@@ -253,6 +253,26 @@ export default function SalesPOSPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {checkedIn && (
+              <button
+                onClick={() => {
+                  if (items.length > 0) {
+                    if (window.confirm('Keranjang Anda masih berisi produk. Keluar akan menghapus isi keranjang. Lanjutkan?')) {
+                      setCheckedIn(false);
+                      setCheckinData(null);
+                      clearCart();
+                    }
+                  } else {
+                    setCheckedIn(false);
+                    setCheckinData(null);
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-red-100 transition-all h-8 animate-in fade-in slide-in-from-right-2 duration-300"
+              >
+                <LogOut className="h-3 w-3" />
+                Keluar
+              </button>
+            )}
             <div className="flex flex-col items-end gap-1">
               <button
                 onClick={handleManualSync}
@@ -292,7 +312,15 @@ export default function SalesPOSPage() {
                 <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-tight">Pilih outlet kunjungan Anda</p>
               </div>
               
-              <OutletCheckin onCheckin={handleCheckin} checkedIn={checkedIn} checkinData={checkinData} />
+              <OutletCheckin 
+                onCheckin={handleCheckin} 
+                checkedIn={checkedIn} 
+                checkinData={checkinData} 
+                onReset={() => {
+                  setCheckedIn(false);
+                  setCheckinData(null);
+                }}
+              />
               
               <div className="pt-2 w-full">
                 <div className="relative">
