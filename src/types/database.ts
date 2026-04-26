@@ -80,6 +80,7 @@ export interface Outlet {
   owner_name: string | null;
   visit_day: string | null;
   visit_frequency: string | null;
+  city: string | null;
   assigned_sales: string | null;
   is_active: boolean;
   status: 'PROSPECT' | 'ACTIVE' | 'INACTIVE' | null;

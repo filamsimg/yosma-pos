@@ -9,6 +9,7 @@ export const outletSchema = z.object({
   }).nullable().optional(),
   visit_day: z.string().nullable().optional(),
   visit_frequency: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
   assigned_sales: z.string().nullable().optional(),
 });
 
