@@ -99,9 +99,9 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
             <FormSection title="Informasi Personal">
               <div className="grid gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Lengkap</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Nama Lengkap</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                     <Input
                       {...registerProfile('full_name')}
                       className="pl-10 bg-slate-50/50 border-slate-200 h-11 focus-visible:ring-blue-600 font-bold text-slate-900 rounded-sm uppercase text-xs"
@@ -112,9 +112,9 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nomor Telepon</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Nomor Telepon</Label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                       <Input
                         {...registerProfile('phone')}
                         className="pl-10 bg-slate-50/50 border-slate-200 h-11 focus-visible:ring-blue-600 font-bold text-slate-900 rounded-sm text-xs"
@@ -124,22 +124,22 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">NIK (Terkunci)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">NIK (Terkunci)</Label>
                     <div className="relative">
-                      <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                      <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                       <Input
                         {...registerProfile('nik')}
                         disabled
-                        className="pl-10 bg-slate-100 border-slate-200 h-11 font-mono font-black text-slate-400 cursor-not-allowed rounded-sm text-xs"
+                        className="pl-10 bg-slate-100 border-slate-200 h-11 font-mono font-black text-slate-600 cursor-not-allowed rounded-sm text-xs"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">NPWP Pajak</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">NPWP Pajak</Label>
                   <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                     <Input
                       {...registerProfile('npwp')}
                       className="pl-10 bg-slate-50/50 border-slate-200 h-11 focus-visible:ring-blue-600 font-bold text-slate-900 font-mono rounded-sm text-xs"
@@ -177,17 +177,17 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
           
           <div className="space-y-5">
             <div>
-              <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Alamat Email Login</Label>
+              <Label className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Alamat Email Login</Label>
               <div className="flex items-center gap-3 bg-slate-50/50 border border-slate-100 rounded-sm p-3">
-                <Mail className="h-4 w-4 text-slate-300" />
+                <Mail className="h-4 w-4 text-slate-600" />
                 <div className="text-xs font-bold text-slate-600 truncate">{email || 'Tidak tersedia'}</div>
               </div>
             </div>
 
             <div>
-              <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Status Keaktifan</Label>
+              <Label className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Status Keaktifan</Label>
               <div className="flex items-center gap-3 bg-slate-50/50 border border-slate-100 rounded-sm p-3">
-                <Activity className="h-4 w-4 text-slate-300" />
+                <Activity className="h-4 w-4 text-slate-600" />
                 <div className="flex items-center gap-2">
                   <div className={`h-2 w-2 rounded-full ${profile.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
                   <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{profile.is_active ? 'AKTIF' : 'NONAKTIF'}</span>
@@ -207,7 +207,7 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
           
           <form onSubmit={handleSubmitPassword(onSubmitPassword)} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Password Saat Ini</Label>
+              <Label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Password Saat Ini</Label>
               <Input
                 type="password"
                 {...registerPassword('current_password')}
@@ -218,7 +218,7 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Password Baru</Label>
+              <Label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Password Baru</Label>
               <Input
                 type="password"
                 {...registerPassword('password')}
@@ -229,7 +229,7 @@ export function ProfileForm({ profile, email }: { profile: Profile, email?: stri
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Konfirmasi Sandi Baru</Label>
+              <Label className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Konfirmasi Sandi Baru</Label>
               <Input
                 type="password"
                 {...registerPassword('confirm_password')}

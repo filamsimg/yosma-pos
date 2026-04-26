@@ -72,7 +72,7 @@ export function ProfileForm({
         <FormSection title="Informasi Dasar Karyawan">
           <div className="grid gap-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nama Lengkap Karyawan *</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Nama Lengkap Karyawan *</Label>
               <div className="relative">
                 <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                 <Input
@@ -87,7 +87,7 @@ export function ProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Role / Hak Akses</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Role / Hak Akses</Label>
                 <Controller
                   name="role"
                   control={control}
@@ -110,7 +110,7 @@ export function ProfileForm({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status Akun</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Status Akun</Label>
                 <Controller
                   name="is_active"
                   control={control}
@@ -142,7 +142,7 @@ export function ProfileForm({
           <div className="grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">NIK (No. Induk Karyawan) *</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">NIK (No. Induk Karyawan) *</Label>
                 <div className="relative">
                   <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input
@@ -156,7 +156,7 @@ export function ProfileForm({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">NPWP (Pajak)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">NPWP (Pajak)</Label>
                 <div className="relative">
                   <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input
@@ -169,9 +169,9 @@ export function ProfileForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">No. WhatsApp / Telepon</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600">No. WhatsApp / Telepon</Label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 border-r border-input pr-2 h-4 flex items-center">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 border-r border-input pr-2 h-4 flex items-center">
                   +62
                 </div>
                 <Input
@@ -193,7 +193,7 @@ export function ProfileForm({
                   <LockKeyhole className="h-3.5 w-3.5 text-blue-600" />
                   <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Reset Password Login</h4>
                 </div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Kembalikan sandi ke pengaturan awal <span className="text-blue-600">(yosma12345)</span>.</p>
+                <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Kembalikan sandi ke pengaturan awal <span className="text-blue-600">(yosma12345)</span>.</p>
               </div>
               <Button
                 type="button"

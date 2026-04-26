@@ -175,7 +175,7 @@ export function ProductForm({
               <div className="space-y-2.5">
                 <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">SKU / Kode Produk</Label>
                 <div className="relative">
-                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
                   <Input
                     {...register('sku')}
                     className="pl-12 bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 font-mono font-bold uppercase text-base rounded-xl"
@@ -309,7 +309,7 @@ export function ProductForm({
             <div className="space-y-2.5">
               <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Harga Satuan (Rp) *</Label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">Rp</div>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-600">Rp</div>
                 <Input
                   type="number"
                   {...register('price', { valueAsNumber: true })}
@@ -331,14 +331,14 @@ export function ProductForm({
                   className="bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 font-bold text-lg rounded-xl shadow-sm pr-12 text-center"
                   placeholder="0"
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">%</div>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-600">%</div>
               </div>
             </div>
 
             <div className="space-y-2.5">
               <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Minimum Stok (Warning)</Label>
               <div className="relative">
-                <Boxes className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Boxes className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
                 <Input
                   type="number"
                   {...register('min_stock', { valueAsNumber: true })}
@@ -347,7 +347,7 @@ export function ProductForm({
                   placeholder="10"
                 />
               </div>
-              <p className="text-[10px] text-slate-400 ml-1">Peringatan saat stok di bawah angka ini.</p>
+              <p className="text-[10px] text-slate-600 ml-1">Peringatan saat stok di bawah angka ini.</p>
             </div>
           </div>
         </section>

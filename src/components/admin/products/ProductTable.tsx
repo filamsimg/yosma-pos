@@ -40,7 +40,7 @@ export function ProductTable({
 }: ProductTableProps) {
   if (loading) {
     return (
-      <div className="p-8 text-center text-slate-400">
+      <div className="p-8 text-center text-slate-600">
         Memuat data produk...
       </div>
     );

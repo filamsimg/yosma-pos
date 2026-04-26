@@ -44,7 +44,7 @@ export function FormSection({
               </p>
             )}
             {subtitle && (
-              <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
+              <p className="text-[9px] font-bold text-slate-600 uppercase mt-0.5">
                 {subtitle}
               </p>
             )}
