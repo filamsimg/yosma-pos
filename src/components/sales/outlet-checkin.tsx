@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { processGeotaggedImage } from '@/lib/utils/image-utils';
+import { CameraCapture } from './camera-capture';
 import {
   Card,
   CardContent,
@@ -72,6 +73,7 @@ export function OutletCheckin({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [processedFile, setProcessedFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const geo = useGeolocation();
@@ -163,29 +165,21 @@ export function OutletCheckin({
     });
   }, [outlets, searchQuery, todayDayName, userProfile]);
 
-  // Handle photo capture
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file && selectedOutlet && geo.latitude && geo.longitude) {
+  // Handle camera capture result
+  async function handleCameraCapture(blob: Blob) {
+    if (selectedOutlet && geo.latitude && geo.longitude) {
       setUploading(true);
       try {
-        const result = await processGeotaggedImage(file, {
-          lat: geo.latitude,
-          lng: geo.longitude,
-          outletName: selectedOutlet.name,
-          salesName: userProfile?.full_name || 'SALES',
-        });
-        
-        setProcessedFile(result as File);
-        setPhotoPreview(URL.createObjectURL(result));
+        const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+        setProcessedFile(file);
+        setPhotoPreview(URL.createObjectURL(blob));
+        setShowCamera(false);
       } catch (err) {
-        console.error('Failed to process image:', err);
-        toast.error('Gagal memproses foto.');
+        console.error('Failed to capture image:', err);
+        toast.error('Gagal mengambil foto.');
       } finally {
         setUploading(false);
       }
-    } else if (!geo.latitude || !geo.longitude) {
-      toast.error('Aktifkan GPS terlebih dahulu sebelum mengambil foto.');
     }
   }
 
@@ -479,15 +473,6 @@ export function OutletCheckin({
                 Foto Bukti Kunjungan
               </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handlePhotoChange}
-                className="hidden"
-              />
-
               {photoPreview ? (
                 <div className="relative rounded-sm overflow-hidden border-2 border-blue-500/20 shadow-xl group">
                   <img
@@ -500,7 +485,6 @@ export function OutletCheckin({
                       onClick={() => {
                         setProcessedFile(null);
                         setPhotoPreview(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
                       }}
                       className="p-3 rounded-sm bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
                     >
@@ -525,15 +509,30 @@ export function OutletCheckin({
                       toast.error('Mohon pilih outlet terlebih dahulu.');
                       return;
                     }
-                    fileInputRef.current?.click();
+                    setShowCamera(true);
                   }}
                   className="w-full h-32 rounded-sm bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
                 >
                   <div className="bg-slate-50 w-12 h-12 rounded-sm flex items-center justify-center group-hover:bg-white shadow-inner">
                     <Camera className="h-6 w-6" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-widest">Buka Kamera</span>
+                  <span className="text-xs font-black uppercase tracking-widest">Buka Kamera Terpandu</span>
                 </Button>
+              )}
+
+              {/* Custom Camera Overlay */}
+              {showCamera && selectedOutlet && (
+                <CameraCapture
+                  isLocationReady={!!geo.latitude && !!geo.longitude}
+                  geotagData={{
+                    lat: geo.latitude!,
+                    lng: geo.longitude!,
+                    outletName: selectedOutlet.name,
+                    salesName: userProfile?.full_name || 'SALES',
+                  }}
+                  onCapture={handleCameraCapture}
+                  onCancel={() => setShowCamera(false)}
+                />
               )}
             </div>
           )}
