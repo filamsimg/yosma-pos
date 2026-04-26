@@ -122,7 +122,7 @@ export async function adminResetPassword(profileId: string) {
   const supabase = createAdminClient();
   
   // Default password for reset
-  const defaultPassword = process.env.DEFAULT_RESET_PASSWORD || 'yosma12345';
+  const defaultPassword = process.env.DEFAULT_RESET_PASSWORD;
 
   const { error } = await supabase.auth.admin.updateUserById(
     profileId,
