@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 
 import { DataTableFacetedFilter } from '@/components/admin/shared/DataTableFacetedFilter';
 import { ProductTable } from '@/components/admin/products/ProductTable';
+import { AdminPagination } from '@/components/ui/admin/pagination';
 import { ProductForm } from '@/components/admin/products/ProductForm';
 import { ImportDialog } from '@/components/admin/products/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -306,20 +307,20 @@ export default function AdminProductsPage() {
       <AdminToolbar>
         <AdminToolbarSection grow>
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
-              placeholder="Cari produk, SKU, atau merk..."
+              placeholder="Cari produk berdasarkan nama atau SKU..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-400 outline-none"
             />
           </div>
         </AdminToolbarSection>
         
-        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1 md:py-1">
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-400 py-1 md:py-1">
           <div className="flex items-center gap-2">
             <DataTableFacetedFilter
               title="Kategori"
@@ -334,13 +335,13 @@ export default function AdminProductsPage() {
               onSelect={(val) => { setBrandFilter(val); setCurrentPage(1); }}
             />
             <Select value={stockFilter} onValueChange={(val) => { if (val) { setStockFilter(val); setCurrentPage(1); } }}>
-              <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-200 text-[10px] font-black text-slate-400 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest">
+              <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-400 text-[10px] font-black text-slate-400 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <Filter className="h-3 w-3" />
                   <SelectValue placeholder="Status Stok" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-sm">
+              <SelectContent className="bg-white border-slate-400 text-slate-900 shadow-xl rounded-sm">
                 <SelectItem value="ALL" className="text-[10px] font-black uppercase">SEMUA STOK</SelectItem>
                 <SelectItem value="OUT_OF_STOCK" className="text-[10px] font-black uppercase">HABIS (0)</SelectItem>
                 <SelectItem value="LOW_STOCK" className="text-[10px] font-black uppercase">MENIPIS ({"<="}10)</SelectItem>
@@ -405,89 +406,21 @@ export default function AdminProductsPage() {
               setCurrentPage(1);
             }}
           />
-      </div>        {/* Pagination Footer */}
-        {totalPages > 0 && (
-          <div className="p-4 bg-white border border-slate-100 rounded-sm mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-center gap-6">
-              <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest whitespace-nowrap">
-                Showing <span className="text-slate-900">{products.length}</span> of <span className="text-slate-900">{totalCount}</span> Products
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Rows:</span>
-                <Select 
-                  value={pageSize.toString()} 
-                  onValueChange={(val) => {
-                    if (val) {
-                      setPageSize(parseInt(val));
-                      setCurrentPage(1);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-7 w-16 bg-slate-50 border-slate-100 text-[10px] font-black text-slate-600 rounded-sm">
-                    <SelectValue placeholder={pageSize.toString()} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl min-w-[4rem] rounded-sm">
-                    {[10, 25, 50, 100].map(size => (
-                      <SelectItem key={size} value={size.toString()} className="text-[10px] font-black uppercase">
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1 || loading}
-                className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                  .map((p, idx, arr) => {
-                    const showDots = idx > 0 && p - arr[idx - 1] > 1;
-                    return (
-                      <div key={p} className="flex items-center gap-1">
-                        {showDots && <span className="text-slate-200 px-1 text-[10px] font-black">...</span>}
-                        <Button
-                          variant={currentPage === p ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setCurrentPage(p)}
-                          disabled={loading}
-                          className={cn(
-                            "h-8 w-8 p-0 text-[10px] font-black rounded-sm transition-all",
-                            currentPage === p 
-                              ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" 
-                              : "border-slate-100 text-slate-400 hover:bg-slate-50"
-                          )}
-                        >
-                          {p}
-                        </Button>
-                      </div>
-                    );
-                  })}
-              </div>
- 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || loading}
-                className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+          <AdminPagination
+            totalCount={totalCount}
+            filteredCount={products.length}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            itemName="Produk"
+            loading={loading}
+          />
+      </div>
 
       <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
         <DialogContent className="max-w-5xl w-[calc(100%-2rem)] bg-white border-slate-200 p-0 overflow-hidden max-h-[96vh] flex flex-col shadow-2xl rounded-xl">

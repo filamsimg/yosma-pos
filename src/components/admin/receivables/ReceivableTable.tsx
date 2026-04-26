@@ -20,18 +20,18 @@ interface ReceivableTableProps {
 export function ReceivableTable({ data, loading, onPay, type }: ReceivableTableProps) {
   if (loading) {
     return (
-      <div className="p-12 text-center opacity-30">
+      <div className="p-12 text-center opacity-60">
         <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Memuat data piutang...</p>
       </div>
     );
   }
 
   const headers = [
-    "Outlet & Invoice",
-    <div className="text-right">Nilai</div>,
-    <div className="text-right">Terbayar</div>,
-    <div className="text-right">{type === 'ACTIVE' ? 'Sisa' : 'Total'}</div>,
-    type === 'ACTIVE' ? 'Jatuh Tempo' : 'Tgl Lunas',
+    <div className="text-center">Outlet & Invoice</div>,
+    <div className="text-center">Nilai</div>,
+    <div className="text-center">Terbayar</div>,
+    <div className="text-center">{type === 'ACTIVE' ? 'Sisa' : 'Total'}</div>,
+    <div className="text-center">{type === 'ACTIVE' ? 'Jatuh Tempo' : 'Tgl Lunas'}</div>,
     <div className="text-center">Aksi</div>
   ];
 
@@ -39,8 +39,8 @@ export function ReceivableTable({ data, loading, onPay, type }: ReceivableTableP
     <AdminTable headers={headers}>
       {data.length === 0 ? (
         <TableRow>
-          <TableCell colSpan={6} className="py-20 text-center opacity-30">
-            <p className="text-[10px] font-black uppercase tracking-widest">
+          <TableCell colSpan={6} className="py-20 text-center opacity-60">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
               {type === 'ACTIVE' ? 'Tidak ada tagihan aktif' : 'Belum ada riwayat pelunasan'}
             </p>
           </TableCell>
@@ -63,7 +63,7 @@ export function ReceivableTable({ data, loading, onPay, type }: ReceivableTableP
                   <span className="font-black text-slate-900 text-sm uppercase tracking-tight">
                     {item.outlet?.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                  <span className="text-[10px] text-slate-600 font-black uppercase tracking-widest mt-1">
                     {item.invoice_number}
                   </span>
                 </div>

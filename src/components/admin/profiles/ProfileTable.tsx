@@ -32,17 +32,17 @@ export function ProfileTable({
   }
 
   const headers = [
-    <div key="name" className="flex items-center gap-2 cursor-pointer" onClick={() => onSort('full_name')}>
+    <div key="name" className="flex items-center justify-center gap-2 cursor-pointer" onClick={() => onSort('full_name')}>
       Karyawan
       {sorting.field === 'full_name' ? (
         sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3 text-blue-600" /> : <ArrowDown className="h-3 w-3 text-blue-600" />
       ) : (
-        <ArrowUpDown className="h-3 w-3 opacity-30" />
+        <ArrowUpDown className="h-3 w-3 text-slate-600 opacity-90" />
       )}
     </div>,
-    "Role / Akses",
-    "Kontak",
-    "Status",
+    <div className="text-center">Role / Akses</div>,
+    <div className="text-center">Kontak</div>,
+    <div className="text-center">Status</div>,
     <div key="actions" className="text-center">Aksi</div>,
   ];
 
@@ -90,7 +90,7 @@ export function ProfileTable({
           <TableCell className="py-3 px-4">
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-sm bg-slate-50 border border-slate-100 flex items-center justify-center">
-                <Phone className="h-3.5 w-3.5 text-slate-400" />
+                <Phone className="h-3.5 w-3.5 text-slate-600" />
               </div>
               <span className="text-[11px] font-bold text-slate-600 font-mono">
                 {profile.phone || '-'}
@@ -105,8 +105,8 @@ export function ProfileTable({
                 AKTIF
               </Badge>
             ) : (
-              <Badge variant="outline" className="bg-slate-50 text-slate-400 border-slate-200 font-black text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-sm flex items-center w-fit">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mr-1.5" />
+              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 font-black text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-sm flex items-center w-fit">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-600 mr-1.5" />
                 NONAKTIF
               </Badge>
             )}
@@ -128,7 +128,7 @@ export function ProfileTable({
       ))}
       {profiles.length === 0 && !loading && (
         <TableRow>
-          <TableCell colSpan={5} className="py-20 text-center opacity-30">
+          <TableCell colSpan={5} className="py-20 text-center opacity-60">
             <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
               <User className="h-10 w-10" />
               <p className="text-[10px] font-black uppercase tracking-widest">Belum ada data karyawan</p>

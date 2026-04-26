@@ -79,25 +79,25 @@ export function OutletTable({
       onChange={toggleAll}
       className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
     />,
-    <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSort('name')}>
+    <div className="flex items-center justify-center gap-2 cursor-pointer" onClick={() => onSort('name')}>
       Outlet
       {sorting.field === 'name' ? (
         sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3 text-blue-600" /> : <ArrowDown className="h-3 w-3 text-blue-600" />
       ) : (
-        <ArrowUpDown className="h-3 w-3 opacity-30" />
+        <ArrowUpDown className="h-3 w-3 text-slate-600 opacity-90" />
       )}
     </div>,
-    "Alamat",
-    <div className="flex items-center gap-2 cursor-pointer" onClick={() => onSort('visit_day')}>
+    <div className="text-center">Alamat</div>,
+    <div className="flex items-center justify-center gap-2 cursor-pointer" onClick={() => onSort('visit_day')}>
       Jadwal
       {sorting.field === 'visit_day' ? (
         sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3 text-blue-600" /> : <ArrowDown className="h-3 w-3 text-blue-600" />
       ) : (
-        <ArrowUpDown className="h-3 w-3 opacity-30" />
+        <ArrowUpDown className="h-3 w-3 text-slate-600 opacity-90" />
       )}
     </div>,
-    "Kontak",
-    "Status",
+    <div className="text-center">Kontak</div>,
+    <div className="text-center">Status</div>,
     <div className="text-center">Aksi</div>
   ];
 
@@ -118,7 +118,7 @@ export function OutletTable({
           </TableCell>
           <TableCell className="px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-sm bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
+              <div className="w-10 h-10 rounded-sm bg-slate-50 flex items-center justify-center text-slate-600 border border-slate-100 shadow-sm">
                 <Store className="h-5 w-5" />
               </div>
               <div>
@@ -130,18 +130,18 @@ export function OutletTable({
                     </Badge>
                   )}
                 </div>
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">ID: {o.id.split('-')[0]}</div>
+                <div className="text-[9px] text-slate-600 font-bold uppercase tracking-tighter mt-0.5">ID: {o.id.split('-')[0]}</div>
               </div>
             </div>
           </TableCell>
           <TableCell className="px-4 py-3">
             {o.address ? (
               <div className="flex items-start gap-1.5 max-w-[200px]">
-                <MapPin className="h-3 w-3 text-slate-300 mt-0.5 shrink-0" />
+                <MapPin className="h-3 w-3 text-slate-600 mt-0.5 shrink-0" />
                 <span className="text-[11px] font-bold text-slate-500 whitespace-normal line-clamp-2 uppercase tracking-tight">{o.address}</span>
               </div>
             ) : (
-              <span className="text-[10px] text-slate-300 italic">No Address</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic opacity-50">No Address</span>
             )}
           </TableCell>
           <TableCell className="px-4 py-3">
@@ -158,13 +158,13 @@ export function OutletTable({
           <TableCell className="px-4 py-3">
             {o.phone ? (
               <div className="flex items-center gap-1.5">
-                <div className="w-7 h-7 rounded-sm bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                <div className="w-7 h-7 rounded-sm bg-slate-50 flex items-center justify-center text-slate-600 border border-slate-100">
                   <Phone className="h-3.5 w-3.5" />
                 </div>
                 <span className="text-[11px] font-black text-slate-700 tabular-nums">{o.phone}</span>
               </div>
             ) : (
-              <span className="text-[10px] text-slate-300 italic">No Contact</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic opacity-50">No Contact</span>
             )}
           </TableCell>
           <TableCell className="px-4 py-3">
@@ -183,7 +183,7 @@ export function OutletTable({
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(o)}
-                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all rounded-sm"
+                className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all rounded-sm"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -201,7 +201,7 @@ export function OutletTable({
       ))}
       {outlets.length === 0 && !loading && (
         <TableRow>
-          <TableCell colSpan={6} className="py-20 text-center opacity-30">
+          <TableCell colSpan={6} className="py-20 text-center opacity-60">
             <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
               <Store className="h-10 w-10" />
               <p className="text-[10px] font-black uppercase tracking-widest">Belum ada data outlet</p>

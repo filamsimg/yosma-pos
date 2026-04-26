@@ -14,7 +14,7 @@ export function AdminToolbar({
 }: AdminToolbarProps) {
   return (
     <div className={cn(
-      "flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-6 p-1 md:p-1.5 bg-white border border-slate-100 rounded-sm shadow-sm",
+      "flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-6 p-1 md:p-1.5 bg-white border border-slate-400 rounded-sm shadow-sm",
       className
     )}>
       {children}

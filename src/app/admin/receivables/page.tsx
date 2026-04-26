@@ -139,17 +139,17 @@ export default function ReceivablesPage() {
       <AdminToolbar>
         <AdminToolbarSection grow>
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
             <input
               placeholder="Cari outlet atau nomor invoice..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-600 outline-none"
             />
           </div>
         </AdminToolbarSection>
 
-        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1">
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-400 py-1">
           <div className="flex items-center gap-1.5 p-1 bg-slate-50/50 rounded-sm overflow-x-auto scrollbar-none">
             <button
               onClick={() => {}} // Active logic already handled by Tabs below, but keeping look consistent
@@ -166,7 +166,7 @@ export default function ReceivablesPage() {
 
       <Tabs defaultValue="aktif" className="w-full">
         <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-none pb-1">
-           <TabsList className="bg-slate-50/50 p-1 h-auto rounded-sm border border-slate-100">
+           <TabsList className="bg-slate-50/50 p-1 h-auto rounded-sm border border-slate-400">
              <TabsTrigger value="aktif" className="font-black text-[9px] uppercase tracking-[0.2em] px-6 py-2 rounded-sm data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Aktif</TabsTrigger>
              <TabsTrigger value="selesai" className="font-black text-[9px] uppercase tracking-[0.2em] px-6 py-2 rounded-sm data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Selesai</TabsTrigger>
            </TabsList>

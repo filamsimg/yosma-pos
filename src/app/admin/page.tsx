@@ -180,7 +180,7 @@ export default function AdminDashboardPage() {
                     ))}
                 </div>
             ) : recentTxns.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+                <div className="flex flex-col items-center justify-center py-12 text-slate-400 opacity-60">
                     <Receipt className="h-10 w-10 mb-2 opacity-20" />
                     <p className="text-[10px] font-black uppercase tracking-widest">Belum Ada Transaksi</p>
                 </div>
@@ -188,7 +188,7 @@ export default function AdminDashboardPage() {
                 <div className="overflow-x-auto scrollbar-none">
                     <table className="w-full text-left whitespace-nowrap">
                         <thead>
-                            <tr className="bg-slate-100 text-left border-b-2 border-slate-200">
+                            <tr className="bg-slate-100 text-center border-b-2 border-slate-200">
                                 <th className="py-3 px-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Invoice</th>
                                 <th className="py-3 px-4 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50">Waktu</th>
                                 <th className="py-3 px-4 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50">Total</th>
@@ -200,11 +200,11 @@ export default function AdminDashboardPage() {
                                 <tr key={txn.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="py-3 px-6 align-middle">
                                         <p className="text-[11px] font-black text-slate-800 tracking-tight font-mono uppercase">{txn.invoice_number}</p>
-                                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase truncate max-w-[150px]">{txn.outlet?.name}</p>
+                                        <p className="text-[9px] font-bold text-slate-600 mt-0.5 uppercase truncate max-w-[150px]">{txn.outlet?.name}</p>
                                     </td>
                                     <td className="py-3 px-4 align-middle border-l border-slate-50/50">
                                         <p className="text-[10px] font-bold text-slate-600">{format(new Date(txn.created_at), 'dd MMM', { locale: idLocale })}</p>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase">{format(new Date(txn.created_at), 'HH:mm')}</p>
+                                        <p className="text-[9px] font-bold text-slate-600 uppercase">{format(new Date(txn.created_at), 'HH:mm')}</p>
                                     </td>
                                     <td className="py-3 px-4 align-middle border-l border-slate-50/50">
                                         <p className="text-[11px] font-black text-blue-600 font-mono">Rp {txn.total_price.toLocaleString('id-ID')}</p>
@@ -241,7 +241,7 @@ export default function AdminDashboardPage() {
                         ))}
                     </div>
                 ) : (stats as any)?.topProducts?.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-slate-300">
+                    <div className="flex flex-col items-center justify-center py-10 text-slate-400 opacity-60">
                         <Package className="h-10 w-10 mb-2 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-widest">Belum Ada Data</p>
                     </div>
@@ -251,7 +251,7 @@ export default function AdminDashboardPage() {
                             <div key={i} className="flex items-center justify-between p-3 rounded-sm bg-slate-50/50 border border-slate-100 hover:bg-white hover:border-blue-100 transition-all group">
                                 <div className="flex-1 min-w-0 pr-2">
                                     <p className="text-[11px] font-black text-slate-800 truncate uppercase leading-none mb-1">{p.name}</p>
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">{p.sku}</p>
+                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest font-mono">{p.sku}</p>
                                 </div>
                                 <div className="text-right shrink-0">
                                     <p className="text-[12px] font-black text-blue-600 leading-none">{p.qty}</p>

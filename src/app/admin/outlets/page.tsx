@@ -15,13 +15,14 @@ import { toast } from 'sonner';
 import { AppDialog } from '@/components/ui/app-dialog';
 
 import { DataTableFacetedFilter } from '@/components/admin/shared/DataTableFacetedFilter';
+import { AdminTable } from '@/components/ui/admin/data-table';
+import { AdminPagination } from '@/components/ui/admin/pagination';
 import { OutletTable } from '@/components/admin/outlets/OutletTable';
 import { OutletForm } from '@/components/admin/outlets/OutletForm';
 import { ImportDialog } from '@/components/admin/outlets/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
-import { AdminTable } from '@/components/ui/admin/data-table';
 import { cn } from '@/lib/utils';
 import { 
   upsertOutlet, 
@@ -207,20 +208,20 @@ export default function AdminOutletsPage() {
       <AdminToolbar>
         <AdminToolbarSection grow>
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
-              placeholder="Cari nama atau alamat..."
+              placeholder="Cari outlet berdasarkan nama atau ID..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-400 outline-none"
             />
           </div>
         </AdminToolbarSection>
 
-        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1">
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-400 py-1">
           <div className="flex items-center gap-2">
             <DataTableFacetedFilter
               title="Tipe"
@@ -289,7 +290,7 @@ export default function AdminOutletsPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           sorting={sorting}
-          onSort={(field) => {
+          onSort={(field: string) => {
             setSorting(prev => ({
               field,
               dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
@@ -299,89 +300,20 @@ export default function AdminOutletsPage() {
         />
       </div>
 
-      {/* Pagination Footer */}
-      {totalPages > 0 && (
-        <div className="border border-slate-100 p-4 bg-white rounded-sm shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest whitespace-nowrap">
-              Total <span className="text-slate-900">{totalCount}</span> Outlet
-            </div>
-            
-            <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
-              <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Baris:</span>
-              <Select 
-                value={pageSize.toString()} 
-                onValueChange={(val) => {
-                  if (val) {
-                    setPageSize(parseInt(val));
-                    setCurrentPage(1);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-7 w-16 bg-slate-50 border-none text-[10px] font-black text-slate-600 focus:ring-0 rounded-sm">
-                  <SelectValue placeholder={pageSize.toString()} />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl min-w-[4rem] rounded-sm">
-                  {[10, 25, 50, 100].map(size => (
-                    <SelectItem key={size} value={size.toString()} className="text-[10px] font-black uppercase cursor-pointer focus:bg-blue-50 focus:text-blue-600">
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1 || loading}
-              className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                .map((p, idx, arr) => {
-                  const showDots = idx > 0 && p - arr[idx - 1] > 1;
-                  return (
-                    <div key={p} className="flex items-center gap-1">
-                      {showDots && <span className="text-slate-200 px-1 text-[10px] font-black">...</span>}
-                      <Button
-                        variant={currentPage === p ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setCurrentPage(p)}
-                        disabled={loading}
-                        className={cn(
-                          "h-8 w-8 p-0 text-[10px] font-black rounded-sm transition-all",
-                          currentPage === p 
-                            ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" 
-                            : "border-slate-100 text-slate-400 hover:bg-slate-50"
-                        )}
-                      >
-                        {p}
-                      </Button>
-                    </div>
-                  );
-                })}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages || loading}
-              className="h-8 w-8 p-0 border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <AdminPagination
+        totalCount={totalCount}
+        filteredCount={outlets.length}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+        itemName="Outlet"
+        loading={loading}
+      />
 
       <AppDialog
         open={modalOpen}

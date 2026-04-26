@@ -30,20 +30,20 @@ function AdminTableComponent({
 }: AdminTableProps) {
   return (
     <div className={cn(
-      "rounded-sm border border-slate-200 bg-white shadow-sm overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200",
+      "rounded-sm border border-slate-400 bg-white shadow-sm overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200",
       containerClassName
     )}>
       {/* Meningkatkan basis font ke text-sm (14px) untuk legibilitas maksimal */}
       <Table className={cn("text-sm font-semibold", className)}>
         <TableHeader className={cn(
-          "bg-slate-100 border-b-2 border-slate-200",
+          "bg-slate-100 border-b-2 border-slate-400",
           stickyHeader && "sticky top-0 z-10"
         )}>
           <TableRow className="hover:bg-transparent border-none">
             {headers.map((header, i) => (
               <TableHead 
                 key={i} 
-                className="h-14 text-[11px] font-black text-slate-700 uppercase tracking-widest px-4 border-r border-slate-200/50 last:border-r-0"
+                className="h-14 text-[11px] font-black text-slate-700 uppercase tracking-widest px-4 border-r border-slate-400/50 last:border-r-0 text-center"
               >
                 {header}
               </TableHead>

@@ -35,7 +35,7 @@ export function AdminPageHeader({
           </Link>
           {breadcrumbs.map((bc, i) => (
             <React.Fragment key={bc.label}>
-              <ChevronRight className="h-3 w-3 opacity-30" />
+              <ChevronRight className="h-3 w-3 opacity-60" />
               {bc.href ? (
                 <Link href={bc.href} className="hover:text-blue-600 transition-colors">
                   {bc.label}

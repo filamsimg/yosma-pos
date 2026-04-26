@@ -27,17 +27,17 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
 
   if (loading) {
     return (
-      <div className="p-12 text-center opacity-30">
+      <div className="p-12 text-center opacity-60">
         <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Memuat data transaksi...</p>
       </div>
     );
   }
 
   const headers = [
-    "Invoice & Outlet",
-    <div className="text-right">Total</div>,
+    <div className="text-center">Invoice & Outlet</div>,
+    <div className="text-center">Total</div>,
     <div className="text-center">Status</div>,
-    "Waktu",
+    <div className="text-center">Waktu</div>,
     <div className="text-center">Aksi</div>
   ];
 
@@ -45,8 +45,8 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
     <AdminTable headers={headers}>
       {data.length === 0 ? (
         <TableRow>
-          <TableCell colSpan={5} className="py-20 text-center opacity-30">
-            <p className="text-[10px] font-black uppercase tracking-widest">Tidak ada transaksi ditemukan</p>
+          <TableCell colSpan={5} className="py-20 text-center opacity-60">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tidak ada transaksi ditemukan</p>
           </TableCell>
         </TableRow>
       ) : (
@@ -57,7 +57,7 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
                 <span className="font-black text-slate-900 text-sm uppercase tracking-tight">
                    {item.invoice_number}
                 </span>
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-black uppercase tracking-tighter mt-1">
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-black uppercase tracking-tighter mt-1">
                    <Store className="h-3 w-3" />
                    {item.outlet?.name || 'Toko Umum'}
                 </div>
@@ -79,7 +79,7 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
               </Badge>
             </TableCell>
 
-            <TableCell className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase">
+            <TableCell className="px-4 py-4 text-[10px] font-black text-slate-600 uppercase">
               <div className="flex items-center gap-2">
                  <Calendar className="h-3.5 w-3.5 opacity-50 text-blue-500" />
                  {format(new Date(item.created_at), 'dd MMM yyyy', { locale: idLocale })}
@@ -92,7 +92,7 @@ export function TransactionTable({ data, loading, onView }: TransactionTableProp
                   size="sm" 
                   onClick={() => onView(item)}
                   variant="ghost"
-                  className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 h-9 px-4 text-[11px] font-black uppercase tracking-widest rounded-sm border border-transparent hover:border-blue-100"
+                  className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 h-9 px-4 text-[11px] font-black uppercase tracking-widest rounded-sm border border-transparent hover:border-blue-100"
                 >
                    Detail
                 </Button>

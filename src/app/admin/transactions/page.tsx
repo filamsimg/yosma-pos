@@ -160,7 +160,7 @@ export default function AdminTransactionsPage() {
         description="Monitoring arus pesanan dan status pengiriman harian secara real-time"
         breadcrumbs={[{ label: 'Transaksi' }]}
         action={
-          <Button variant="outline" className="h-10 px-4 border-slate-200 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50">
+          <Button variant="outline" className="h-10 px-4 border-slate-400 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50">
             <Download className="h-4 w-4 mr-2" /> Export PDF
           </Button>
         }
@@ -180,17 +180,17 @@ export default function AdminTransactionsPage() {
       <AdminToolbar>
         <AdminToolbarSection grow>
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
             <input
               placeholder="Cari invoice atau outlet..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-300 outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-600 outline-none"
             />
           </div>
         </AdminToolbarSection>
 
-        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-100 py-1">
+        <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-400 py-1">
           <div className="flex items-center gap-1.5 p-1 bg-slate-50/50 rounded-sm overflow-x-auto scrollbar-none">
             {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'] as const).map((tab) => {
               const label = tab === 'ALL' ? 'Semua' : TRANSACTION_STATUS_MAP[tab].label;
@@ -203,7 +203,7 @@ export default function AdminTransactionsPage() {
                     "px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all",
                     isActive 
                       ? "bg-slate-900 text-white shadow-lg shadow-slate-200" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-white"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white"
                   )}
                 >
                   {label}

@@ -70,15 +70,15 @@ export function ProductTable({
       onChange={toggleAll}
       className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
     />,
-    <div className="flex items-center gap-1 cursor-pointer" onClick={() => onSort('sku')}>
+    <div className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => onSort('sku')}>
       SKU {sorting.field === 'sku' && (sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
     </div>,
-    <div className="flex items-center gap-1 cursor-pointer" onClick={() => onSort('name')}>
+    <div className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => onSort('name')}>
       Produk {sorting.field === 'name' && (sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
     </div>,
     "Merk",
     "Satuan",
-    <div className="text-right cursor-pointer" onClick={() => onSort('price')}>Harga</div>,
+    <div className="text-center cursor-pointer" onClick={() => onSort('price')}>Harga</div>,
     <div className="text-center">Stok</div>,
     <div className="text-center">Aksi</div>
   ];
@@ -87,7 +87,7 @@ export function ProductTable({
     <AdminTable headers={headers}>
       {products.length === 0 ? (
         <TableRow>
-          <TableCell colSpan={8} className="py-20 text-center opacity-30">
+          <TableCell colSpan={8} className="py-20 text-center opacity-60">
             <p className="text-[10px] font-black uppercase tracking-widest">Tidak ada produk ditemukan</p>
           </TableCell>
         </TableRow>
@@ -105,11 +105,11 @@ export function ProductTable({
                 className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </TableCell>
-            <TableCell className="px-4 py-4 text-[11px] font-black text-slate-400 uppercase tracking-tight">{p.sku}</TableCell>
+            <TableCell className="px-4 py-4 text-[11px] font-black text-slate-600 uppercase tracking-tight">{p.sku}</TableCell>
             <TableCell className="px-4 py-4">
               <div className="flex flex-col">
                 <span className="font-black text-slate-900 text-sm uppercase tracking-tight">{p.name}</span>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">{p.category?.name}</span>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter mt-0.5">{p.category?.name}</span>
               </div>
             </TableCell>
             <TableCell className="px-4 py-4 text-[11px] font-black text-slate-600 uppercase tracking-tighter">{p.brand?.name || '-'}</TableCell>
@@ -134,7 +134,7 @@ export function ProductTable({
                   variant="ghost"
                   size="sm"
                   onClick={() => onAdjustStock(p)}
-                  className="text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 p-0"
+                  className="text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 p-0"
                 >
                   <PackagePlus className="h-3.5 w-3.5" />
                 </Button>
@@ -142,7 +142,7 @@ export function ProductTable({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(p)}
-                  className="text-slate-300 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 p-0"
+                  className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 h-8 w-8 p-0"
                 >
                   <Edit className="h-3.5 w-3.5" />
                 </Button>
@@ -150,7 +150,7 @@ export function ProductTable({
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(p.id)}
-                  className="text-slate-300 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                  className="text-slate-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
