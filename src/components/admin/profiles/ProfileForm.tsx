@@ -78,7 +78,7 @@ export function ProfileForm({
                 <Input
                   {...register('full_name')}
                   onChange={(e) => setValue('full_name', e.target.value.toUpperCase())}
-                  className="pl-10 bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 rounded-sm uppercase font-black text-xs tracking-tight"
+                  className="pl-10 bg-slate-50/50 border-input text-slate-900 h-11 focus-visible:ring-blue-600 rounded-sm uppercase font-black text-xs tracking-tight"
                   placeholder="CONTOH: AHMAD SUBARI"
                 />
               </div>
@@ -93,10 +93,10 @@ export function ProfileForm({
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus:ring-blue-600 rounded-sm font-black text-xs uppercase">
+                      <SelectTrigger className="bg-slate-50/50 border-input text-slate-900 h-11 focus:ring-blue-600 rounded-sm font-black text-xs uppercase">
                         <SelectValue placeholder="PILIH ROLE" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-sm">
+                      <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-sm">
                         <SelectItem value="SALES" className="focus:bg-blue-50 focus:text-blue-600 py-2.5 font-black text-[10px] uppercase cursor-pointer">
                           SALES (Lapangan)
                         </SelectItem>
@@ -119,10 +119,10 @@ export function ProfileForm({
                       value={field.value ? "true" : "false"} 
                       onValueChange={(v) => field.onChange(v === "true")}
                     >
-                      <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus:ring-blue-600 rounded-sm font-black text-xs uppercase">
+                      <SelectTrigger className="bg-slate-50/50 border-input text-slate-900 h-11 focus:ring-blue-600 rounded-sm font-black text-xs uppercase">
                         <SelectValue placeholder="PILIH STATUS" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-sm">
+                      <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-sm">
                         <SelectItem value="true" className="focus:bg-emerald-50 focus:text-emerald-700 py-2.5 font-black text-[10px] uppercase text-emerald-600 cursor-pointer">
                           AKTIF
                         </SelectItem>
@@ -148,7 +148,7 @@ export function ProfileForm({
                   <Input
                     {...register('nik')}
                     onChange={(e) => setValue('nik', e.target.value.toUpperCase())}
-                    className="pl-10 bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 font-mono font-black uppercase text-xs rounded-sm tracking-widest"
+                    className="pl-10 bg-slate-50/50 border-input text-slate-900 h-11 focus-visible:ring-blue-600 font-mono font-black uppercase text-xs rounded-sm tracking-widest"
                     placeholder="JY.XX.XXX.XX"
                   />
                 </div>
@@ -161,7 +161,7 @@ export function ProfileForm({
                   <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input
                     {...register('npwp')}
-                    className="pl-10 bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 font-mono text-xs rounded-sm"
+                    className="pl-10 bg-slate-50/50 border-input text-slate-900 h-11 focus-visible:ring-blue-600 font-mono text-xs rounded-sm"
                     placeholder="00.000.000.0-000.000"
                   />
                 </div>
@@ -171,13 +171,13 @@ export function ProfileForm({
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">No. WhatsApp / Telepon</Label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 border-r border-slate-200 pr-2 h-4 flex items-center">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 border-r border-input pr-2 h-4 flex items-center">
                   +62
                 </div>
                 <Input
                   {...register('phone')}
                   onChange={(e) => setValue('phone', normalizePhoneNumber(e.target.value))}
-                  className="pl-12 bg-slate-50/50 border-slate-200 text-slate-900 h-11 focus-visible:ring-blue-600 text-xs font-black rounded-sm tracking-wider"
+                  className="pl-12 bg-slate-50/50 border-input text-slate-900 h-11 focus-visible:ring-blue-600 text-xs font-black rounded-sm tracking-wider"
                   placeholder="812xxxxxx"
                 />
               </div>
@@ -199,7 +199,7 @@ export function ProfileForm({
                 type="button"
                 variant="outline"
                 onClick={() => setResetConfirmOpen(true)}
-                className="bg-white border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all h-9 px-4 rounded-sm shadow-sm"
+                className="bg-white border-input text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all h-9 px-4 rounded-sm shadow-sm"
               >
                 <KeyRound className="h-3.5 w-3.5 mr-2" />
                 Reset Password
