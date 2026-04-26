@@ -1,6 +1,26 @@
 'use client';
 
-import { Suspense } from 'react';
+import { useState, Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { login } from '@/lib/actions/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Eye,
+  EyeOff,
+  LogIn,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
 
 function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
