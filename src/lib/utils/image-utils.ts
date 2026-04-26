@@ -89,7 +89,7 @@ export async function processGeotaggedImage(
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 9px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('VERIFIED VISIT', width - 60, height - 22);
+        ctx.fillText('Kunjungan Terverifikasi', width - 60, height - 22);
         ctx.textAlign = 'left';
 
         // 5. Export as Compressed JPEG (Quality 0.6)

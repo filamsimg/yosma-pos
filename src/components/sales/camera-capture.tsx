@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, RefreshCw, X, Check, MapPin, Loader2 } from 'lucide-react';
+import { Camera, RefreshCw, X, Check, MapPin, Loader2, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GeotagData, processGeotaggedImage } from '@/lib/utils/image-utils';
 
@@ -10,28 +10,30 @@ interface CameraCaptureProps {
   onCancel: () => void;
   geotagData: GeotagData;
   isLocationReady: boolean;
+  overlayMode?: 'FACE' | 'SHOP' | 'AUTO';
 }
 
-export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady }: CameraCaptureProps) {
+export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady, overlayMode = 'AUTO' }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
   useEffect(() => {
     startCamera();
     return () => {
       stopCamera();
     };
-  }, []);
+  }, [facingMode]);
 
   const startCamera = async () => {
     try {
       const constraints = {
         video: {
-          facingMode: 'user',
+          facingMode: facingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -100,6 +102,10 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
     startCamera();
   };
 
+  const toggleCamera = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+  };
+
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
       {/* Header */}
@@ -109,7 +115,7 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
         </button>
         <div className="flex items-center gap-2 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/20">
           <MapPin className={`h-4 w-4 ${isLocationReady ? 'text-green-400' : 'text-red-400'}`} />
-          <span className="text-white text-xs font-medium">
+          <span className="text-white text-[10px] font-bold uppercase tracking-wider">
             {isLocationReady ? 'GPS Terkunci' : 'Mencari GPS...'}
           </span>
         </div>
@@ -125,29 +131,42 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
               ref={videoRef} 
               autoPlay 
               playsInline 
-              className="w-full h-full object-cover scale-x-[-1]"
+              className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
             />
             
+            {/* Hidden Canvas for Capture */}
+            <canvas ref={canvasRef} className="hidden" />
             {/* Silhouette / Frame Overlay */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[80%] h-[60%] border-2 border-white/50 rounded-3xl relative overflow-hidden flex items-center justify-center">
-                {/* Subtle Head Silhouette */}
-                <svg viewBox="0 0 100 100" className="w-48 h-48 text-white/20 fill-current">
-                  <path d="M50 20C40 20 32 28 32 38C32 48 40 56 50 56C60 56 68 48 68 38C68 28 60 20 50 20ZM50 62C35 62 20 70 20 80V85H80V80C80 70 65 62 50 62Z" />
-                </svg>
+              <div className="w-[85%] h-[65%] border-2 border-white/30 rounded-3xl relative overflow-hidden flex items-center justify-center">
+                {overlayMode === 'FACE' || (overlayMode === 'AUTO' && facingMode === 'user') ? (
+                  /* Subtle Head Silhouette */
+                  <svg viewBox="0 0 100 100" className="w-56 h-56 text-white/10 fill-current animate-pulse">
+                    <path d="M50 20C40 20 32 28 32 38C32 48 40 56 50 56C60 56 68 48 68 38C68 28 60 20 50 20ZM50 62C35 62 20 70 20 80V85H80V80C80 70 65 62 50 62Z" />
+                  </svg>
+                ) : (
+                  /* Shop/Building Frame */
+                  <div className="w-full h-full border-[16px] border-black/20 flex items-center justify-center">
+                    <div className="w-[90%] h-[80%] border border-dashed border-white/20 rounded-lg flex items-center justify-center">
+                      <Store className="w-16 h-16 text-white/5" />
+                    </div>
+                  </div>
+                )}
                 
                 {/* Corner Accents */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-xl" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-xl" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-xl" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-xl" />
+                <div className="absolute top-4 left-4 w-10 h-10 border-t-4 border-l-4 border-blue-500 rounded-tl-lg" />
+                <div className="absolute top-4 right-4 w-10 h-10 border-t-4 border-r-4 border-blue-500 rounded-tr-lg" />
+                <div className="absolute bottom-4 left-4 w-10 h-10 border-b-4 border-l-4 border-blue-500 rounded-bl-lg" />
+                <div className="absolute bottom-4 right-4 w-10 h-10 border-b-4 border-r-4 border-blue-500 rounded-br-lg" />
               </div>
             </div>
 
             {/* Instruction */}
-            <div className="absolute bottom-32 left-0 right-0 text-center px-6">
-              <p className="text-white text-sm bg-black/40 backdrop-blur-md py-2 px-4 rounded-full inline-block border border-white/10 shadow-lg">
-                Posisikan wajah atau toko di dalam bingkai
+            <div className="absolute bottom-40 left-0 right-0 text-center px-6 pointer-events-none">
+              <p className="text-white text-[10px] font-black uppercase tracking-widest bg-black/60 backdrop-blur-md py-2.5 px-5 rounded-full inline-block border border-white/10 shadow-2xl">
+                {overlayMode === 'FACE' || (overlayMode === 'AUTO' && facingMode === 'user') 
+                  ? 'Posisikan wajah di dalam bingkai' 
+                  : 'Posisikan toko di dalam bingkai'}
               </p>
             </div>
           </>
@@ -196,7 +215,7 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
               disabled={!isLocationReady || isProcessing}
               className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
                 isLocationReady 
-                  ? 'bg-blue-600 active:scale-90 shadow-lg shadow-blue-500/40' 
+                  ? 'bg-blue-600 active:scale-90 shadow-2xl shadow-blue-500/40' 
                   : 'bg-slate-700 opacity-50 cursor-not-allowed'
               }`}
             >
@@ -204,11 +223,20 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
                 <Loader2 className="h-10 w-10 text-white animate-spin" />
               ) : (
                 <div className="w-16 h-16 rounded-full border-4 border-white/30 flex items-center justify-center">
-                   <div className="w-12 h-12 rounded-full bg-white" />
+                   <div className="w-12 h-12 rounded-full bg-white shadow-inner" />
                 </div>
               )}
             </button>
-            <div className="w-14 h-14" /> {/* Spacer */}
+            
+            <button 
+              onClick={toggleCamera}
+              className="flex flex-col items-center gap-2 text-white opacity-80 hover:opacity-100 transition-opacity"
+            >
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                <RefreshCw className="h-6 w-6" />
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-widest">Ganti Kamera</span>
+            </button>
           </>
         )}
       </div>

@@ -470,7 +470,7 @@ export function OutletCheckin({
                 <span className="flex items-center justify-center w-6 h-6 rounded-sm bg-blue-100 text-blue-700 text-xs font-bold">
                   03
                 </span>
-                Foto Bukti Kunjungan
+                On-site Verification Photo
               </div>
 
               {photoPreview ? (
@@ -516,7 +516,7 @@ export function OutletCheckin({
                   <div className="bg-slate-50 w-12 h-12 rounded-sm flex items-center justify-center group-hover:bg-white shadow-inner">
                     <Camera className="h-6 w-6" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-widest">Buka Kamera Terpandu</span>
+                  <span className="text-xs font-black uppercase tracking-widest">Buka Verifikasi On-site</span>
                 </Button>
               )}
 
@@ -532,6 +532,7 @@ export function OutletCheckin({
                   }}
                   onCapture={handleCameraCapture}
                   onCancel={() => setShowCamera(false)}
+                  overlayMode="AUTO" // Automatically switches based on camera facing
                 />
               )}
             </div>
