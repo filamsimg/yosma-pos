@@ -273,8 +273,8 @@ export default function SalesPOSPage() {
                 </span>
               )}
             </div>
-            <div className="w-10 h-10 rounded-sm bg-blue-600 border border-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-100">
-              <ShoppingBag className="h-5 w-5" />
+            <div className="w-10 h-10 rounded-sm bg-white border border-slate-200 flex items-center justify-center shadow-lg shadow-slate-100 p-1.5">
+              <img src="/icon.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
           </div>
         </div>
@@ -284,8 +284,8 @@ export default function SalesPOSPage() {
         {!checkedIn ? (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-white rounded-sm border border-slate-100 p-6 shadow-sm flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-sm bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100">
-                <MapPin className="h-8 w-8" />
+              <div className="w-16 h-16 rounded-sm bg-white border border-slate-100 flex items-center justify-center shadow-lg shadow-slate-100 p-3">
+                <img src="/icon.png" alt="Yosma Logo" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h2 className="text-lg font-black text-slate-900 uppercase">Mulai Check-in</h2>

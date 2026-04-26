@@ -83,8 +83,8 @@ export default function RegisterPage() {
 
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25 mb-4">
-            <ShoppingCart className="h-8 w-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-lg shadow-indigo-500/10 mb-4 p-2">
+            <img src="/icon.png" alt="Yosma Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
             Buat Akun <span className="text-indigo-600">Baru</span>

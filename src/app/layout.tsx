@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description:
     "Aplikasi POS & Sales Monitoring untuk tim penjualan lapangan dan admin.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export const viewport: Viewport = {

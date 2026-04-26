@@ -84,8 +84,8 @@ export function AdminSidebar({ mode, onModeChange, onNavigate, hideControls }: A
         "flex items-center gap-2.5 px-4 h-16 shrink-0 border-b border-[#1e293b]",
         isEffectivelyCollapsed && "justify-center px-0"
       )}>
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 shrink-0">
-          <ShoppingCart className="h-4 w-4 text-white" />
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white shrink-0 p-1">
+          <img src="/icon.png" alt="Logo" className="w-full h-full object-contain" />
         </div>
         {!isEffectivelyCollapsed && (
           <div className="flex flex-col animate-in fade-in duration-300">
