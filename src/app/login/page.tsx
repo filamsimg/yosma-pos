@@ -1,29 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { login } from '@/lib/actions/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  ShoppingCart,
-  Eye,
-  EyeOff,
-  LogIn,
-  Loader2,
-  AlertCircle,
-} from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -186,5 +165,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
