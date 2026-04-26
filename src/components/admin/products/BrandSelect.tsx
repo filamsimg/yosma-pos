@@ -94,6 +94,12 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
             placeholder="Nama merk baru..."
             value={newBrandName}
             onChange={(e) => setNewBrandName(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddBrand();
+              }
+            }}
             autoFocus
             className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 focus-visible:ring-offset-2 shadow-sm transition-all uppercase"
           />

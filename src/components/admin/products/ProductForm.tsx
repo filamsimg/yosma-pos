@@ -2,6 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { productSchema, type ProductFormValues } from '@/lib/validations/product';
@@ -44,11 +45,13 @@ interface ProductFormProps {
 
 export function ProductForm({
   initialData,
-  categories,
   onSubmit,
   onCancel,
   loading,
-}: ProductFormProps) {
+}: Omit<ProductFormProps, 'categories'>) {
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+  const [fetchingCategories, setFetchingCategories] = useState(true);
+
   const {
     register,
     handleSubmit,
@@ -63,7 +66,7 @@ export function ProductForm({
       description: initialData?.description || '',
       price: initialData?.price || 0,
       discount_regular: initialData?.discount_regular || 0,
-      category_id: initialData?.category_id || (categories[0]?.id || ''),
+      category_id: initialData?.category_id || '',
       brand_id: initialData?.brand_id || '',
       unit_id: initialData?.unit_id || '',
       min_stock: initialData?.min_stock ?? 10,
@@ -74,7 +77,6 @@ export function ProductForm({
   const brandId = watch('brand_id') || '';
   const unitId = watch('unit_id') || '';
 
-  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -84,8 +86,22 @@ export function ProductForm({
   const [submittingCategory, setSubmittingCategory] = useState(false);
 
   useEffect(() => {
-    setLocalCategories(categories);
-  }, [categories]);
+    fetchCategories();
+  }, []);
+
+  async function fetchCategories() {
+    setFetchingCategories(true);
+    const supabase = createClient();
+    const { data } = await supabase.from('categories').select('*').order('name');
+    if (data) {
+      setLocalCategories(data);
+      // If we're creating new and have no category selected, select the first one
+      if (!initialData && !categoryId && data.length > 0) {
+        setValue('category_id', data[0].id);
+      }
+    }
+    setFetchingCategories(false);
+  }
 
   async function handleAddCategory() {
     const normalizedName = normalizeTypeName(newCategoryName.trim().toUpperCase());
@@ -96,7 +112,8 @@ export function ProductForm({
       toast.error('Gagal menambah kategori', { description: result.error });
     } else if (result.data) {
       const newCat = result.data as Category;
-      setLocalCategories([...localCategories, newCat].sort((a, b) => a.name.localeCompare(b.name)));
+      const updated = [...localCategories, newCat].sort((a, b) => a.name.localeCompare(b.name));
+      setLocalCategories(updated);
       setValue('category_id', newCat.id, { shouldValidate: true });
       setIsAddingCategory(false);
       setNewCategoryName('');
@@ -148,7 +165,7 @@ export function ProductForm({
               <Input
                 {...register('name')}
                 onChange={(e) => setValue('name', e.target.value.toUpperCase())}
-                className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl uppercase font-semibold text-base"
+                className="bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl uppercase font-semibold text-base"
                 placeholder="CONTOH: ABARTUS TANG"
               />
               {errors.name && <p className="text-xs text-red-600 mt-1 font-medium ml-1">{errors.name.message}</p>}
@@ -161,7 +178,7 @@ export function ProductForm({
                   <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <Input
                     {...register('sku')}
-                    className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 font-mono font-bold uppercase text-base rounded-xl"
+                    className="pl-12 bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 font-mono font-bold uppercase text-base rounded-xl"
                     placeholder="AUTO-GENERATED (YAP-####)"
                   />
                 </div>
@@ -176,8 +193,14 @@ export function ProductForm({
                       placeholder="NAMA BARU..."
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCategory();
+                        }
+                      }}
                       autoFocus
-                      className="bg-white border-slate-200 text-slate-900 h-12 px-4 focus-visible:ring-blue-600 rounded-xl shadow-sm uppercase font-bold"
+                      className="bg-white border-input text-slate-900 h-12 px-4 focus-visible:ring-blue-600 rounded-xl shadow-sm uppercase font-bold"
                     />
                     <Button 
                       type="button"
@@ -205,12 +228,12 @@ export function ProductForm({
                       onValueChange={(val: string | null) => setValue('category_id', val || '', { shouldValidate: true })}
                       disabled={localCategories.length === 0}
                     >
-                      <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 focus:ring-blue-600 px-5 flex-1 rounded-xl font-medium">
+                      <SelectTrigger className="bg-white border-input text-slate-900 h-12 focus:ring-blue-600 px-5 flex-1 rounded-xl font-medium">
                         <SelectValue>
-                          {localCategories.find(c => c.id === categoryId)?.name || (localCategories.length === 0 ? "Memuat..." : "Pilih Kategori")}
+                          {localCategories.find(c => c.id === categoryId)?.name || (fetchingCategories ? "Memuat..." : "Pilih Kategori")}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-xl">
+                      <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-xl">
                         {localCategories.map((c) => (
                           <SelectItem 
                             key={c.id} 
@@ -232,7 +255,7 @@ export function ProductForm({
                       type="button"
                       size="icon" 
                       onClick={() => setIsAddingCategory(true)}
-                      className="h-12 w-12 shrink-0 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-xl"
+                      className="h-12 w-12 shrink-0 bg-white border border-input text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm rounded-xl"
                     >
                       <Plus className="h-5 w-5" />
                     </Button>
@@ -266,7 +289,7 @@ export function ProductForm({
               <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Deskripsi / Keterangan</Label>
               <Input
                 {...register('description')}
-                className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl"
+                className="bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 px-5 shadow-sm rounded-xl"
                 placeholder="TAMBAHKAN INFORMASI TAMBAHAN PRODUK..."
               />
             </div>
@@ -291,7 +314,7 @@ export function ProductForm({
                   type="number"
                   {...register('price', { valueAsNumber: true })}
                   onFocus={(e) => e.target.select()}
-                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 font-black text-lg rounded-xl shadow-sm"
+                  className="pl-12 bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 font-black text-lg rounded-xl shadow-sm"
                   placeholder="0"
                 />
               </div>
@@ -305,7 +328,7 @@ export function ProductForm({
                   type="number"
                   {...register('discount_regular', { valueAsNumber: true })}
                   onFocus={(e) => e.target.select()}
-                  className="bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-blue-600 font-bold text-lg rounded-xl shadow-sm pr-12 text-center"
+                  className="bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 font-bold text-lg rounded-xl shadow-sm pr-12 text-center"
                   placeholder="0"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">%</div>
@@ -320,7 +343,7 @@ export function ProductForm({
                   type="number"
                   {...register('min_stock', { valueAsNumber: true })}
                   onFocus={(e) => e.target.select()}
-                  className="pl-12 bg-white border-slate-200 text-slate-900 h-12 focus-visible:ring-amber-500 font-bold text-lg rounded-xl shadow-sm"
+                  className="pl-12 bg-white border-input text-slate-900 h-12 focus-visible:ring-blue-600 font-bold text-lg rounded-xl shadow-sm"
                   placeholder="10"
                 />
               </div>

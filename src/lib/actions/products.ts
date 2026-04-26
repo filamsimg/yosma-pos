@@ -160,6 +160,7 @@ export async function createBrand(name: string) {
     .single();
 
   if (error) return { error: error.message };
+  revalidatePath('/admin/products');
   return { data };
 }
 
@@ -172,6 +173,7 @@ export async function createUnit(name: string) {
     .single();
 
   if (error) return { error: error.message };
+  revalidatePath('/admin/products');
   return { data };
 }
 
@@ -184,6 +186,7 @@ export async function createCategory(name: string) {
     .single();
 
   if (error) return { error: error.message };
+  revalidatePath('/admin/products');
   return { data };
 }
 

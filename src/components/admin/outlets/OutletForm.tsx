@@ -173,7 +173,7 @@ export function OutletForm({
                 <Input
                   {...register('name')}
                   onChange={(e) => setValue('name', e.target.value.toUpperCase())}
-                  className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus-visible:ring-blue-600 px-4 shadow-none rounded-sm uppercase font-bold text-xs"
+                  className="bg-slate-50/50 border-input text-slate-900 h-10 focus-visible:ring-blue-600 px-4 shadow-none rounded-sm uppercase font-bold text-xs"
                   placeholder="CONTOH: SEHAT JAYA"
                 />
                 {errors.name && <p className="text-[10px] text-red-600 mt-1 font-bold ml-1 uppercase">{errors.name.message}</p>}
@@ -188,7 +188,7 @@ export function OutletForm({
                       value={newTypeName}
                       onChange={(e) => setNewTypeName(e.target.value.toUpperCase())}
                       autoFocus
-                      className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 px-4 focus-visible:ring-blue-600 rounded-sm shadow-none uppercase font-bold text-xs"
+                      className="bg-slate-50/50 border-input text-slate-900 h-10 px-4 focus-visible:ring-blue-600 rounded-sm shadow-none uppercase font-bold text-xs"
                     />
                     <Button 
                       type="button"
@@ -216,10 +216,10 @@ export function OutletForm({
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ''} onValueChange={field.onChange} disabled={fetchingTypes}>
-                          <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 flex-1 rounded-sm font-bold text-xs uppercase">
+                          <SelectTrigger className="bg-slate-50/50 border-input text-slate-900 h-10 focus:ring-blue-600 px-4 flex-1 rounded-sm font-bold text-xs uppercase">
                             <SelectValue placeholder={fetchingTypes ? "MEMUAT..." : "PILIH TIPE"} />
                           </SelectTrigger>
-                          <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
+                          <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-sm">
                             {outletTypes.map((type) => (
                               <SelectItem key={type.id} value={type.name} className="focus:bg-slate-50 focus:text-blue-600 py-2 px-3 flex items-center justify-between group/item text-xs font-bold uppercase">
                                 <span>{type.name}</span>
@@ -240,7 +240,7 @@ export function OutletForm({
                       type="button"
                       size="icon" 
                       onClick={() => setIsAddingType(true)}
-                      className="h-10 w-10 shrink-0 bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-none rounded-sm"
+                      className="h-10 w-10 shrink-0 bg-white border border-input text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-none rounded-sm"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -255,7 +255,7 @@ export function OutletForm({
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                 <Input
                   {...register('address')}
-                  className="pl-9 bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus-visible:ring-blue-600 shadow-none rounded-sm text-xs font-bold uppercase"
+                  className="pl-9 bg-slate-50/50 border-input text-slate-900 h-10 focus-visible:ring-blue-600 shadow-none rounded-sm text-xs font-bold uppercase"
                   placeholder="Gunakan nama jalan, nomor, dan kecamatan..."
                 />
               </div>
@@ -275,10 +275,10 @@ export function OutletForm({
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm font-bold text-xs uppercase">
+                    <SelectTrigger className="bg-slate-50/50 border-input text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm font-bold text-xs uppercase">
                       <SelectValue placeholder="PILIH HARI" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
+                    <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-sm">
                       {VISIT_DAYS.map((day) => (
                         <SelectItem key={day.value} value={day.value} className="focus:bg-slate-50 focus:text-blue-600 py-2 text-xs font-bold uppercase">
                           {day.label}
@@ -297,10 +297,10 @@ export function OutletForm({
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm font-bold text-xs uppercase">
+                    <SelectTrigger className="bg-slate-50/50 border-input text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm font-bold text-xs uppercase">
                       <SelectValue placeholder="SEMINGGU SEKALI" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
+                    <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-sm">
                       {VISIT_FREQUENCIES.map((freq) => (
                         <SelectItem key={freq.value} value={freq.value} className="focus:bg-slate-50 focus:text-blue-600 py-2 text-xs font-bold uppercase">
                           {freq.label}
@@ -326,7 +326,7 @@ export function OutletForm({
               
               <div className="space-y-3">
                 <Select onValueChange={(val: any) => { if (typeof val === 'string') addSales(val); }}>
-                  <SelectTrigger className="bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm shadow-none font-bold text-xs uppercase">
+                  <SelectTrigger className="bg-slate-50/50 border-input text-slate-900 h-10 focus:ring-blue-600 px-4 rounded-sm shadow-none font-bold text-xs uppercase">
                     <SelectValue placeholder={fetchingProfiles ? "MEMUAT DATA SALES..." : "PILIH SALES UNTUK DITAMBAHKAN"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-slate-100 text-slate-900 shadow-xl rounded-sm">
@@ -348,12 +348,12 @@ export function OutletForm({
                 </Select>
 
                 {/* List Selected Items */}
-                <div className={`p-4 rounded-sm border transition-all duration-300 flex flex-wrap gap-2 ${selectedCodes.length === 0 ? 'bg-slate-50/50 border-slate-100' : 'bg-slate-50 border-slate-100 shadow-inner'}`}>
+                <div className={`p-4 rounded-sm border transition-all duration-300 flex flex-wrap gap-2 ${selectedCodes.length === 0 ? 'bg-slate-50/50 border-input' : 'bg-slate-50 border-input shadow-inner'}`}>
                   {selectedCodes.length > 0 ? (
                     selectedCodes.map(code => {
                       const profile = salesProfiles.find(p => p.nik?.toUpperCase() === code);
                       return (
-                        <div key={code} className="flex items-center gap-2 bg-white border border-slate-100 pl-3 pr-1 py-1 rounded-sm transition-all hover:border-blue-200 group">
+                        <div key={code} className="flex items-center gap-2 bg-white border border-input pl-3 pr-1 py-1 rounded-sm transition-all hover:border-blue-200 group">
                            <div className="flex flex-col">
                              <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{profile?.full_name || 'Loading...'}</span>
                              <span className="text-[9px] font-mono text-blue-600 font-bold">{code}</span>
@@ -377,13 +377,13 @@ export function OutletForm({
             <div className="space-y-2">
               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. WhatsApp Toko / Owner</Label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-300 border-r border-slate-100 pr-3 h-4 flex items-center">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-300 border-r border-input pr-3 h-4 flex items-center">
                   +62
                 </div>
                 <Input
                   {...register('phone')}
                   onChange={(e) => setValue('phone', normalizePhoneNumber(e.target.value))}
-                  className="pl-14 bg-slate-50/50 border-slate-100 text-slate-900 h-10 focus-visible:ring-blue-600 text-xs font-black tabular-nums rounded-sm shadow-none"
+                  className="pl-14 bg-slate-50/50 border-input text-slate-900 h-10 focus-visible:ring-blue-600 text-xs font-black tabular-nums rounded-sm shadow-none"
                   placeholder="812xxxxxx"
                 />
               </div>

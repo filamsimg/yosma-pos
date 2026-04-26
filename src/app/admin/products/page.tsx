@@ -503,7 +503,6 @@ export default function AdminProductsPage() {
           <div className="flex-1 overflow-y-auto p-6 pt-4">
             <ProductForm 
               initialData={selectedProduct}
-              categories={categories}
               loading={isSubmitting}
               onSubmit={handleProductSubmit}
               onCancel={() => setProductModalOpen(false)}
