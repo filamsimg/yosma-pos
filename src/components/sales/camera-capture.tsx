@@ -32,8 +32,8 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
       const constraints = {
         video: {
           facingMode: 'environment',
-          width: {理想: 1280 },
-          height: {理想: 720 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       };
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
