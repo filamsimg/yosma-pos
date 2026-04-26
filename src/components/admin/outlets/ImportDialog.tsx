@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, FileUp, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { bulkImportOutlets, type OutletImportItem } from '@/lib/actions/import';
 import { toast } from 'sonner';
-import { normalizeTypeName, normalizePhoneNumber } from '@/lib/utils/string-utils';
+import { normalizeTypeName, normalizePhoneNumber, normalizeVisitDay, normalizeVisitFrequency } from '@/lib/utils/string-utils';
 import { cn } from '@/lib/utils';
 
 interface ImportDialogProps {
@@ -49,8 +49,8 @@ export function ImportDialog({ onSuccess, className }: ImportDialogProps) {
         address: row['Alamat'] || row['alamat'] || '',
         phone: normalizePhoneNumber(String(row['Telepon'] || row['telepon'] || row['WhatsApp'] || row['phone'] || '')),
         owner_name: row['Pemilik'] || row['pemilik'] || row['Owner'] || '',
-        visit_day: row['Hari Kunjungan'] || row['hari'] || row['Visit Day'] || '',
-        visit_frequency: row['Frekuensi'] || row['frekuensi'] || row['Visit Frequency'] || '',
+        visit_day: normalizeVisitDay(row['Hari Kunjungan'] || row['hari'] || row['Visit Day'] || ''),
+        visit_frequency: normalizeVisitFrequency(row['Frekuensi'] || row['frekuensi'] || row['Visit Frequency'] || ''),
         assigned_sales: row['NIK Sales'] || row['NIK'] || row['Sales'] || row['sales'] || row['Sales Code'] || '',
       })).filter(item => item.name);
 
@@ -84,7 +84,7 @@ export function ImportDialog({ onSuccess, className }: ImportDialogProps) {
   const downloadTemplate = () => {
     const template = [
       {
-        'Nama': 'APOTEK SEHAT JAYA',
+        'Nama': 'SEHAT JAYA',
         'Tipe': 'APOTEK',
         'Alamat': 'JL. RAYA NO. 123, JAKARTA',
         'Telepon': '081234567890',

@@ -6,12 +6,24 @@
 export function normalizeTypeName(name: string): string {
   if (!name) return '';
   
-  // Regex to remove content within parentheses and any preceding whitespace
-  // \s* matches zero or more whitespace characters
-  // \( matches the opening parenthesis
-  // .*? matches any character (lazy)
-  // \) matches the closing parenthesis
-  return name.replace(/\s*\([^)]*\)/g, '').trim();
+  // 1. Basic cleaning (Uppercase and remove content in parentheses)
+  let cleaned = name.toUpperCase().replace(/\s*\([^)]*\)/g, '').trim();
+
+  // 2. Alias Mapping
+  const aliasMap: Record<string, string> = {
+    'APT': 'APOTEK',
+    'APT.': 'APOTEK',
+    'APOTIK': 'APOTEK',
+    'TK': 'TOKO',
+    'TK.': 'TOKO',
+    'RS': 'RS',
+    'R.S.': 'RS',
+    'RUMAH SAKIT': 'RS',
+    'KLINIK': 'KLINIK',
+    'PUSKESMAS': 'PUSKESMAS',
+  };
+
+  return aliasMap[cleaned] || cleaned;
 }
 
 /**
@@ -36,5 +48,48 @@ export function normalizePhoneNumber(phone: string): string {
   }
   
   return cleaned;
+}
+
+/**
+ * Normalizes visit days to standard Indonesian names
+ */
+export function normalizeVisitDay(day: string): string {
+  if (!day) return '';
+  const cleaned = day.trim().toLowerCase();
+  
+  const map: Record<string, string> = {
+    'monday': 'Senin', 'senin': 'Senin',
+    'tuesday': 'Selasa', 'selasa': 'Selasa',
+    'wednesday': 'Rabu', 'rabu': 'Rabu',
+    'thursday': 'Kamis', 'kamis': 'Kamis',
+    'friday': 'Jumat', 'jumat': 'Jumat',
+    'saturday': 'Sabtu', 'sabtu': 'Sabtu',
+    'sunday': 'Minggu', 'minggu': 'Minggu',
+  };
+  
+  return map[cleaned] || day;
+}
+
+/**
+ * Normalizes visit frequencies to standard Indonesian labels
+ */
+export function normalizeVisitFrequency(freq: string): string {
+  if (!freq) return 'Seminggu Sekali';
+  const cleaned = freq.trim().toLowerCase();
+  
+  const map: Record<string, string> = {
+    'weekly': 'Seminggu Sekali',
+    'seminggu sekali': 'Seminggu Sekali',
+    'seminggu': 'Seminggu Sekali',
+    'tiap minggu': 'Seminggu Sekali',
+    '2 weekly': '2 Minggu Sekali',
+    '2 minggu sekali': '2 Minggu Sekali',
+    '3 minggu sekali': '3 Minggu Sekali',
+    'monthly': 'Sebulan Sekali',
+    'sebulan sekali': 'Sebulan Sekali',
+    'sebulan': 'Sebulan Sekali',
+  };
+  
+  return map[cleaned] || freq;
 }
 
