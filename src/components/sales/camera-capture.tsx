@@ -101,24 +101,40 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center font-sans">
+      {/* Hidden canvas for processing */}
+      <canvas ref={canvasRef} className="hidden" />
+
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/50 to-transparent">
-        <button onClick={onCancel} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors">
-          <X className="h-6 w-6" />
-        </button>
-        <div className="flex items-center gap-2 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/20">
-          <MapPin className={`h-4 w-4 ${isLocationReady ? 'text-green-400' : 'text-red-400'}`} />
-          <span className="text-white text-xs font-medium">
-            {isLocationReady ? 'GPS Terkunci' : 'Mencari GPS...'}
-          </span>
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-white text-lg font-black tracking-tight leading-none">
+            On-site Verification
+          </h2>
+          <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em]">
+            Photo Proof System
+          </p>
+        </div>
+        
+        <div className="flex flex-col items-end gap-3">
+          <button onClick={onCancel} className="text-white/80 p-2 hover:bg-white/10 rounded-full transition-colors backdrop-blur-md bg-white/5 border border-white/10">
+            <X className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/20 shadow-lg">
+            <div className={`w-2 h-2 rounded-full animate-pulse ${isLocationReady ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-red-500'}`} />
+            <span className="text-white text-[10px] font-black uppercase tracking-wider">
+              {isLocationReady ? 'GPS LOCKED' : 'SEARCHING GPS...'}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Main View */}
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
         {capturedImage ? (
-          <img src={capturedImage} className="w-full h-full object-contain" alt="Captured" />
+          <div className="w-full h-full bg-slate-900 flex items-center justify-center p-4">
+            <img src={capturedImage} className="w-full h-full object-contain rounded-2xl shadow-2xl border border-white/10" alt="Captured" />
+          </div>
         ) : (
           <>
             <video 
@@ -128,87 +144,115 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
               className="w-full h-full object-cover scale-x-[-1]"
             />
             
-            {/* Silhouette / Frame Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[80%] h-[60%] border-2 border-white/50 rounded-3xl relative overflow-hidden flex items-center justify-center">
-                {/* Subtle Head Silhouette */}
-                <svg viewBox="0 0 100 100" className="w-48 h-48 text-white/20 fill-current">
+            {/* Professional Overlay / Frame */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <div className="relative w-[85%] aspect-[3/4] max-h-[60vh] border-[1px] border-white/30 rounded-[2.5rem] shadow-[0_0_0_2000px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center">
+                
+                {/* Subtle Human Silhouette */}
+                <svg viewBox="0 0 100 100" className="w-48 h-48 text-white/10 fill-current mb-12">
                   <path d="M50 20C40 20 32 28 32 38C32 48 40 56 50 56C60 56 68 48 68 38C68 28 60 20 50 20ZM50 62C35 62 20 70 20 80V85H80V80C80 70 65 62 50 62Z" />
                 </svg>
-                
-                {/* Corner Accents */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-xl" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-xl" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-xl" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-xl" />
-              </div>
-            </div>
 
-            {/* Instruction */}
-            <div className="absolute bottom-32 left-0 right-0 text-center px-6">
-              <p className="text-white text-sm bg-black/40 backdrop-blur-md py-2 px-4 rounded-full inline-block border border-white/10 shadow-lg">
-                Posisikan wajah atau toko di dalam bingkai
-              </p>
+                {/* Corner Brackets (Glowing) */}
+                <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-blue-500 rounded-tl-[2rem] shadow-[-2px_-2px_10px_rgba(59,130,246,0.5)]" />
+                <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-blue-500 rounded-tr-[2rem] shadow-[2px_-2px_10px_rgba(59,130,246,0.5)]" />
+                <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-blue-500 rounded-bl-[2rem] shadow-[-2px_2px_10px_rgba(59,130,246,0.5)]" />
+                <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-blue-500 rounded-br-[2rem] shadow-[2px_2px_10px_rgba(59,130,246,0.5)]" />
+
+                {/* Center Target */}
+                <div className="w-2 h-2 rounded-full bg-blue-500/50" />
+                
+                {/* Overlay Label */}
+                <div className="absolute bottom-10 px-4 py-2 bg-blue-600/90 backdrop-blur-md rounded-lg border border-blue-400/50 shadow-xl">
+                  <p className="text-white text-[9px] font-black uppercase tracking-[0.15em]">
+                    Position Subject Here
+                  </p>
+                </div>
+              </div>
+
+              {/* Instruction Text */}
+              <div className="mt-12 px-8 text-center">
+                <p className="text-white/80 text-xs font-bold leading-relaxed max-w-[240px]">
+                  Posisikan wajah Anda atau outlet dengan jelas di dalam bingkai biru.
+                </p>
+              </div>
             </div>
           </>
         )}
 
         {error && (
-          <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 text-center">
-            <div className="bg-white p-6 rounded-2xl max-w-sm">
-              <X className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-slate-900 font-medium mb-4">{error}</p>
-              <Button onClick={onCancel} className="w-full">Tutup</Button>
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-8 z-50">
+            <div className="bg-white p-8 rounded-[2rem] max-w-sm shadow-2xl">
+              <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <AlertCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="text-slate-900 text-lg font-black text-center mb-2">Akses Kamera Terhambat</h3>
+              <p className="text-slate-500 text-sm text-center mb-8 leading-relaxed">Pastikan Anda telah memberikan izin kamera di pengaturan browser Anda.</p>
+              <Button onClick={onCancel} className="w-full h-12 bg-slate-900 rounded-xl font-bold">Kembali ke Menu</Button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-around pb-12">
+      {/* Control Bar */}
+      <div className="absolute bottom-0 left-0 right-0 p-10 pb-14 bg-gradient-to-t from-black via-black/60 to-transparent flex items-center justify-between z-30">
         {capturedImage ? (
           <>
             <button 
               onClick={handleRetake}
-              className="flex flex-col items-center gap-2 text-white opacity-80 hover:opacity-100 transition-opacity"
+              className="group flex flex-col items-center gap-3"
             >
-              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                <RefreshCw className="h-6 w-6" />
+              <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center border border-white/10 backdrop-blur-md group-active:scale-90 transition-all">
+                <RefreshCw className="h-6 w-6 text-white/70" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider">Ulangi</span>
+              <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Retake</span>
             </button>
+
             <button 
               onClick={handleConfirm}
-              className="flex flex-col items-center gap-2 text-white hover:text-green-400 transition-colors"
+              className="group flex flex-col items-center gap-3"
             >
-              <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
-                <Check className="h-10 w-10 text-white" />
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] group-active:scale-95 transition-all">
+                <Check className="h-10 w-10 text-slate-950" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider">Simpan Foto</span>
+              <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Confirm & Save</span>
             </button>
-            <div className="w-14 h-14" /> {/* Spacer */}
+
+            <div className="w-14 h-14" /> {/* Balanced Spacer */}
           </>
         ) : (
           <>
-            <div className="w-14 h-14" /> {/* Spacer */}
+            <div className="w-14 h-14" /> {/* Balanced Spacer */}
+            
             <button 
               onClick={handleCapture}
               disabled={!isLocationReady || isProcessing}
-              className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
-                isLocationReady 
-                  ? 'bg-blue-600 active:scale-90 shadow-lg shadow-blue-500/40' 
-                  : 'bg-slate-700 opacity-50 cursor-not-allowed'
-              }`}
+              className="group relative"
             >
-              {isProcessing ? (
-                <Loader2 className="h-10 w-10 text-white animate-spin" />
-              ) : (
-                <div className="w-16 h-16 rounded-full border-4 border-white/30 flex items-center justify-center">
-                   <div className="w-12 h-12 rounded-full bg-white" />
+              {/* Outer Ring */}
+              <div className={`w-24 h-24 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 ${
+                isLocationReady 
+                ? 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]' 
+                : 'border-white/10'
+              }`}>
+                {/* Inner Shutter Button */}
+                <div className={`rounded-full transition-all duration-300 ${
+                  isLocationReady 
+                  ? 'w-18 h-18 bg-white shadow-xl group-active:scale-90' 
+                  : 'w-12 h-12 bg-white/10'
+                } flex items-center justify-center`}>
+                   {isProcessing && <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />}
+                </div>
+              </div>
+              
+              {!isLocationReady && (
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-red-500 text-[8px] font-black text-white px-2 py-0.5 rounded-full">
+                  GPS REQUIRED
                 </div>
               )}
             </button>
-            <div className="w-14 h-14" /> {/* Spacer */}
+
+            <div className="w-14 h-14" /> {/* Balanced Spacer */}
           </>
         )}
       </div>
