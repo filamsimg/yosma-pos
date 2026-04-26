@@ -29,6 +29,8 @@ import { cn } from '@/lib/utils';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import Link from 'next/link';
 
+import { getAdminDashboardStats } from '@/lib/actions/dashboard';
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [recentTxns, setRecentTxns] = useState<Transaction[]>([]);
@@ -37,34 +39,27 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function fetchDashboard() {
       const supabase = createClient();
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      
+      // 1. Fetch optimized stats from summary tables
+      const dashboardStats = await getAdminDashboardStats();
+      
+      // 2. Fetch recent transactions (only 8 items, so it's fast)
+      const { data: recentResult } = await supabase
+        .from('transactions')
+        .select('*, outlet:outlets(name, type), sales:profiles(full_name)')
+        .order('created_at', { ascending: false })
+        .limit(8);
 
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+      // 3. Fetch top products (this is still raw but we can optimize later)
+      // For now we keep it simple as it only scans top 100 recent items
+      const { data: topProductsResult } = await supabase
+        .from('transaction_items')
+        .select('product_id, quantity, product:products(name, sku)')
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-      // Fetch all stats in parallel
-      const [txnResult, productResult, salesResult, todayTxnResult, yesterdayTxnResult, recentResult, topProductsResult] =
-        await Promise.all([
-          supabase.from('transactions').select('total_price').neq('status', 'CANCELLED'),
-          supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
-          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'SALES').eq('is_active', true),
-          supabase.from('transactions').select('total_price, status').gte('created_at', today.toISOString()),
-          supabase.from('transactions').select('total_price').gte('created_at', yesterday.toISOString()).lt('created_at', today.toISOString()).neq('status', 'CANCELLED'),
-          supabase.from('transactions').select('*, outlet:outlets(name, type), sales:profiles(full_name)').order('created_at', { ascending: false }).limit(8),
-          supabase.from('transaction_items').select('product_id, quantity, product:products(name, sku)').limit(100)
-        ]);
-
-      const totalRevenue = txnResult.data?.reduce((sum, t) => sum + Number(t.total_price), 0) ?? 0;
-      const todayRevenue = todayTxnResult.data?.filter(t => t.status !== 'CANCELLED').reduce((sum, t) => sum + Number(t.total_price), 0) ?? 0;
-      const yesterdayRevenue = yesterdayTxnResult.data?.reduce((sum, t) => sum + Number(t.total_price), 0) ?? 0;
-
-      const pendingCount = todayTxnResult.data?.filter(t => t.status === 'PENDING').length ?? 0;
-      const processingCount = todayTxnResult.data?.filter(t => t.status === 'PROCESSING').length ?? 0;
-
-      // Group top products
       const topMap = new Map();
-      topProductsResult.data?.forEach(item => {
+      topProductsResult?.forEach(item => {
         const id = item.product_id;
         const p = Array.isArray(item.product) ? item.product[0] : item.product;
         const current = topMap.get(id) || { name: p?.name, sku: p?.sku, qty: 0 };
@@ -73,19 +68,11 @@ export default function AdminDashboardPage() {
       const topList = Array.from(topMap.values()).sort((a, b) => b.qty - a.qty).slice(0, 5);
 
       setStats({
-        totalRevenue,
-        totalTransactions: txnResult.data?.length ?? 0,
-        totalProducts: productResult.count ?? 0,
-        totalSales: salesResult.count ?? 0,
-        todayRevenue,
-        todayTransactions: todayTxnResult.data?.length ?? 0,
-        yesterdayRevenue,
-        pendingCount,
-        processingCount,
+        ...dashboardStats,
         topProducts: topList
       });
 
-      if (recentResult.data) setRecentTxns(recentResult.data);
+      if (recentResult) setRecentTxns(recentResult as any);
       setLoading(false);
     }
 
