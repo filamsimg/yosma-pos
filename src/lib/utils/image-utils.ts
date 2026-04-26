@@ -48,27 +48,49 @@ export async function processGeotaggedImage(
         ctx.drawImage(img, 0, 0, width, height);
 
         // 3. Draw Watermark Overlay (Bottom)
-        const overlayHeight = 60;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        const overlayHeight = 70;
+        const gradient = ctx.createLinearGradient(0, height - overlayHeight, 0, height);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, height - overlayHeight, width, overlayHeight);
 
-        // 4. Draw Text
+        // 4. Draw Text with better styling
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.font = '900 14px Inter, system-ui, sans-serif';
         
         const timestamp = new Date().toLocaleString('id-ID', {
           dateStyle: 'medium',
           timeStyle: 'short',
         });
 
-        const textLines = [
-          `${data.outletName.toUpperCase()} | ${data.salesName.toUpperCase()}`,
-          `LOC: ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)} | ${timestamp}`,
-        ];
-
-        ctx.fillText(textLines[0], 15, height - 35);
-        ctx.font = '10px Inter, sans-serif';
-        ctx.fillText(textLines[1], 15, height - 15);
+        // Outlet & Sales Name (Main Title)
+        ctx.fillText(`${data.outletName.toUpperCase()}`, 20, height - 42);
+        
+        // Secondary Info
+        ctx.font = '600 11px Inter, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillText(`SALES: ${data.salesName.toUpperCase()} | ${timestamp}`, 20, height - 25);
+        
+        // GPS Coordinates
+        ctx.font = '500 10px Courier New, monospace';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillText(`GPS: ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}`, 20, height - 12);
+        
+        // "VERIFIED VISIT" badge
+        ctx.fillStyle = '#3b82f6'; // blue-500
+        ctx.shadowBlur = 0;
+        ctx.fillRect(width - 100, height - 35, 80, 18);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('VERIFIED VISIT', width - 60, height - 22);
+        ctx.textAlign = 'left';
 
         // 5. Export as Compressed JPEG (Quality 0.6)
         canvas.toBlob(
