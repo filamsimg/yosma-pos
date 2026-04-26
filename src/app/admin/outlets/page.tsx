@@ -195,7 +195,7 @@ export default function AdminOutletsPage() {
             <ImportDialog onSuccess={fetchData} className="w-full md:w-auto" />
             <Button
               onClick={() => handleOpenForm()}
-              className="col-span-2 md:col-auto bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 shadow-md shadow-blue-100 rounded-sm font-black text-[10px] uppercase tracking-widest w-full md:w-auto"
+              className="col-span-2 md:col-auto bg-blue-600 hover:bg-blue-700 text-white h-11 px-6 shadow-xl shadow-blue-100 rounded-sm font-bold text-xs uppercase tracking-widest w-full md:w-auto transition-all active:scale-95"
             >
               <Plus className="h-4 w-4 mr-2" />
               Outlet Baru

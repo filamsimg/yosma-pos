@@ -199,9 +199,9 @@ export function ProfileForm({
                 type="button"
                 variant="outline"
                 onClick={() => setResetConfirmOpen(true)}
-                className="bg-white border-input text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all h-9 px-4 rounded-sm shadow-sm"
+                className="bg-white border-input text-[11px] font-bold uppercase tracking-widest text-slate-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all h-11 px-5 rounded-sm shadow-sm"
               >
-                <KeyRound className="h-3.5 w-3.5 mr-2" />
+                <KeyRound className="h-4 w-4 mr-2" />
                 Reset Password
               </Button>
             </div>
@@ -210,22 +210,22 @@ export function ProfileForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           onClick={onCancel}
-          className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 h-10 px-6 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all"
+          className="w-full sm:w-auto border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 h-12 px-8 font-bold text-xs uppercase tracking-widest rounded-sm transition-all order-2 sm:order-1"
         >
           Batal
         </Button>
         <Button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-8 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95 rounded-sm flex items-center gap-2"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white h-12 px-10 font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-100 transition-all active:scale-95 rounded-sm flex items-center justify-center gap-2 order-1 sm:order-2"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-          {initialData ? 'Simpan Perubahan' : 'Daftarkan Karyawan'}
+          {initialData ? 'SIMPAN PERUBAHAN' : 'DAFTARKAN KARYAWAN'}
         </Button>
       </div>
 

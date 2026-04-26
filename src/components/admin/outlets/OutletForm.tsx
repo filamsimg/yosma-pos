@@ -394,21 +394,21 @@ export function OutletForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-slate-100">
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-8 mt-4 border-t border-slate-100">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           onClick={onCancel}
-          className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 h-10 px-6 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all"
+          className="w-full sm:w-auto border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 h-12 px-8 font-bold text-xs uppercase tracking-widest rounded-sm transition-all order-2 sm:order-1"
         >
           Batal
         </Button>
         <Button
           type="submit"
           disabled={loading || fetchingProfiles || fetchingTypes}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-8 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95 rounded-sm flex items-center gap-2"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white h-12 px-10 font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-100 transition-all active:scale-95 rounded-sm flex items-center justify-center gap-2 order-1 sm:order-2"
         >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
           {initialData ? 'SIMPAN PERUBAHAN' : 'SELESAIKAN'}
         </Button>
       </div>
