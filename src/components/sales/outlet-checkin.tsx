@@ -7,6 +7,7 @@ import { useImageCapture } from '@/hooks/use-image-capture';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { processGeotaggedImage } from '@/lib/utils/image-utils';
 import {
   Card,
   CardContent,
@@ -37,6 +38,7 @@ import {
 import { useAuth } from '@/components/providers/auth-provider';
 import { OUTLET_STATUS_MAP } from '@/lib/constants';
 import type { Outlet } from '@/types';
+import { toast } from 'sonner';
 
 interface OutletCheckinProps {
   onCheckin: (data: {
@@ -68,6 +70,8 @@ export function OutletCheckin({
   const [uploading, setUploading] = useState(false);
   const [isRemote, setIsRemote] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [processedFile, setProcessedFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const geo = useGeolocation();
@@ -162,8 +166,26 @@ export function OutletCheckin({
   // Handle photo capture
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      await img.processImage(file);
+    if (file && selectedOutlet && geo.latitude && geo.longitude) {
+      setUploading(true);
+      try {
+        const result = await processGeotaggedImage(file, {
+          lat: geo.latitude,
+          lng: geo.longitude,
+          outletName: selectedOutlet.name,
+          salesName: userProfile?.full_name || 'SALES',
+        });
+        
+        setProcessedFile(result as File);
+        setPhotoPreview(URL.createObjectURL(result));
+      } catch (err) {
+        console.error('Failed to process image:', err);
+        toast.error('Gagal memproses foto.');
+      } finally {
+        setUploading(false);
+      }
+    } else if (!geo.latitude || !geo.longitude) {
+      toast.error('Aktifkan GPS terlebih dahulu sebelum mengambil foto.');
     }
   }
 
@@ -172,7 +194,9 @@ export function OutletCheckin({
     if (!selectedOutlet) return;
     
     // Physical validation requirement
-    if (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) {
+    if (!isRemote && (!geo.latitude || !geo.longitude || !processedFile)) {
+      if (!geo.latitude) toast.error('Lokasi GPS diperlukan.');
+      if (!processedFile) toast.error('Foto bukti kunjungan diperlukan.');
       return;
     }
 
@@ -187,13 +211,13 @@ export function OutletCheckin({
       let lng = geo.longitude || 0;
       let photoUrl = 'REMOTE_ORDER';
 
-      if (!isRemote && img.compressedFile) {
+      if (!isRemote && processedFile) {
         // Warning: Storage upload WILL still fail if offline, 
         // but the error will be handled by the catch block
         const fileName = `${user.id}/${Date.now()}_checkin.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('transaction-photos')
-          .upload(fileName, img.compressedFile, {
+          .upload(fileName, processedFile, {
             contentType: 'image/jpeg',
             upsert: false,
           });
@@ -464,17 +488,18 @@ export function OutletCheckin({
                 className="hidden"
               />
 
-              {img.preview ? (
+              {photoPreview ? (
                 <div className="relative rounded-sm overflow-hidden border-2 border-blue-500/20 shadow-xl group">
                   <img
-                    src={img.preview}
+                    src={photoPreview}
                     alt="Preview outlet"
                     className="w-full h-44 object-cover"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
                     <button
                       onClick={() => {
-                        img.clearImage();
+                        setProcessedFile(null);
+                        setPhotoPreview(null);
                         if (fileInputRef.current) fileInputRef.current.value = '';
                       }}
                       className="p-3 rounded-sm bg-red-600 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
@@ -482,7 +507,7 @@ export function OutletCheckin({
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  {img.loading && (
+                  {uploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white/80">
                       <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
                     </div>
@@ -490,8 +515,19 @@ export function OutletCheckin({
                 </div>
               ) : (
                 <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-32 rounded-2xl bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
+                  onClick={() => {
+                    if (!geo.latitude || !geo.longitude) {
+                      toast.error('Mohon aktifkan GPS terlebih dahulu.');
+                      geo.getCurrentPosition();
+                      return;
+                    }
+                    if (!selectedOutlet) {
+                      toast.error('Mohon pilih outlet terlebih dahulu.');
+                      return;
+                    }
+                    fileInputRef.current?.click();
+                  }}
+                  className="w-full h-32 rounded-sm bg-white border-2 border-dashed border-slate-200 text-slate-400 hover:border-blue-400 hover:bg-blue-50/30 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-2"
                 >
                   <div className="bg-slate-50 w-12 h-12 rounded-sm flex items-center justify-center group-hover:bg-white shadow-inner">
                     <Camera className="h-6 w-6" />
@@ -508,7 +544,7 @@ export function OutletCheckin({
             onClick={() => handleCheckinSubmission('ORDER')}
             disabled={
               !selectedOutlet ||
-              (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
+              (!isRemote && (!geo.latitude || !geo.longitude || !processedFile)) ||
               uploading
             }
             className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg shadow-blue-200 active:scale-95 transition-all"
@@ -527,7 +563,7 @@ export function OutletCheckin({
               onClick={() => handleCheckinSubmission('VISIT_ONLY')}
               disabled={
                 !selectedOutlet ||
-                (!isRemote && (!geo.latitude || !geo.longitude || !img.compressedFile)) ||
+                (!isRemote && (!geo.latitude || !geo.longitude || !processedFile)) ||
                 uploading
               }
               className="w-full h-12 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"

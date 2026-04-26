@@ -85,7 +85,11 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form 
+              onSubmit={handleSubmit} 
+              method="POST"
+              className="space-y-4"
+            >
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-700 text-sm">
