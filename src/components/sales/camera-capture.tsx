@@ -31,7 +31,7 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
     try {
       const constraints = {
         video: {
-          facingMode: 'environment',
+          facingMode: 'user',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -125,7 +125,7 @@ export function CameraCapture({ onCapture, onCancel, geotagData, isLocationReady
               ref={videoRef} 
               autoPlay 
               playsInline 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-x-[-1]"
             />
             
             {/* Silhouette / Frame Overlay */}
