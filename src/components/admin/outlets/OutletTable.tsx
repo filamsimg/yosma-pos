@@ -87,6 +87,7 @@ export function OutletTable({
         <ArrowUpDown className="h-3 w-3 text-slate-600 opacity-90" />
       )}
     </div>,
+    <div className="text-center">Kota</div>,
     <div className="text-center">Alamat</div>,
     <div className="flex items-center justify-center gap-2 cursor-pointer" onClick={() => onSort('visit_day')}>
       Jadwal
@@ -133,6 +134,11 @@ export function OutletTable({
                 <div className="text-[9px] text-slate-600 font-bold uppercase tracking-tighter mt-0.5">ID: {o.id.split('-')[0]}</div>
               </div>
             </div>
+          </TableCell>
+          <TableCell className="px-4 py-3 text-center">
+            <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">
+              {o.city || '-'}
+            </span>
           </TableCell>
           <TableCell className="px-4 py-3">
             {o.address ? (

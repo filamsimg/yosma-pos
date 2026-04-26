@@ -321,8 +321,9 @@ export default function AdminOutletsPage() {
         title={selectedOutlet ? 'Edit Outlet' : 'Tambah Outlet Baru'}
         subtitle="Isi detail outlet untuk mengelola cabang toko Anda."
         variant="receipt"
+        maxWidth="max-w-md lg:max-w-5xl"
       >
-        <div className="max-h-[80vh] overflow-y-auto custom-scrollbar p-1">
+        <div className="max-h-[80vh] overflow-y-auto custom-scrollbar p-4 lg:p-6">
           <OutletForm 
             initialData={selectedOutlet}
             loading={isSubmitting}

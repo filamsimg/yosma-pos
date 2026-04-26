@@ -48,6 +48,7 @@ export function ImportDialog({ onSuccess, className }: ImportDialogProps) {
         type: normalizeTypeName(row['Tipe'] || row['tipe'] || row['Kategori'] || ''),
         address: row['Alamat'] || row['alamat'] || '',
         phone: normalizePhoneNumber(String(row['Telepon'] || row['telepon'] || row['WhatsApp'] || row['phone'] || '')),
+        city: row['Kota'] || row['kota'] || row['City'] || '',
         owner_name: row['Pemilik'] || row['pemilik'] || row['Owner'] || '',
         visit_day: normalizeVisitDay(row['Hari Kunjungan'] || row['hari'] || row['Visit Day'] || ''),
         visit_frequency: normalizeVisitFrequency(row['Frekuensi'] || row['frekuensi'] || row['Visit Frequency'] || ''),
@@ -86,6 +87,7 @@ export function ImportDialog({ onSuccess, className }: ImportDialogProps) {
       {
         'Nama': 'SEHAT JAYA',
         'Tipe': 'APOTEK',
+        'Kota': 'PEMALANG',
         'Alamat': 'JL. RAYA NO. 123, JAKARTA',
         'Telepon': '081234567890',
         'Pemilik': 'BUDI SANTOSO',
