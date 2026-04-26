@@ -268,3 +268,53 @@ export async function updateTransactionStatus(
   revalidatePath('/sales/history');
   return { success: true };
 }
+
+// ============================================================
+// GET PAGINATED TRANSACTIONS (admin)
+// ============================================================
+export async function getPaginatedTransactions({
+  page = 1,
+  pageSize = 10,
+  search = '',
+  status = 'ALL'
+}: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+}) {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from('transactions')
+    .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)', { count: 'exact' });
+
+  // Filter status
+  if (status !== 'ALL') {
+    query = query.eq('status', status);
+  }
+
+  // Search filter
+  if (search) {
+    query = query.or(`invoice_number.ilike.%${search}%,outlet_id.in.(select id from outlets where name.ilike.%${search}%)`);
+  }
+
+  // Pagination & Order
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, count, error } = await query
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error('Error fetching transactions:', error);
+    return { data: [], totalCount: 0, totalPages: 0 };
+  }
+
+  return {
+    data: data as any[],
+    totalCount: count ?? 0,
+    totalPages: Math.ceil((count ?? 0) / pageSize)
+  };
+}

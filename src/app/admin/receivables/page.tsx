@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getReceivables, addPayment } from '@/lib/actions/receivables';
+import { getReceivables, addPayment, getPaginatedReceivables } from '@/lib/actions/receivables';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ import type { PaymentMethod } from '@/types';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { ReceivableTable } from '@/components/admin/receivables/ReceivableTable';
+import { AdminPagination } from '@/components/ui/admin/pagination';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
 import { AppDialog } from '@/components/ui/app-dialog';
@@ -40,10 +41,18 @@ import { FormSection } from '@/components/ui/form-section';
 
 export default function ReceivablesPage() {
   const [loading, setLoading] = useState(true);
-  const [receivables, setReceivables] = useState<any[]>([]);
+  const [receivables, setReceivables] = useState<any[]>([]); // For stats
+  const [paginatedData, setPaginatedData] = useState<any[]>([]); // For table
   const [searchQuery, setSearchQuery] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'aktif' | 'selesai'>('aktif');
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   
   // Hooks
   const img = useImageCapture();
@@ -56,27 +65,32 @@ export default function ReceivablesPage() {
 
   async function loadData() {
     setLoading(true);
-    const data = await getReceivables();
-    setReceivables(data);
+    // Fetch stats data (full list)
+    const statsData = await getReceivables();
+    setReceivables(statsData);
+
+    // Fetch paginated data
+    const { data, totalCount, totalPages } = await getPaginatedReceivables({
+      page: currentPage,
+      pageSize,
+      search: searchQuery,
+      type: activeTab === 'aktif' ? 'ACTIVE' : 'COMPLETED'
+    });
+
+    setPaginatedData(data);
+    setTotalCount(totalCount);
+    setTotalPages(totalPages);
     setLoading(false);
   }
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [currentPage, pageSize, searchQuery, activeTab]);
 
   const activeReceivables = receivables.filter(r => r.payment_status !== 'PAID');
-  const completedReceivables = receivables.filter(r => r.payment_status === 'PAID');
   const totalOutstanding = activeReceivables.reduce((sum, item) => sum + (item.total_price - item.paid_amount), 0);
   const overdueCount = activeReceivables.filter(item => item.due_date && new Date(item.due_date) < new Date()).length;
   const totalBilled = activeReceivables.reduce((sum, item) => sum + item.total_price, 0);
   const totalPaid = activeReceivables.reduce((sum, item) => sum + item.paid_amount, 0);
   const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
-
-  const filterFn = (item: any) => 
-    item.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.invoice_number?.toLowerCase().includes(searchQuery.toLowerCase());
-
-  const filteredActive = activeReceivables.filter(filterFn);
-  const filteredCompleted = completedReceivables.filter(filterFn);
 
   async function handleAddPayment() {
     if (!selectedTxn || !paymentAmount) return;
@@ -122,7 +136,7 @@ export default function ReceivablesPage() {
         description="Pantau penagihan outlet dan kelola jatuh tempo pembayaran secara real-time"
         breadcrumbs={[{ label: 'Piutang' }]}
         action={
-          <Button variant="outline" className="h-10 px-4 border-slate-200 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50 w-full md:w-auto">
+          <Button variant="outline" className="h-10 px-4 border-slate-400 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50 w-full md:w-auto">
             <TrendingUp className="h-4 w-4 mr-2 text-blue-600" /> Laporan Piutang
           </Button>
         }
@@ -143,7 +157,10 @@ export default function ReceivablesPage() {
             <input
               placeholder="Cari outlet atau nomor invoice..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-600 outline-none"
             />
           </div>
@@ -152,7 +169,6 @@ export default function ReceivablesPage() {
         <AdminToolbarSection className="border-t md:border-t-0 md:border-l border-slate-400 py-1">
           <div className="flex items-center gap-1.5 p-1 bg-slate-50/50 rounded-sm overflow-x-auto scrollbar-none">
             <button
-              onClick={() => {}} // Active logic already handled by Tabs below, but keeping look consistent
               className={cn(
                 "px-4 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all",
                 "bg-slate-900 text-white shadow-lg shadow-slate-200"
@@ -164,7 +180,14 @@ export default function ReceivablesPage() {
         </AdminToolbarSection>
       </AdminToolbar>
 
-      <Tabs defaultValue="aktif" className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(val) => {
+          setActiveTab(val as any);
+          setCurrentPage(1);
+        }} 
+        className="w-full"
+      >
         <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-none pb-1">
            <TabsList className="bg-slate-50/50 p-1 h-auto rounded-sm border border-slate-400">
              <TabsTrigger value="aktif" className="font-black text-[9px] uppercase tracking-[0.2em] px-6 py-2 rounded-sm data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">Aktif</TabsTrigger>
@@ -174,7 +197,7 @@ export default function ReceivablesPage() {
 
           <TabsContent value="aktif" className="mt-0">
              <ReceivableTable 
-               data={filteredActive} 
+               data={paginatedData} 
                loading={loading} 
                onPay={handleOpenPayment} 
                type="ACTIVE" 
@@ -183,12 +206,27 @@ export default function ReceivablesPage() {
 
           <TabsContent value="selesai" className="mt-0">
              <ReceivableTable 
-               data={filteredCompleted} 
+               data={paginatedData} 
                loading={loading} 
                onPay={() => {}} 
                type="COMPLETED" 
              />
           </TabsContent>
+
+          <AdminPagination
+            totalCount={totalCount}
+            filteredCount={paginatedData.length}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            itemName="Piutang"
+            loading={loading}
+          />
         </Tabs>
 
       <AppDialog 

@@ -48,11 +48,15 @@ import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { TRANSACTION_STATUS_MAP, PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib/constants';
 import type { Transaction, TransactionItem } from '@/types';
-import { updateTransactionStatus } from '@/lib/actions/transactions';
+import { 
+  updateTransactionStatus, 
+  getPaginatedTransactions 
+} from '@/lib/actions/transactions';
 import { toast } from 'sonner';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { TransactionTable } from '@/components/admin/transactions/TransactionTable';
+import { AdminPagination } from '@/components/ui/admin/pagination';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import { AdminToolbar, AdminToolbarSection } from '@/components/ui/admin/toolbar';
 import { AppDialog } from '@/components/ui/app-dialog';
@@ -68,37 +72,45 @@ export default function AdminTransactionsPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED'>('ALL');
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  async function fetchTransactions() {
+    setLoading(true);
+    const { data, totalCount, totalPages } = await getPaginatedTransactions({
+      page: currentPage,
+      pageSize,
+      search: searchQuery,
+      status: activeTab
+    });
+    
+    setTransactions(data);
+    setTotalCount(totalCount);
+    setTotalPages(totalPages);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    async function fetchTransactions() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('transactions')
-        .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (data) setTransactions(data);
-      setLoading(false);
-    }
     fetchTransactions();
 
     const supabase = createClient();
     const channel = supabase
       .channel('admin-transactions')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, async (payload) => {
-          const { data } = await supabase
-            .from('transactions')
-            .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)')
-            .eq('id', payload.new.id)
-            .single();
-          if (data) setTransactions((prev) => [data, ...prev]);
+          // Hanya refresh jika di halaman 1 dan tidak ada filter pencarian aktif yang mungkin menyembunyikan data baru
+          if (currentPage === 1 && !searchQuery) {
+            fetchTransactions();
+          }
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [currentPage, pageSize, searchQuery, activeTab]);
 
   async function handleViewDetail(txn: Transaction) {
     setSelectedTxn(txn);
@@ -120,7 +132,8 @@ export default function AdminTransactionsPage() {
       } else {
         const label = TRANSACTION_STATUS_MAP[newStatus].label;
         toast.success(`Status berhasil diubah: ${label}`);
-        setTransactions(prev => prev.map(t => t.id === txnId ? { ...t, status: newStatus } : t));
+        // Refresh data to ensure correct sorting/filtering
+        fetchTransactions();
         if (selectedTxn?.id === txnId) setSelectedTxn(prev => prev ? { ...prev, status: newStatus } : null);
       }
     } finally { setUpdatingStatus(null); }
@@ -140,18 +153,12 @@ export default function AdminTransactionsPage() {
     printWindow.print();
   };
 
-
   const stats = {
     today: transactions.filter(t => format(new Date(t.created_at), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')).length,
     pending: transactions.filter(t => t.status === 'PENDING').length,
     processing: transactions.filter(t => t.status === 'PROCESSING').length,
     amount: transactions.reduce((sum, t) => sum + t.total_price, 0)
   };
-
-  const filtered = transactions.filter(txn => {
-    const match = !searchQuery.trim() || txn.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || txn.outlet?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    return match && (activeTab === 'ALL' || txn.status === activeTab);
-  });
 
   return (
     <div className="space-y-6">
@@ -167,7 +174,7 @@ export default function AdminTransactionsPage() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {loading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl bg-white border border-slate-100" />) : (
+        {loading && totalCount === 0 ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl bg-white border border-slate-100" />) : (
           <>
             <StatCard label="Order Hari Ini" value={stats.today} icon={History} iconBgColor="bg-blue-50" iconColor="text-blue-600" />
             <StatCard label="Menunggu" value={stats.pending} icon={Clock} iconBgColor="bg-amber-50" iconColor="text-amber-600" />
@@ -184,7 +191,10 @@ export default function AdminTransactionsPage() {
             <input
               placeholder="Cari invoice atau outlet..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-9 pr-4 py-2 bg-transparent text-sm font-bold text-slate-700 placeholder:text-slate-600 outline-none"
             />
           </div>
@@ -198,7 +208,10 @@ export default function AdminTransactionsPage() {
               return (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setCurrentPage(1);
+                  }}
                   className={cn(
                     "px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all",
                     isActive 
@@ -216,9 +229,24 @@ export default function AdminTransactionsPage() {
 
       <div className="flex-1 min-h-0">
         <TransactionTable 
-          data={filtered} 
+          data={transactions} 
           loading={loading} 
           onView={handleViewDetail} 
+        />
+        
+        <AdminPagination
+          totalCount={totalCount}
+          filteredCount={transactions.length}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          itemName="Transaksi"
+          loading={loading}
         />
       </div>
 

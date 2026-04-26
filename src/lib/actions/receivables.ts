@@ -115,3 +115,61 @@ export async function addPayment(formData: FormData) {
   revalidatePath('/admin/receivables');
   return { success: true };
 }
+
+// ============================================================
+// GET PAGINATED RECEIVABLES (admin)
+// ============================================================
+export async function getPaginatedReceivables({
+  page = 1,
+  pageSize = 10,
+  search = '',
+  type = 'ACTIVE'
+}: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  type?: 'ACTIVE' | 'COMPLETED';
+}) {
+  const supabase = await createClient();
+  
+  let query = supabase
+    .from('transactions')
+    .select(`
+      *,
+      outlet:outlets(id, name, type, address),
+      sales:profiles!sales_id(id, full_name),
+      payments:transaction_payments(*)
+    `, { count: 'exact' })
+    .eq('payment_method', 'CREDIT');
+
+  // Filter status
+  if (type === 'ACTIVE') {
+    query = query.neq('payment_status', 'PAID');
+  } else {
+    query = query.eq('payment_status', 'PAID');
+  }
+
+  // Search filter
+  if (search) {
+    query = query.or(`invoice_number.ilike.%${search}%,outlet_id.in.(select id from outlets where name.ilike.%${search}%)`);
+  }
+
+  // Pagination & Order
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, count, error } = await query
+    .order(type === 'ACTIVE' ? 'due_date' : 'created_at', { ascending: type === 'ACTIVE' })
+    .range(from, to);
+
+  if (error) {
+    console.error('Error fetching receivables:', error);
+    return { data: [], totalCount: 0, totalPages: 0 };
+  }
+
+  return {
+    data: data as any[],
+    totalCount: count ?? 0,
+    totalPages: Math.ceil((count ?? 0) / pageSize)
+  };
+}
