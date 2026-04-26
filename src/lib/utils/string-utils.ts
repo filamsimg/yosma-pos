@@ -51,23 +51,31 @@ export function normalizePhoneNumber(phone: string): string {
 }
 
 /**
- * Normalizes visit days to standard Indonesian names
+ * Normalizes visit days to standard Indonesian names.
+ * Supports multiple days separated by /, ,, or ;
+ * Example: "Monday/Friday" -> "Senin, Jumat"
  */
 export function normalizeVisitDay(day: string): string {
   if (!day) return '';
-  const cleaned = day.trim().toLowerCase();
+  
+  // Split by common separators: / , ;
+  const days = day.split(/[\/,;]+/).map(d => d.trim());
   
   const map: Record<string, string> = {
-    'monday': 'Senin', 'senin': 'Senin',
-    'tuesday': 'Selasa', 'selasa': 'Selasa',
-    'wednesday': 'Rabu', 'rabu': 'Rabu',
-    'thursday': 'Kamis', 'kamis': 'Kamis',
-    'friday': 'Jumat', 'jumat': 'Jumat',
-    'saturday': 'Sabtu', 'sabtu': 'Sabtu',
-    'sunday': 'Minggu', 'minggu': 'Minggu',
+    'monday': 'Senin', 'senin': 'Senin', 'sen': 'Senin',
+    'tuesday': 'Selasa', 'selasa': 'Selasa', 'sel': 'Selasa',
+    'wednesday': 'Rabu', 'rabu': 'Rabu', 'rab': 'Rabu',
+    'thursday': 'Kamis', 'kamis': 'Kamis', 'kam': 'Kamis',
+    'friday': 'Jumat', 'jumat': 'Jumat', 'jum': 'Jumat',
+    'saturday': 'Sabtu', 'sabtu': 'Sabtu', 'sab': 'Sabtu',
+    'sunday': 'Minggu', 'minggu': 'Minggu', 'min': 'Minggu',
   };
   
-  return map[cleaned] || day;
+  const normalizedDays = days
+    .map(d => map[d.toLowerCase()] || d)
+    .filter((v, i, a) => v && a.indexOf(v) === i); // Remove duplicates
+    
+  return normalizedDays.join(', ');
 }
 
 /**
@@ -91,5 +99,21 @@ export function normalizeVisitFrequency(freq: string): string {
   };
   
   return map[cleaned] || freq;
+}
+
+/**
+ * Normalizes a list of sales NIKs from a string (Excel/Form)
+ * Example: "NIK01 , NIK02 / NIK03" -> "NIK01, NIK02, NIK03"
+ */
+export function normalizeSalesList(list: string): string {
+  if (!list) return '';
+  
+  // Split by common separators: / , ;
+  const codes = list.split(/[\/,;]+/).map(c => c.trim().toUpperCase());
+  
+  const normalizedCodes = codes
+    .filter((v, i, a) => v && a.indexOf(v) === i); // Remove duplicates
+    
+  return normalizedCodes.join(', ');
 }
 

@@ -3,6 +3,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { generateNextSKU } from './products';
+import { 
+  normalizeTypeName, 
+  normalizeVisitDay, 
+  normalizeVisitFrequency,
+  normalizeSalesList
+} from '@/lib/utils/string-utils';
 
 export interface ProductImportItem {
   nama: string;
@@ -139,7 +145,7 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
     // Basic normalization
     item.name = item.name.toUpperCase();
     if (item.type) {
-      item.type = item.type.toUpperCase();
+      item.type = normalizeTypeName(item.type.toUpperCase());
       if (!typeMap.has(item.type)) newTypes.add(item.type);
     }
   }
@@ -163,9 +169,9 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
     phone: item.phone || null,
     city: item.city || null,
     owner_name: item.owner_name || null,
-    visit_day: item.visit_day || null,
-    visit_frequency: item.visit_frequency || 'Seminggu Sekali',
-    assigned_sales: item.assigned_sales || null,
+    visit_day: item.visit_day ? normalizeVisitDay(item.visit_day) : null,
+    visit_frequency: normalizeVisitFrequency(item.visit_frequency || ''),
+    assigned_sales: item.assigned_sales ? normalizeSalesList(item.assigned_sales) : null,
     is_active: true,
   }));
 

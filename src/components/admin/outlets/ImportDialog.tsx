@@ -91,7 +91,7 @@ export function ImportDialog({ onSuccess, className }: ImportDialogProps) {
         'Alamat': 'JL. RAYA NO. 123, JAKARTA',
         'Telepon': '081234567890',
         'Pemilik': 'BUDI SANTOSO',
-        'Hari Kunjungan': 'Senin',
+        'Hari Kunjungan': 'Senin, Kamis',
         'Frekuensi': 'Seminggu Sekali',
         'NIK Sales': 'JY.01.YAP.06'
       }
@@ -117,7 +117,7 @@ export function ImportDialog({ onSuccess, className }: ImportDialogProps) {
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-slate-900">Import Outlet Massal</DialogTitle>
           <DialogDescription className="text-slate-500">
-            Unggah file Excel untuk mendaftarkan banyak outlet sekaligus ke database rute kunjungan Anda.
+            Unggah file Excel untuk mendaftarkan banyak outlet sekaligus. Untuk **Hari Kunjungan**, Anda bisa mengisi lebih dari satu hari (contoh: Senin/Kamis atau Selasa, Jumat).
           </DialogDescription>
         </DialogHeader>
 

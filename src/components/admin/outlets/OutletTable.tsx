@@ -65,7 +65,41 @@ export function OutletTable({
   };
 
   const getDayLabel = (value: string | null) => {
-    return VISIT_DAYS.find(d => d.value === value)?.label || '-';
+    if (!value) return '-';
+    // If multiple days, split them
+    const days = value.split(', ').filter(Boolean);
+    return days.map(d => VISIT_DAYS.find(vd => vd.value === d)?.label || d).join(', ');
+  };
+
+  const getDayBadges = (value: string | null) => {
+    if (!value) return <span className="text-slate-400">-</span>;
+    const days = value.split(', ').filter(Boolean);
+    
+    return (
+      <div className="flex flex-wrap gap-1 mt-1 justify-start">
+        {days.map(d => {
+          const label = VISIT_DAYS.find(vd => vd.value === d)?.label || d;
+          return (
+            <Badge 
+              key={d} 
+              variant="outline" 
+              className={cn(
+                "text-[8px] font-black border-none py-0 px-1.5 h-3.5 rounded-sm uppercase",
+                d === 'Senin' && "bg-blue-50 text-blue-600",
+                d === 'Selasa' && "bg-emerald-50 text-emerald-600",
+                d === 'Rabu' && "bg-amber-50 text-amber-600",
+                d === 'Kamis' && "bg-purple-50 text-purple-600",
+                d === 'Jumat' && "bg-rose-50 text-rose-600",
+                d === 'Sabtu' && "bg-slate-100 text-slate-600",
+                d === 'Minggu' && "bg-red-50 text-red-600",
+              )}
+            >
+              {label}
+            </Badge>
+          );
+        })}
+      </div>
+    );
   };
 
   const getFreqLabel = (value: string | null) => {
@@ -151,12 +185,13 @@ export function OutletTable({
             )}
           </TableCell>
           <TableCell className="px-4 py-3">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5 text-slate-800 font-black text-[10px] uppercase tracking-widest">
-                <Calendar className="h-3 w-3 text-blue-500" />
-                {getDayLabel(o.visit_day)}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[9px] uppercase tracking-widest">
+                <Calendar className="h-3 w-3" />
+                Jadwal Kunjungan
               </div>
-              <Badge variant="outline" className="text-[8px] w-fit font-black border-none text-slate-400 bg-slate-50 py-0 px-2 rounded-sm uppercase">
+              {getDayBadges(o.visit_day)}
+              <Badge variant="outline" className="text-[8px] w-fit font-bold border-none text-slate-400 bg-slate-50/50 py-0 px-1 rounded-sm uppercase mt-0.5">
                 {getFreqLabel(o.visit_frequency)}
               </Badge>
             </div>

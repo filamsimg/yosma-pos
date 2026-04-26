@@ -26,6 +26,8 @@ import {
   Trash2, 
   MapPin, 
   CalendarClock, 
+  CheckSquare,
+  Square,
   Users, 
   Store,
   Navigation 
@@ -35,6 +37,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { FormSection } from '@/components/ui/form-section';
 import { normalizeTypeName, normalizePhoneNumber } from '@/lib/utils/string-utils';
 import type { Outlet, Profile, OutletType } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface OutletFormProps {
   initialData?: Outlet | null;
@@ -292,27 +295,47 @@ export function OutletForm({
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Operasional & Jadwal</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2.5">
-              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1">Hari Kunjungan Utama</Label>
-              <Controller
-                name="visit_day"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger className="bg-white border-input text-slate-900 h-12 focus:ring-blue-600 px-5 rounded-xl font-medium uppercase">
-                      <SelectValue placeholder="PILIH HARI" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-xl">
-                      {VISIT_DAYS.map((day) => (
-                        <SelectItem key={day.value} value={day.value} className="focus:bg-slate-50 focus:text-blue-600 py-3 px-4 text-xs font-bold uppercase">
-                          {day.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+          <div className="grid grid-cols-1 gap-8">
+            <div className="space-y-4">
+              <Label className="text-slate-600 font-bold text-[12px] uppercase tracking-wider ml-1 block mb-2">Hari Kunjungan Rutin (Bisa pilih lebih dari satu)</Label>
+              <div className="flex flex-wrap gap-2">
+                {VISIT_DAYS.map((day) => {
+                  const currentDays = (watch('visit_day') || '').split(', ').filter(Boolean);
+                  const isSelected = currentDays.includes(day.value);
+                  
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      onClick={() => {
+                        let newDays;
+                        if (isSelected) {
+                          newDays = currentDays.filter(d => d !== day.value);
+                        } else {
+                          newDays = [...currentDays, day.value];
+                          // Sort based on VISIT_DAYS order
+                          newDays.sort((a, b) => {
+                            const indexA = VISIT_DAYS.findIndex(d => d.value === a);
+                            const indexB = VISIT_DAYS.findIndex(d => d.value === b);
+                            return indexA - indexB;
+                          });
+                        }
+                        setValue('visit_day', newDays.join(', '));
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-xs font-bold uppercase tracking-wider",
+                        isSelected 
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100 ring-2 ring-blue-600 ring-offset-2" 
+                          : "bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600"
+                      )}
+                    >
+                      {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 opacity-40" />}
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <Input type="hidden" {...register('visit_day')} />
             </div>
 
             <div className="space-y-2.5">
@@ -322,7 +345,7 @@ export function OutletForm({
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger className="bg-white border-input text-slate-900 h-12 focus:ring-blue-600 px-5 rounded-xl font-medium uppercase">
+                    <SelectTrigger className="bg-white border-input text-slate-900 h-12 focus:ring-blue-600 px-5 rounded-xl font-medium uppercase text-left">
                       <SelectValue placeholder="SEMINGGU SEKALI" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-input text-slate-900 shadow-xl rounded-xl">
