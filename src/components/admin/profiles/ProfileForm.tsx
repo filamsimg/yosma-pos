@@ -193,7 +193,7 @@ export function ProfileForm({
                   <LockKeyhole className="h-3.5 w-3.5 text-blue-600" />
                   <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Reset Password Login</h4>
                 </div>
-                <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Kembalikan sandi ke pengaturan awal <span className="text-blue-600">(yosma12345)</span>.</p>
+                <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Kembalikan sandi ke pengaturan awal.</p>
               </div>
               <Button
                 type="button"

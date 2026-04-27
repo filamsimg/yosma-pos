@@ -14,7 +14,7 @@ interface SidebarControlProps {
 export function SidebarControl({ mode, isCollapsed, onModeChange }: SidebarControlProps) {
 
   return (
-    <div className="mt-auto border-t border-[#1e293b] p-2 space-y-1">
+    <div className="border-t border-[#1e293b] pt-2 mt-2">
       <Popover>
         <PopoverTrigger className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-[#1e293b]/50 transition-all group cursor-pointer text-left focus:outline-none">
           <PanelLeft className="h-4.5 w-4.5 shrink-0" />
@@ -52,15 +52,6 @@ export function SidebarControl({ mode, isCollapsed, onModeChange }: SidebarContr
           </div>
         </PopoverContent>
       </Popover>
-      
-      {/* Small collapse toggle button at the very bottom */}
-      <button 
-        onClick={() => onModeChange(mode === 'expanded' ? 'collapsed' : 'expanded')}
-        className="flex items-center justify-center p-2 w-9 h-9 rounded-md text-slate-400 hover:text-white hover:bg-[#1e293b] transition-all self-start"
-        title={mode === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}
-      >
-        <PanelLeft className={cn("h-4.5 w-4.5 transition-transform duration-300", isCollapsed && "rotate-180")} />
-      </button>
     </div>
   );
 }
