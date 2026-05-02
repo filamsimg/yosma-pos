@@ -143,7 +143,10 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
 
   for (const item of items) {
     // Basic normalization
-    item.name = item.name.toUpperCase();
+    item.name = item.name.trim().toUpperCase();
+    if (item.address) {
+      item.address = item.address.trim().toUpperCase();
+    }
     if (item.type) {
       item.type = normalizeTypeName(item.type.toUpperCase());
       if (!typeMap.has(item.type)) newTypes.add(item.type);
@@ -178,10 +181,10 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
     is_active: true,
   }));
 
-  // 5. Upsert outlets by Name (simplified conflict target, usually name + address is better but name is common)
+  // 5. Upsert outlets by Name + Address to prevent duplicates
   const { error } = await supabase
     .from('outlets')
-    .upsert(outletsToUpsert, { onConflict: 'name' }); // Assuming name is unique or we just want to update by name
+    .upsert(outletsToUpsert, { onConflict: 'name,address' });
 
   if (error) {
     return { error: error.message };

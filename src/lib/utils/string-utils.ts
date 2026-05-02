@@ -16,9 +16,9 @@ export function normalizeTypeName(name: string): string {
     'APOTIK': 'APOTEK',
     'TK': 'TOKO',
     'TK.': 'TOKO',
-    'RS': 'RS',
-    'R.S.': 'RS',
-    'RUMAH SAKIT': 'RS',
+    'RS': 'RUMAH SAKIT',
+    'R.S.': 'RUMAH SAKIT',
+    'RUMAH SAKIT': 'RUMAH SAKIT',
     'KLINIK': 'KLINIK',
     'PUSKESMAS': 'PUSKESMAS',
   };
