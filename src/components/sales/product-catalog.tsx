@@ -7,14 +7,22 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Search,
-  Plus,
-  Minus,
-  Package,
-  Loader2,
-  X,
-  RefreshCw,
-  CheckCircle2
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { 
+  Search, 
+  Plus, 
+  Minus, 
+  Package, 
+  Loader2, 
+  X, 
+  RefreshCw, 
+  CheckCircle2,
+  Filter
 } from 'lucide-react';
 import type { Product, Category } from '@/types';
 import { useAuth } from '../providers/auth-provider';
@@ -24,6 +32,7 @@ export function ProductCatalog() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [stockFilter, setStockFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
@@ -102,9 +111,20 @@ export function ProductCatalog() {
         !selectedCategory || 
         product.category_id === selectedCategory;
 
-      return matchesSearch && matchesCategory;
+      const matchesStock = () => {
+        if (stockFilter === 'ALL') return true;
+        const stock = product.stock || 0;
+        const minStock = product.min_stock || 10;
+        
+        if (stockFilter === 'OUT_OF_STOCK') return stock <= 0;
+        if (stockFilter === 'LOW_STOCK') return stock > 0 && stock <= minStock;
+        if (stockFilter === 'IN_STOCK') return stock > minStock;
+        return true;
+      };
+
+      return matchesSearch && matchesCategory && matchesStock();
     });
-  }, [allProducts, searchQuery, selectedCategory]);
+  }, [allProducts, searchQuery, selectedCategory, stockFilter]);
 
   function getCartQuantity(productId: string): number {
     return cartItems.find((item) => item.product.id === productId)?.quantity ?? 0;
@@ -150,9 +170,43 @@ export function ProductCatalog() {
         )}
       </div>
 
-      {/* Category Filter - Premium Pills */}
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex gap-2 pb-2">
+      {/* Filters Area */}
+      <div className="flex flex-col gap-3">
+        {/* Stock Filter Row */}
+        <div className="flex items-center justify-between gap-2">
+          <Select value={stockFilter} onValueChange={setStockFilter}>
+            <SelectTrigger className="h-9 w-full bg-white border-slate-200 text-[10px] font-black text-slate-600 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest shadow-sm">
+              <div className="flex items-center gap-2">
+                <Filter className="h-3 w-3 text-slate-400" />
+                <span className="text-blue-600">STOK:</span>
+                <SelectValue placeholder="Status Stok" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-xl rounded-sm">
+              <SelectItem value="ALL" className="text-[10px] font-black uppercase">SEMUA STOK</SelectItem>
+              <SelectItem value="OUT_OF_STOCK" className="text-[10px] font-black uppercase">HABIS (0)</SelectItem>
+              <SelectItem value="LOW_STOCK" className="text-[10px] font-black uppercase">MENIPIS ({"<="}10)</SelectItem>
+              <SelectItem value="IN_STOCK" className="text-[10px] font-black uppercase">TERSEDIA ({'>'}10)</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(stockFilter !== 'ALL' || selectedCategory !== null || searchQuery !== '') && (
+            <button 
+              onClick={() => {
+                setStockFilter('ALL');
+                setSelectedCategory(null);
+                setSearchQuery('');
+              }}
+              className="h-9 px-4 text-[10px] font-black text-red-600 hover:text-red-700 hover:bg-red-50 bg-white border border-red-100 rounded-sm uppercase tracking-widest transition-all shadow-sm"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+
+        {/* Category Filter - Premium Pills */}
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex gap-2 pb-1">
           <button
             onClick={() => setSelectedCategory(null)}
             className={`shrink-0 px-4 py-2 rounded-sm text-xs font-bold transition-all shadow-sm border ${
