@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { generateNextSKU } from './products';
 import { 
   normalizeTypeName, 
+  normalizeUnitName,
   normalizeVisitDay, 
   normalizeVisitFrequency,
   normalizeSalesList
@@ -64,7 +65,7 @@ export async function bulkImportProducts(items: ProductImportItem[]) {
       item.kategori = item.kategori.toUpperCase();
     }
     if (item.satuan) {
-      item.satuan = item.satuan.toUpperCase();
+      item.satuan = normalizeUnitName(item.satuan);
       if (!unitMap.has(item.satuan)) newUnits.add(item.satuan);
     }
   }

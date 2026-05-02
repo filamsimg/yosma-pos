@@ -20,7 +20,34 @@ export function normalizeTypeName(name: string): string {
     'R.S.': 'RUMAH SAKIT',
     'RUMAH SAKIT': 'RUMAH SAKIT',
     'KLINIK': 'KLINIK',
+    'KLINIK PRATAMA': 'KLINIK PRATAMA',
+    'KLINIK UTAMA': 'KLINIK UTAMA',
+    'BIDAN': 'BIDAN',
+    'TOKO OBAT': 'TOKO OBAT',
     'PUSKESMAS': 'PUSKESMAS',
+  };
+
+  return aliasMap[cleaned] || cleaned;
+}
+
+/**
+ * Normalizes product units (Satuan)
+ * Example: "FLS" -> "FLACON"
+ */
+export function normalizeUnitName(name: string): string {
+  if (!name) return '';
+  
+  const cleaned = name.toUpperCase().trim();
+  const aliasMap: Record<string, string> = {
+    'FLS': 'BOTOL',
+    'FLC': 'BOTOL',
+    'BTL': 'BOTOL',
+    'PCS': 'PCS',
+    'PC': 'PCS',
+    'TUBE': 'TUBE',
+    'UNIT': 'UNIT',
+    'LMBR': 'LEMBAR',
+    'JER': 'JERIGEN',
   };
 
   return aliasMap[cleaned] || cleaned;
