@@ -152,19 +152,22 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
 
   // 3. Create missing types
   if (newTypes.size > 0) {
-    const { data } = await supabase
+    const { data, error: typeError } = await supabase
       .from('outlet_types')
       .insert(Array.from(newTypes).map(name => ({ name })))
       .select();
+    
+    if (typeError) {
+      console.error('Error auto-creating outlet types:', typeError);
+    }
+    
     data?.forEach(t => typeMap.set(t.name.toUpperCase(), t.id));
   }
 
   // 4. Prepare outlet data
   const outletsToUpsert = items.map((item) => ({
     name: item.name,
-    type: item.type ? (typeMap.get(item.type) ? item.type : null) : null, // Store as string if that's how it's in DB, but wait.
-    // Check database.ts again: Outlet.type is string | null. So we just need the string.
-    // But usually we map it to the name.
+    type: item.type || null,
     address: item.address || null,
     phone: item.phone || null,
     city: item.city || null,
