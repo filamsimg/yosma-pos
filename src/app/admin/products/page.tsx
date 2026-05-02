@@ -335,14 +335,15 @@ export default function AdminProductsPage() {
               onSelect={(val) => { setBrandFilter(val); setCurrentPage(1); }}
             />
             <Select value={stockFilter} onValueChange={(val) => { if (val) { setStockFilter(val); setCurrentPage(1); } }}>
-              <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-400 text-[10px] font-black text-slate-400 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest">
-                <div className="flex items-center gap-2">
+              <SelectTrigger className="h-7 w-fit min-w-[100px] border-none bg-transparent hover:bg-blue-50 text-blue-600 px-2 flex items-center gap-2 font-bold transition-all rounded-sm uppercase tracking-widest outline-none">
+                <div className="flex items-center gap-1.5">
                   <Filter className="h-3 w-3" />
-                  <SelectValue placeholder="Status Stok" />
+                  <span className="text-[10px]">STOK:</span>
+                  <SelectValue placeholder="STOK" />
                 </div>
               </SelectTrigger>
               <SelectContent className="bg-white border-slate-400 text-slate-900 shadow-xl rounded-sm">
-                <SelectItem value="ALL" className="text-[10px] font-black uppercase">SEMUA STOK</SelectItem>
+                <SelectItem value="ALL" className="text-[10px] font-black uppercase">SEMUA</SelectItem>
                 <SelectItem value="OUT_OF_STOCK" className="text-[10px] font-black uppercase">HABIS (0)</SelectItem>
                 <SelectItem value="LOW_STOCK" className="text-[10px] font-black uppercase">MENIPIS ({"<="}10)</SelectItem>
                 <SelectItem value="IN_STOCK" className="text-[10px] font-black uppercase">TERSEDIA ({'>'}10)</SelectItem>
