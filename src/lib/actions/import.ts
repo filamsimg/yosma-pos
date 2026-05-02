@@ -178,6 +178,7 @@ export async function bulkImportOutlets(items: OutletImportItem[]) {
     visit_day: item.visit_day ? normalizeVisitDay(item.visit_day) : null,
     visit_frequency: normalizeVisitFrequency(item.visit_frequency || ''),
     assigned_sales: item.assigned_sales ? normalizeSalesList(item.assigned_sales) : null,
+    status: 'ACTIVE',
     is_active: true,
   }));
 

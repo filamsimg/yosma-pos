@@ -41,16 +41,16 @@ export function AdminPagination({
 
   return (
     <div className={cn(
-      "p-4 bg-white border border-slate-400 rounded-sm mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm",
+      "p-3 sm:p-4 bg-white border border-slate-400 rounded-sm mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm",
       className
     )}>
       {/* Info Section */}
-      <div className="flex items-center gap-6">
-        <div className="text-[10px] text-slate-600 font-black uppercase tracking-widest whitespace-nowrap">
-          Menampilkan <span className="text-xs text-slate-900">{filteredCount}</span> dari <span className="text-xs text-slate-900">{totalCount}</span> {itemName}
+      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
+        <div className="text-[10px] text-slate-600 font-black uppercase tracking-widest whitespace-nowrap text-center sm:text-left">
+          Menampilkan <span className="text-xs text-slate-900">{filteredCount}</span> <span className="hidden sm:inline">dari <span className="text-xs text-slate-900">{totalCount}</span></span> {itemName}
         </div>
         
-        <div className="flex items-center gap-2 border-l border-slate-400 pl-4">
+        <div className="flex items-center gap-2 sm:border-l border-slate-400 sm:pl-4 justify-center">
           <span className="text-[10px] text-slate-600 font-black uppercase tracking-widest">Baris:</span>
           <Select 
             value={pageSize.toString()} 
@@ -74,18 +74,19 @@ export function AdminPagination({
       </div>
       
       {/* Navigation Section */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2 justify-center w-full sm:w-auto">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1 || loading}
-          className="h-8 w-8 p-0 border-slate-400 text-slate-600 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
+          className="h-9 w-9 sm:h-8 sm:w-8 p-0 border-slate-400 text-slate-600 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        <div className="flex items-center gap-1">
+        {/* Desktop Page Numbers */}
+        <div className="hidden sm:flex items-center gap-1">
           {Array.from({ length: totalPages }, (_, i) => i + 1)
             .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
             .map((p, idx, arr) => {
@@ -112,12 +113,19 @@ export function AdminPagination({
             })}
         </div>
 
+        {/* Mobile Page Info */}
+        <div className="flex sm:hidden items-center px-4 h-9 bg-slate-50 border border-slate-200 rounded-sm">
+          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+            {currentPage} / {totalPages}
+          </span>
+        </div>
+
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || loading}
-          className="h-8 w-8 p-0 border-slate-400 text-slate-600 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
+          className="h-9 w-9 sm:h-8 sm:w-8 p-0 border-slate-400 text-slate-600 hover:bg-slate-50 disabled:opacity-20 rounded-sm"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
