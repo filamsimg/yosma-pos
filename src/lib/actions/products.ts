@@ -218,7 +218,7 @@ export async function getPaginatedProducts(
   page: number, 
   pageSize: number, 
   search: string = '',
-  filters?: { category_id?: string[]; brand_id?: string[]; stock_status?: string },
+  filters?: { category_id?: string[]; brand_id?: string[]; stock_status?: string[] },
   orderBy: string = 'name',
   orderDir: 'asc' | 'desc' = 'asc'
 ) {
@@ -255,13 +255,20 @@ export async function getPaginatedProducts(
     query = query.in('brand_id', filters.brand_id);
   }
 
-  if (filters?.stock_status && filters.stock_status !== 'ALL') {
-    if (filters.stock_status === 'OUT_OF_STOCK') {
-      query = query.eq('stock', 0);
-    } else if (filters.stock_status === 'LOW_STOCK') {
-      query = query.gt('stock', 0).lte('stock', 10);
-    } else if (filters.stock_status === 'IN_STOCK') {
-      query = query.gt('stock', 10);
+  if (filters?.stock_status && filters.stock_status.length > 0) {
+    const conditions: string[] = [];
+    filters.stock_status.forEach(status => {
+      if (status === 'OUT_OF_STOCK') {
+        conditions.push('stock.eq.0');
+      } else if (status === 'LOW_STOCK') {
+        conditions.push('and(stock.gt.0,stock.lte.10)');
+      } else if (status === 'IN_STOCK') {
+        conditions.push('stock.gt.10');
+      }
+    });
+    
+    if (conditions.length > 0) {
+      query = query.or(conditions.join(','));
     }
   }
 
