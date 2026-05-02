@@ -50,7 +50,13 @@ export function ImportDialog({ onSuccess, className = "" }: ImportDialogProps) {
         stok: Number(row['Stok'] || row['stok'] || row['Stok Awal'] || 0),
         min_stock: Number(row['Min Stok'] || row['Batas Minimal Stok'] || 10),
         deskripsi: row['Deskripsi'] || row['deskripsi'] || '',
-        diskon_reguler: Number(row['Diskon'] || row['diskon'] || 0),
+        diskon_reguler: (() => {
+          const raw = row['Diskon'] || row['diskon'] || row['DISK REGU'] || 0;
+          let val = Number(raw);
+          // Handle Excel percentage format (0.1 -> 10, 0.25 -> 25)
+          if (val > 0 && val < 1) val = val * 100;
+          return val;
+        })(),
       })).filter(item => item.nama); // Allow empty SKU for auto-generation
 
       setPreview(mappedData);
