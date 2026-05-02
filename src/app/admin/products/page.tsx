@@ -335,10 +335,9 @@ export default function AdminProductsPage() {
               onSelect={(val) => { setBrandFilter(val); setCurrentPage(1); }}
             />
             <Select value={stockFilter} onValueChange={(val) => { if (val) { setStockFilter(val); setCurrentPage(1); } }}>
-              <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-400 text-[10px] font-black text-slate-600 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest">
+              <SelectTrigger className="h-8 w-fit min-w-[120px] bg-white border-slate-400 text-[10px] font-black text-slate-400 hover:bg-slate-50 px-3 rounded-sm uppercase tracking-widest">
                 <div className="flex items-center gap-2">
-                  <Filter className="h-3 w-3 text-slate-400" />
-                  <span className="text-blue-600">STOK:</span>
+                  <Filter className="h-3 w-3" />
                   <SelectValue placeholder="Status Stok" />
                 </div>
               </SelectTrigger>
