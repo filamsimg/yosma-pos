@@ -91,6 +91,7 @@ export function ImportDialog({ onSuccess, className = "" }: ImportDialogProps) {
         'Harga': 15000,
         'Stok': 100,
         'Min Stok': 10,
+        'Diskon': 0,
         'Deskripsi': 'Deskripsi produk'
       }
     ];
@@ -175,6 +176,7 @@ export function ImportDialog({ onSuccess, className = "" }: ImportDialogProps) {
                   <th className="px-3 py-2">SKU</th>
                   <th className="px-3 py-2">Merk</th>
                   <th className="px-3 py-2">Harga</th>
+                  <th className="px-3 py-2">Diskon</th>
                   <th className="px-3 py-2">Min Stok</th>
                 </tr>
               </thead>
@@ -187,6 +189,7 @@ export function ImportDialog({ onSuccess, className = "" }: ImportDialogProps) {
                     </td>
                     <td className="px-3 py-2 text-slate-600">{row.merk}</td>
                     <td className="px-3 py-2 font-semibold text-blue-600">Rp {row.harga.toLocaleString()}</td>
+                    <td className="px-3 py-2 text-emerald-600 font-bold">{row.diskon_reguler}%</td>
                     <td className="px-3 py-2 text-amber-600 font-semibold">{row.min_stock}</td>
                   </tr>
                 ))}

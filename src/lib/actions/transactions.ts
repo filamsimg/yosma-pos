@@ -318,3 +318,17 @@ export async function getPaginatedTransactions({
     totalPages: Math.ceil((count ?? 0) / pageSize)
   };
 }
+
+// ============================================================
+// GET ALL TRANSACTIONS (for export)
+// ============================================================
+export async function getAllTransactions() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*, outlet:outlets(name, address, type), sales:profiles(full_name)')
+    .order('created_at', { ascending: false });
+  
+  if (error) return { error: error.message };
+  return { data: data as any[] };
+}

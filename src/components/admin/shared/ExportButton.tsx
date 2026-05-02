@@ -11,6 +11,7 @@ interface ExportButtonProps {
   filename: string;
   mapper: (item: any) => Record<string, any>;
   label?: string;
+  timestampField?: string;
   variant?: "outline" | "default" | "destructive" | "secondary" | "ghost" | "link";
   className?: string;
 }
@@ -20,6 +21,7 @@ export function ExportButton({
   filename, 
   mapper, 
   label = "Export Excel",
+  timestampField = "updated_at",
   variant = "outline",
   className = ""
 }: ExportButtonProps) {
@@ -48,8 +50,28 @@ export function ExportButton({
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Data');
 
-      // Download file
-      const fullFilename = `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      // Find the latest update date from the data with smart fallbacks
+      let latestUpdate = new Date();
+      if (data.length > 0) {
+        const dates = data
+          .map(item => {
+            // Priority: 1. Specified field, 2. updated_at, 3. created_at
+            const val = item[timestampField] || item['updated_at'] || item['created_at'];
+            return val ? new Date(val).getTime() : 0;
+          })
+          .filter(t => t > 0);
+        
+        if (dates.length > 0) {
+          latestUpdate = new Date(Math.max(...dates));
+        }
+      }
+
+      // Download file with timestamp (YYYY-MM-DD_HHmm)
+      const dateStr = latestUpdate.toISOString().split('T')[0];
+      const timeStr = latestUpdate.getHours().toString().padStart(2, '0') + latestUpdate.getMinutes().toString().padStart(2, '0');
+      
+      // Professional filename format: [filename]_Update_[date]_[time].xlsx
+      const fullFilename = `${filename}_Update_${dateStr}_${timeStr}.xlsx`;
       XLSX.writeFile(wb, fullFilename);
       
       toast.success("Data berhasil di-export");

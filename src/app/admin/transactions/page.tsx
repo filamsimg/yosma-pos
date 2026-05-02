@@ -50,8 +50,10 @@ import { TRANSACTION_STATUS_MAP, PAYMENT_STATUSES, PAYMENT_METHODS } from '@/lib
 import type { Transaction, TransactionItem } from '@/types';
 import { 
   updateTransactionStatus, 
-  getPaginatedTransactions 
+  getPaginatedTransactions,
+  getAllTransactions
 } from '@/lib/actions/transactions';
+import { ExportButton } from '@/components/admin/shared/ExportButton';
 import { toast } from 'sonner';
 
 import { StatCard } from '@/components/ui/stat-card';
@@ -167,9 +169,26 @@ export default function AdminTransactionsPage() {
         description="Monitoring arus pesanan dan status pengiriman harian secara real-time"
         breadcrumbs={[{ label: 'Transaksi' }]}
         action={
-          <Button variant="outline" className="h-10 px-4 border-slate-400 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50">
-            <Download className="h-4 w-4 mr-2" /> Export PDF
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportButton 
+              fetcher={getAllTransactions}
+              filename="Laporan_Transaksi"
+              timestampField="created_at"
+              label="Export Excel"
+              mapper={(t) => ({
+                'Invoice': t.invoice_number,
+                'Outlet': t.outlet?.name || '-',
+                'Sales': t.sales?.full_name || '-',
+                'Total': t.total_price,
+                'Status': TRANSACTION_STATUS_MAP[t.status as keyof typeof TRANSACTION_STATUS_MAP]?.label || t.status,
+                'Metode': t.payment_method,
+                'Tanggal': format(new Date(t.created_at), 'dd/MM/yyyy HH:mm')
+              })}
+            />
+            <Button variant="outline" className="hidden sm:flex h-10 px-4 border-slate-400 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-slate-50">
+              <Printer className="h-4 w-4 mr-2" /> PDF
+            </Button>
+          </div>
         }
       />
 
