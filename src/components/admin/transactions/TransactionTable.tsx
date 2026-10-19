@@ -16,6 +16,7 @@ import { id as idLocale } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { TRANSACTION_STATUS_MAP } from '@/lib/constants';
 import { AdminTable } from '@/components/ui/admin/data-table';
+import { TableRowsSkeleton } from '@/components/ui/skeletons';
 
 interface TransactionTableProps {
   data: any[];
@@ -24,22 +25,21 @@ interface TransactionTableProps {
 }
 
 export function TransactionTable({ data, loading, onView }: TransactionTableProps) {
+  const headers = [
+    <div key="inv" className="text-center">Invoice & Outlet</div>,
+    <div key="tot" className="text-center">Total</div>,
+    <div key="stat" className="text-center">Status</div>,
+    <div key="time" className="text-center">Waktu</div>,
+    <div key="act" className="text-center">Aksi</div>
+  ];
 
   if (loading) {
     return (
-      <div className="p-12 text-center opacity-60">
-        <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Memuat data transaksi...</p>
-      </div>
+      <AdminTable headers={headers}>
+        <TableRowsSkeleton rows={6} columns={5} />
+      </AdminTable>
     );
   }
-
-  const headers = [
-    <div className="text-center">Invoice & Outlet</div>,
-    <div className="text-center">Total</div>,
-    <div className="text-center">Status</div>,
-    <div className="text-center">Waktu</div>,
-    <div className="text-center">Aksi</div>
-  ];
 
   return (
     <AdminTable headers={headers}>

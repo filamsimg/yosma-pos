@@ -41,9 +41,10 @@ import {
 } from '@/lib/actions/transactions';
 import { TRANSACTION_STATUS_MAP, PAYMENT_STATUS_MAP } from '@/lib/constants';
 import { toast } from 'sonner';
-import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
 import { HistoryFilterBar } from '@/components/sales/history/HistoryFilterBar';
 import { HistoryReceiptDialog } from '@/components/sales/history/HistoryReceiptDialog';
+import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
+import { HistoryCardSkeleton } from '@/components/ui/skeletons';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { cn } from '@/lib/utils';
@@ -245,9 +246,7 @@ export default function SalesHistoryPage() {
         />
 
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-sm bg-white border border-slate-100" />)}
-          </div>
+          <HistoryCardSkeleton count={5} />
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-sm border border-slate-100 shadow-sm text-center px-6">
              <Receipt className="h-10 w-10 text-slate-200 mb-4" />

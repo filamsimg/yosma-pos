@@ -14,6 +14,7 @@ import { Edit, Trash2, PackagePlus, ArrowUpDown, ArrowUp, ArrowDown } from 'luci
 import type { Product } from '@/types';
 import { AdminTable } from '@/components/ui/admin/data-table';
 import { cn } from '@/lib/utils';
+import { TableRowsSkeleton } from '@/components/ui/skeletons';
 
 interface ProductTableProps {
   products: Product[];
@@ -38,15 +39,6 @@ export function ProductTable({
   sorting,
   onSort,
 }: ProductTableProps) {
-  if (loading) {
-    return (
-      <div className="p-8 text-center text-slate-600">
-        Memuat data produk...
-      </div>
-    );
-  }
-
-
   const toggleAll = () => {
     if (selectedIds.length === products.length) {
       onSelectionChange([]);
@@ -65,23 +57,32 @@ export function ProductTable({
 
   const headers = [
     <input 
+      key="chk_all"
       type="checkbox" 
       checked={products.length > 0 && selectedIds.length === products.length}
       onChange={toggleAll}
       className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
     />,
-    <div className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => onSort('sku')}>
+    <div key="sku" className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => onSort('sku')}>
       SKU {sorting.field === 'sku' && (sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
     </div>,
-    <div className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => onSort('name')}>
+    <div key="name" className="flex items-center justify-center gap-1 cursor-pointer" onClick={() => onSort('name')}>
       Produk {sorting.field === 'name' && (sorting.dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
     </div>,
     "Merk",
     "Satuan",
-    <div className="text-center cursor-pointer" onClick={() => onSort('price')}>Harga</div>,
-    <div className="text-center">Stok</div>,
-    <div className="text-center">Aksi</div>
+    <div key="price" className="text-center cursor-pointer" onClick={() => onSort('price')}>Harga</div>,
+    <div key="stock" className="text-center">Stok</div>,
+    <div key="action" className="text-center">Aksi</div>
   ];
+
+  if (loading) {
+    return (
+      <AdminTable headers={headers}>
+        <TableRowsSkeleton rows={8} columns={8} />
+      </AdminTable>
+    );
+  }
 
   return (
     <AdminTable headers={headers}>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { Product, Category } from '@/types';
 import { useAuth } from '../providers/auth-provider';
+import { ProductGridSkeleton } from '@/components/ui/skeletons';
 
 export function ProductCatalog() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -168,17 +169,7 @@ export function ProductCatalog() {
 
       {/* Product Grid */}
       {loading && allProducts.length === 0 ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-sm border border-slate-100 bg-white p-4 space-y-3 shadow-sm">
-              <div className="w-10 h-10 rounded-sm bg-slate-50" />
-              <div className="space-y-2">
-                <div className="h-4 w-3/4 bg-slate-100 rounded animate-pulse" />
-                <div className="h-3 w-1/2 bg-slate-50 rounded animate-pulse" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ProductGridSkeleton count={8} layout="grid-2" />
       ) : filteredProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-sm border border-dashed border-slate-200">
           <div className="w-16 h-16 rounded-sm bg-white flex items-center justify-center mb-4 shadow-sm">

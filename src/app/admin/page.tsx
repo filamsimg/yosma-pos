@@ -27,6 +27,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { cn } from '@/lib/utils';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import Link from 'next/link';
+import { DashboardKPISkeleton, TableRowsSkeleton } from '@/components/ui/skeletons';
 
 import { getAdminDashboardData } from '@/lib/actions/dashboard';
 
@@ -70,14 +71,11 @@ export default function AdminDashboardPage() {
       />
 
       {/* Stat Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {loading ? (
-             Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-sm bg-slate-50 border border-slate-100" />
-              ))
-        ) : (
-            <>
-                <StatCard 
+      {loading ? (
+        <DashboardKPISkeleton count={4} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard 
                     label="Omzet Hari Ini"
                     value={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`}
                     icon={TrendingUp}
@@ -109,9 +107,8 @@ export default function AdminDashboardPage() {
                     iconBgColor="bg-indigo-50"
                     iconColor="text-indigo-600"
                 />
-            </>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Transactions Section */}
@@ -133,10 +130,20 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent className="p-0">
             {loading ? (
-                <div className="p-6 space-y-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-10 w-full rounded-sm bg-slate-50" />
-                    ))}
+                <div className="overflow-x-auto scrollbar-none">
+                    <table className="w-full text-left whitespace-nowrap">
+                        <thead>
+                            <tr className="bg-slate-100 text-center border-b-2 border-slate-200">
+                                <th className="py-3 px-6 text-[10px] font-black text-slate-600 uppercase tracking-widest">Invoice</th>
+                                <th className="py-3 px-4 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50">Waktu</th>
+                                <th className="py-3 px-4 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50">Total</th>
+                                <th className="py-3 px-6 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200/50 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            <TableRowsSkeleton rows={5} columns={4} />
+                        </tbody>
+                    </table>
                 </div>
             ) : recentTxns.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-400 opacity-60">
