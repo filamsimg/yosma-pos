@@ -1,5 +1,5 @@
 // ============================================================
-// Database Types - Mirrors Supabase PostgreSQL schema
+// Database Types - Mirrors Neon PostgreSQL schema
 // ============================================================
 
 export type UserRole = 'ADMIN' | 'SALES';
@@ -12,6 +12,7 @@ export type VisitFrequency = 'WEEKLY' | 'BIWEEKLY';
 // ----- Profiles -----
 export interface Profile {
   id: string;
+  email?: string | null;
   full_name: string;
   role: UserRole;
   avatar_url: string | null;
