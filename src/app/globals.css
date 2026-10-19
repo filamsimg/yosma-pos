@@ -186,3 +186,35 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #334155;
 }
+
+/* Meta & Instagram Style Shimmer Wave Animation */
+@keyframes shimmer-wave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 40%,
+    #f1f5f9 80%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer-wave 1.6s infinite ease-in-out !important;
+}
+
+.dark .shimmer {
+  background: linear-gradient(
+    90deg,
+    #1e293b 0%,
+    #334155 40%,
+    #1e293b 80%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer-wave 1.6s infinite ease-in-out !important;
+}
