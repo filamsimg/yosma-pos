@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getAllOutlets } from '@/lib/actions/outlets';
+import { uploadImageAction } from '@/lib/storage';
 import { useGeolocation } from '@/hooks/use-geolocation';
 import { useImageCapture } from '@/hooks/use-image-capture';
 import { Button } from '@/components/ui/button';
@@ -89,33 +90,18 @@ export function OutletCheckin({
   // Fetch outlets & profile
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      
       // Load from cache first
       const cachedOutlets = localStorage.getItem('yosma_outlets_cache');
       if (cachedOutlets) {
         setOutlets(JSON.parse(cachedOutlets));
       }
 
-      // Use existing user from context
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) setUserProfile(profile);
-        else setUserProfile(user); 
+        setUserProfile(user);
       }
 
       try {
-        const { data, error } = await supabase
-          .from('outlets')
-          .select('*')
-          .eq('is_active', true)
-          .order('name');
-
+        const { data } = await getAllOutlets();
         if (data) {
           setOutlets(data);
           localStorage.setItem('yosma_outlets_cache', JSON.stringify(data));
@@ -198,9 +184,6 @@ export function OutletCheckin({
 
     setUploading(true);
     try {
-      const supabase = createClient();
-      
-      // Use existing user session from context
       if (!user) throw new Error('Not authenticated');
 
       let lat = geo.latitude || 0;
@@ -208,23 +191,11 @@ export function OutletCheckin({
       let photoUrl = 'REMOTE_ORDER';
 
       if (!isRemote && processedFile) {
-        // Warning: Storage upload WILL still fail if offline, 
-        // but the error will be handled by the catch block
-        const fileName = `${user.id}/${Date.now()}_checkin.jpg`;
-        const { error: uploadError } = await supabase.storage
-          .from('transaction-photos')
-          .upload(fileName, processedFile, {
-            contentType: 'image/jpeg',
-            upsert: false,
-          });
-
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('transaction-photos').getPublicUrl(fileName);
-        
-        photoUrl = publicUrl;
+        const photoFormData = new FormData();
+        photoFormData.append('file', processedFile);
+        const uploadRes = await uploadImageAction(photoFormData);
+        if (uploadRes.error) throw new Error(uploadRes.error);
+        photoUrl = uploadRes.url || '';
       }
 
       onCheckin({

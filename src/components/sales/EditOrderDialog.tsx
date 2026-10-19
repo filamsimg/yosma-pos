@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { editTransactionItems } from '@/lib/actions/transactions';
+import { searchProducts } from '@/lib/actions/products';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -109,14 +109,7 @@ export function EditOrderDialog({
     }
     const timeout = setTimeout(async () => {
       setSearching(true);
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('products')
-        .select('id, name, sku, price, stock')
-        .eq('is_active', true)
-        .gt('stock', 0)
-        .ilike('name', `%${searchQuery}%`)
-        .limit(8);
+      const data = await searchProducts(searchQuery);
       setSearchResults(data || []);
       setSearching(false);
     }, 300);

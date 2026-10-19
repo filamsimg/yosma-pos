@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getPOSCatalogData } from '@/lib/actions/products';
 import { useCartStore } from '@/store/cart-store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -50,30 +50,17 @@ export function ProductCatalog() {
       return;
     }
     setLoading(true);
-    const supabase = createClient();
     
     try {
-      const [pRes, cRes] = await Promise.all([
-        supabase
-          .from('products')
-          .select('*, category:categories(*)')
-          .eq('is_active', true)
-          .order('name'),
-        supabase
-          .from('categories')
-          .select('*')
-          .order('name')
-      ]);
+      const { products, categories } = await getPOSCatalogData();
 
-      if (pRes.error || cRes.error) throw pRes.error || cRes.error;
-
-      if (pRes.data) {
-        setAllProducts(pRes.data);
-        localStorage.setItem('yosma_products_cache', JSON.stringify(pRes.data));
+      if (products && products.length > 0) {
+        setAllProducts(products);
+        localStorage.setItem('yosma_products_cache', JSON.stringify(products));
       }
-      if (cRes.data) {
-        setCategories(cRes.data);
-        localStorage.setItem('yosma_categories_cache', JSON.stringify(cRes.data));
+      if (categories && categories.length > 0) {
+        setCategories(categories);
+        localStorage.setItem('yosma_categories_cache', JSON.stringify(categories));
       }
       
       const now = new Date();

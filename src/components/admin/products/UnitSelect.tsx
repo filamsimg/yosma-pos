@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import {
   Select,
   SelectContent,
@@ -12,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
-import { createUnit, deleteUnit } from '@/lib/actions/products';
+import { createUnit, deleteUnit, getUnits } from '@/lib/actions/products';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { normalizeTypeName } from '@/lib/utils/string-utils';
@@ -38,8 +37,7 @@ export function UnitSelect({ value, onValueChange }: UnitSelectProps) {
   }, []);
 
   async function fetchUnits() {
-    const supabase = createClient();
-    const { data } = await supabase.from('units').select('*').order('name');
+    const data = await getUnits();
     if (data) setUnits(data);
     setLoading(false);
   }

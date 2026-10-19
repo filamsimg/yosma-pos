@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/components/providers/auth-provider';
+import { getOutletTypes, createProspectOutlet } from '@/lib/actions/outlets';
+import { uploadImageAction } from '@/lib/storage';
 import { AppDialog } from '@/components/ui/app-dialog';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
@@ -52,8 +53,7 @@ export function AddOutletDialog({ open, onOpenChange, onSuccess }: AddOutletDial
   }, [open]);
 
   async function fetchOutletTypes() {
-    const supabase = createClient();
-    const { data } = await supabase.from('outlet_types').select('*').order('name');
+    const data = await getOutletTypes();
     if (data) setOutletTypes(data);
   }
 
@@ -88,57 +88,35 @@ export function AddOutletDialog({ open, onOpenChange, onSuccess }: AddOutletDial
     }
 
     setLoading(true);
-    const supabase = createClient();
 
     try {
-      // 1. Upload Photo
-      const fileExt = photo.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('outlet-photos')
-        .upload(fileName, photo);
+      // 1. Upload Photo via Server Action
+      const photoFormData = new FormData();
+      photoFormData.append('file', photo);
+      const uploadRes = await uploadImageAction(photoFormData);
+      if (uploadRes.error) throw new Error(uploadRes.error);
+      const photoUrl = uploadRes.url || '';
 
-      if (uploadError) throw uploadError;
+      // 2. Insert Outlet & Visit via Server Action
+      const result = await createProspectOutlet({
+        name: formData.name,
+        type: formData.type,
+        address: formData.address,
+        phone: formData.phone,
+        owner_name: formData.owner_name,
+        lat: location.lat,
+        lng: location.lng,
+        photoUrl: photoUrl,
+        mode: mode === 'PROSPECT_ONLY' ? 'PROSPECT_ONLY' : 'ORDER_NOW',
+      });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('outlet-photos')
-        .getPublicUrl(fileName);
+      if (result.error || !result.data) {
+        throw new Error(result.error || 'Gagal mendaftarkan outlet');
+      }
 
-      // 2. Insert Outlet
-      const { data: outletData, error: outletError } = await supabase
-        .from('outlets')
-        .insert({
-          name: formData.name,
-          type: formData.type,
-          address: formData.address,
-          phone: formData.phone,
-          owner_name: formData.owner_name,
-          lat: location.lat,
-          lng: location.lng,
-          assigned_sales: user.id,
-          is_active: true,
-          status: 'PROSPECT' // Default to Prospect
-        })
-        .select()
-        .single();
+      const outletData = result.data;
 
-      if (outletError) throw outletError;
-
-      // 3. If it's a "Prospect Only" visit, record a visit entry
       if (mode === 'PROSPECT_ONLY') {
-        const { error: visitError } = await supabase
-          .from('visits')
-          .insert({
-            sales_id: user.id,
-            outlet_id: outletData.id,
-            lat: location.lat,
-            lng: location.lng,
-            photo_url: publicUrl,
-            notes: 'Kunjungan prospek baru (Canvassing)',
-            status: 'COMPLETED'
-          });
-        
-        if (visitError) console.error('Gagal mencatat kunjungan prospek:', visitError);
         toast.success('Kunjungan prospek berhasil dicatat');
       } else {
         toast.success('Outlet berhasil didaftarkan');

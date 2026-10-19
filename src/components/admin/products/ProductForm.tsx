@@ -2,7 +2,6 @@
 
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { productSchema, type ProductFormValues } from '@/lib/validations/product';
@@ -18,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createCategory, deleteCategory } from '@/lib/actions/products';
+import { createCategory, deleteCategory, getCategories } from '@/lib/actions/products';
 import { 
   Plus, 
   Check, 
@@ -91,8 +90,7 @@ export function ProductForm({
 
   async function fetchCategories() {
     setFetchingCategories(true);
-    const supabase = createClient();
-    const { data } = await supabase.from('categories').select('*').order('name');
+    const data = await getCategories();
     if (data) {
       setLocalCategories(data);
       // If we're creating new and have no category selected, select the first one

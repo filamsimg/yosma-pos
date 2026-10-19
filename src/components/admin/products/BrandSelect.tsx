@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import {
   Select,
   SelectContent,
@@ -12,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Check, Loader2, Trash2 } from 'lucide-react';
-import { createBrand, deleteBrand } from '@/lib/actions/products';
+import { createBrand, deleteBrand, getBrands } from '@/lib/actions/products';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { normalizeTypeName } from '@/lib/utils/string-utils';
@@ -38,8 +37,7 @@ export function BrandSelect({ value, onValueChange }: BrandSelectProps) {
   }, []);
 
   async function fetchBrands() {
-    const supabase = createClient();
-    const { data } = await supabase.from('brands').select('*').order('name');
+    const data = await getBrands();
     if (data) setBrands(data);
     setLoading(false);
   }
