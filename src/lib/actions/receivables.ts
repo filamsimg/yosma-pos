@@ -1,6 +1,8 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { sql } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth/session';
+import { uploadImageFile } from '@/lib/storage';
 import { revalidatePath } from 'next/cache';
 import type { PaymentStatus, PaymentMethod } from '@/types';
 
@@ -8,33 +10,49 @@ import type { PaymentStatus, PaymentMethod } from '@/types';
  * Fetch all transactions that have outstanding balances (Piutang)
  */
 export async function getReceivables() {
-  const supabase = await createClient();
-  
-  const { data, error } = await supabase
-    .from('transactions')
-    .select(`
-      *,
-      outlet:outlets(id, name, type, address),
-      sales:profiles!sales_id(id, full_name),
-      payments:transaction_payments(*)
-    `)
-    .eq('payment_method', 'CREDIT')
-    .order('due_date', { ascending: true });
+  try {
+    const rows = await sql`
+      SELECT 
+        t.id, t.invoice_number, t.sales_id, t.outlet_id, t.subtotal, t.discount, 
+        t.total_price, t.payment_method, t.status, t.payment_status, t.paid_amount, 
+        t.due_date, t.lat, t.lng, t.created_at, t.updated_at,
+        json_build_object('id', o.id, 'name', o.name, 'type', o.type, 'address', o.address) as outlet,
+        json_build_object('id', p.id, 'full_name', p.full_name) as sales,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'id', pay.id,
+                'amount', pay.amount,
+                'payment_method', pay.payment_method,
+                'notes', pay.notes,
+                'recorded_by', pay.recorded_by,
+                'payment_date', pay.payment_date
+              )
+            ) 
+            FROM public.transaction_payments pay 
+            WHERE pay.transaction_id = t.id
+          ),
+          '[]'::json
+        ) as payments
+      FROM public.transactions t
+      LEFT JOIN public.outlets o ON t.outlet_id = o.id
+      LEFT JOIN public.profiles p ON t.sales_id = p.id
+      WHERE t.payment_method = 'CREDIT'
+      ORDER BY t.due_date ASC;
+    `;
 
-  if (error) {
+    return rows as any[];
+  } catch (error) {
     console.error('Error fetching receivables:', error);
     return [];
   }
-
-  return data;
 }
 
 /**
  * Record a new payment/installment for a transaction
  */
 export async function addPayment(formData: FormData) {
-  const supabase = await createClient();
-  
   const transactionId = formData.get('transactionId') as string;
   const amount = parseFloat(formData.get('amount') as string);
   const paymentMethod = formData.get('paymentMethod') as PaymentMethod;
@@ -42,83 +60,57 @@ export async function addPayment(formData: FormData) {
   const proofFile = formData.get('proofFile') as File | null;
 
   if (!transactionId || isNaN(amount)) throw new Error('Invalid payment data');
-  
-  // 1. Get current user (Admin)
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const user = await getCurrentUser();
   if (!user) throw new Error('Not authenticated');
 
-  // 1.5. Handle Proof of Payment Upload if exists
-  let proofUrl = null;
+  let proofUrl: string | null = null;
   if (paymentMethod === 'TRANSFER' && proofFile && proofFile.size > 0) {
-    const fileExt = proofFile.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}_proof.${fileExt}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('transaction-photos')
-      .upload(fileName, proofFile, {
-        contentType: proofFile.type,
-        upsert: false
-      });
-
-    if (uploadError) throw new Error(`Proof upload failed: ${uploadError.message}`);
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('transaction-photos')
-      .getPublicUrl(fileName);
-    
-    proofUrl = publicUrl;
+    try {
+      proofUrl = await uploadImageFile(proofFile);
+    } catch (err: any) {
+      console.error('Failed to process payment proof:', err);
+    }
   }
 
-  // 2. Insert payment record
-  const { error: paymentError } = await supabase
-    .from('transaction_payments')
-    .insert({
-      transaction_id: transactionId,
-      amount: amount,
-      payment_method: paymentMethod,
-      notes: notes,
-      proof_url: proofUrl,
-      recorded_by: user.id,
-      payment_date: new Date().toISOString(),
-    });
+  // 1. Insert payment record
+  await sql`
+    INSERT INTO public.transaction_payments (
+      transaction_id, amount, payment_method, notes, proof_url, recorded_by, payment_date
+    ) VALUES (
+      ${transactionId}, ${amount}, ${paymentMethod}::payment_method,
+      ${notes || null}, ${proofUrl}, ${user.id}, NOW()
+    );
+  `;
 
-  if (paymentError) throw paymentError;
+  // 2. Update transaction paid_amount & status
+  const tRows = await sql`
+    SELECT paid_amount, total_price FROM public.transactions WHERE id = ${transactionId} LIMIT 1;
+  `;
 
-  // 3. Update transaction paid_amount & status
-  // Get current transaction
-  const { data: transaction } = await supabase
-    .from('transactions')
-    .select('paid_amount, total_price')
-    .eq('id', transactionId)
-    .single();
+  if (!tRows || tRows.length === 0) throw new Error('Transaction not found');
+  const transaction = tRows[0];
 
-  if (!transaction) throw new Error('Transaction not found');
-
-  const newPaidAmount = (transaction.paid_amount || 0) + amount;
+  const newPaidAmount = Number(transaction.paid_amount || 0) + amount;
   let newStatus: PaymentStatus = 'PARTIAL';
-  
-  if (newPaidAmount >= transaction.total_price) {
+
+  if (newPaidAmount >= Number(transaction.total_price)) {
     newStatus = 'PAID';
   }
 
-  const { error: updateError } = await supabase
-    .from('transactions')
-    .update({
-      paid_amount: newPaidAmount,
-      payment_status: newStatus,
-    })
-    .eq('id', transactionId);
-
-  if (updateError) throw updateError;
-
+  await sql`
+    UPDATE public.transactions
+    SET paid_amount = ${newPaidAmount}, payment_status = ${newStatus}::payment_status
+    WHERE id = ${transactionId};
+  `;
 
   revalidatePath('/admin/receivables');
   return { success: true };
 }
 
-// ============================================================
-// GET PAGINATED RECEIVABLES (admin)
-// ============================================================
+/**
+ * Get paginated receivables for admin
+ */
 export async function getPaginatedReceivables({
   page = 1,
   pageSize = 10,
@@ -130,46 +122,70 @@ export async function getPaginatedReceivables({
   search?: string;
   type?: 'ACTIVE' | 'COMPLETED';
 }) {
-  const supabase = await createClient();
-  
-  let query = supabase
-    .from('transactions')
-    .select(`
-      *,
-      outlet:outlets(id, name, type, address),
-      sales:profiles!sales_id(id, full_name),
-      payments:transaction_payments(*)
-    `, { count: 'exact' })
-    .eq('payment_method', 'CREDIT');
+  try {
+    const offset = (page - 1) * pageSize;
+    const searchPattern = search.trim() ? `%${search.trim().toLowerCase()}%` : null;
 
-  // Filter status
-  if (type === 'ACTIVE') {
-    query = query.neq('payment_status', 'PAID');
-  } else {
-    query = query.eq('payment_status', 'PAID');
-  }
+    const countRows = await sql`
+      SELECT COUNT(*)::int as total
+      FROM public.transactions t
+      LEFT JOIN public.outlets o ON t.outlet_id = o.id
+      WHERE 
+        t.payment_method = 'CREDIT'
+        AND (${type === 'ACTIVE'}::boolean = true AND t.payment_status != 'PAID' OR ${type === 'COMPLETED'}::boolean = true AND t.payment_status = 'PAID')
+        AND (${searchPattern}::text IS NULL OR (
+          LOWER(t.invoice_number) LIKE ${searchPattern}
+          OR LOWER(COALESCE(o.name, '')) LIKE ${searchPattern}
+        ));
+    `;
 
-  // Search filter
-  if (search) {
-    query = query.or(`invoice_number.ilike.%${search}%,outlet_id.in.(select id from outlets where name.ilike.%${search}%)`);
-  }
+    const total = countRows[0]?.total || 0;
 
-  // Pagination & Order
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+    const rows = await sql`
+      SELECT 
+        t.id, t.invoice_number, t.sales_id, t.outlet_id, t.subtotal, t.discount, 
+        t.total_price, t.payment_method, t.status, t.payment_status, t.paid_amount, 
+        t.due_date, t.lat, t.lng, t.created_at, t.updated_at,
+        json_build_object('id', o.id, 'name', o.name, 'type', o.type, 'address', o.address) as outlet,
+        json_build_object('id', p.id, 'full_name', p.full_name) as sales,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'id', pay.id,
+                'amount', pay.amount,
+                'payment_method', pay.payment_method,
+                'notes', pay.notes,
+                'recorded_by', pay.recorded_by,
+                'payment_date', pay.payment_date
+              )
+            ) 
+            FROM public.transaction_payments pay 
+            WHERE pay.transaction_id = t.id
+          ),
+          '[]'::json
+        ) as payments
+      FROM public.transactions t
+      LEFT JOIN public.outlets o ON t.outlet_id = o.id
+      LEFT JOIN public.profiles p ON t.sales_id = p.id
+      WHERE 
+        t.payment_method = 'CREDIT'
+        AND (${type === 'ACTIVE'}::boolean = true AND t.payment_status != 'PAID' OR ${type === 'COMPLETED'}::boolean = true AND t.payment_status = 'PAID')
+        AND (${searchPattern}::text IS NULL OR (
+          LOWER(t.invoice_number) LIKE ${searchPattern}
+          OR LOWER(COALESCE(o.name, '')) LIKE ${searchPattern}
+        ))
+      ORDER BY ${type === 'ACTIVE'}::boolean ? t.due_date : t.created_at DESC
+      LIMIT ${pageSize} OFFSET ${offset};
+    `;
 
-  const { data, count, error } = await query
-    .order(type === 'ACTIVE' ? 'due_date' : 'created_at', { ascending: type === 'ACTIVE' })
-    .range(from, to);
-
-  if (error) {
-    console.error('Error fetching receivables:', error);
+    return {
+      data: rows as any[],
+      totalCount: total,
+      totalPages: Math.ceil(total / pageSize)
+    };
+  } catch (error) {
+    console.error('Error fetching paginated receivables:', error);
     return { data: [], totalCount: 0, totalPages: 0 };
   }
-
-  return {
-    data: data as any[],
-    totalCount: count ?? 0,
-    totalPages: Math.ceil((count ?? 0) / pageSize)
-  };
 }

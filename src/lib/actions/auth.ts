@@ -2,65 +2,94 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { sql } from '@/lib/db';
+import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import { signSessionToken } from '@/lib/auth/jwt';
+import {
+  setSessionCookie,
+  deleteSessionCookie,
+  getCurrentUser,
+  getCurrentSession,
+} from '@/lib/auth/session';
+import type { Profile } from '@/types';
 
 export async function login(formData: FormData) {
-  const supabase = await createClient();
-
-  const email = formData.get('email') as string;
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
   const password = formData.get('password') as string;
 
   if (!email || !password) {
     return { error: 'Email dan password harus diisi.' };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const rows = await sql`
+      SELECT id, email, password_hash, full_name, role, is_active
+      FROM public.profiles
+      WHERE LOWER(email) = LOWER(${email})
+      LIMIT 1;
+    `;
 
-  if (error) {
-    return { error: 'Email atau password salah.' };
-  }
+    if (!rows || rows.length === 0) {
+      return { error: 'Email atau password salah.' };
+    }
 
-  // Get user role for redirect
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const user = rows[0] as {
+      id: string;
+      email: string;
+      password_hash: string | null;
+      full_name: string;
+      role: 'ADMIN' | 'SALES';
+      is_active: boolean;
+    };
 
-  if (!user) {
-    return { error: 'Gagal mengambil data user.' };
-  }
+    if (!user.is_active) {
+      return { error: 'Akun Anda dinonaktifkan. Silakan hubungi Administrator.' };
+    }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+    if (!user.password_hash) {
+      return { error: 'Akun ini belum memiliki password. Silakan hubungi Administrator.' };
+    }
 
-  revalidatePath('/', 'layout');
+    const isValid = await verifyPassword(password, user.password_hash);
+    if (!isValid) {
+      return { error: 'Email atau password salah.' };
+    }
 
-  if (profile?.role === 'ADMIN') {
-    redirect('/admin');
-  } else {
-    redirect('/sales');
+    // Buat JWT Token dan simpan di HTTP-only cookie
+    const token = await signSessionToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      full_name: user.full_name,
+    });
+
+    await setSessionCookie(token);
+    revalidatePath('/', 'layout');
+
+    if (user.role === 'ADMIN') {
+      redirect('/admin');
+    } else {
+      redirect('/sales');
+    }
+  } catch (err: any) {
+    if (err?.message === 'NEXT_REDIRECT') throw err; // Biarkan redirect Next.js berjalan
+    console.error('[login error]:', err);
+    return { error: err.message || 'Terjadi kesalahan pada server saat login.' };
   }
 }
 
 export async function register(formData: FormData) {
-  const supabase = await createClient();
-
-  const email = formData.get('email') as string;
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
   const password = formData.get('password') as string;
-  const fullName = formData.get('full_name') as string;
-  const role = (formData.get('role') as string) || 'SALES';
-  const inviteCode = formData.get('invite_code') as string;
+  const fullName = (formData.get('full_name') as string)?.trim();
+  const role = ((formData.get('role') as string) || 'SALES') as 'ADMIN' | 'SALES';
+  const inviteCode = (formData.get('invite_code') as string)?.trim();
 
   if (!email || !password || !fullName || !inviteCode) {
     return { error: 'Semua field harus diisi termasuk Kode Akses.' };
   }
 
-  // Verify Invite Code
+  // Verifikasi Kode Akses
   const expectedAdminCode = process.env.ADMIN_INVITE_CODE;
   const expectedSalesCode = process.env.SALES_INVITE_CODE;
 
@@ -75,95 +104,103 @@ export async function register(formData: FormData) {
     return { error: 'Password minimal 6 karakter.' };
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        role: role,
-      },
-    },
-  });
+  try {
+    // Cek apakah email sudah terdaftar
+    const existing = await sql`
+      SELECT id FROM public.profiles WHERE LOWER(email) = LOWER(${email}) LIMIT 1;
+    `;
 
-  if (error) {
-    if (error.message.includes('already registered')) {
+    if (existing && existing.length > 0) {
       return { error: 'Email sudah terdaftar.' };
     }
-    return { error: `Registrasi gagal: ${error.message}` };
-  }
 
-  // Check if email confirmation is required
-  // When confirmation is required, session will be null
-  if (!data.session) {
-    // User exists but identity is fake (duplicate signup attempt on unconfirmed email)
-    if (data.user?.identities?.length === 0) {
-      return { error: 'Email sudah terdaftar. Silakan cek email untuk konfirmasi.' };
+    const hashedPassword = await hashPassword(password);
+
+    const inserted = await sql`
+      INSERT INTO public.profiles (email, password_hash, full_name, role)
+      VALUES (${email}, ${hashedPassword}, ${fullName}, ${role})
+      RETURNING id, email, full_name, role;
+    `;
+
+    const newUser = inserted[0] as {
+      id: string;
+      email: string;
+      full_name: string;
+      role: 'ADMIN' | 'SALES';
+    };
+
+    const token = await signSessionToken({
+      id: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+      full_name: newUser.full_name,
+    });
+
+    await setSessionCookie(token);
+    revalidatePath('/', 'layout');
+
+    if (role === 'ADMIN') {
+      redirect('/admin');
+    } else {
+      redirect('/sales');
     }
-    // Email confirmation required - show success message
-    return { success: true, message: 'Registrasi berhasil! Silakan cek email Anda untuk konfirmasi.' };
-  }
-
-  // If auto-confirmed (no email confirmation required), wait briefly for the
-  // database trigger to create the profile row
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  revalidatePath('/', 'layout');
-
-  if (role === 'ADMIN') {
-    redirect('/admin');
-  } else {
-    redirect('/sales');
+  } catch (err: any) {
+    if (err?.message === 'NEXT_REDIRECT') throw err;
+    console.error('[register error]:', err);
+    return { error: err.message || 'Registrasi gagal. Silakan coba beberapa saat lagi.' };
   }
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await deleteSessionCookie();
   revalidatePath('/', 'layout');
   redirect('/login');
 }
 
-export async function getSession() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  return profile;
+export async function getSession(): Promise<Profile | null> {
+  return getCurrentUser();
 }
 
 export async function updateMyPassword(currentPassword: string, newPassword: string) {
-  const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !user.email) {
-    return { error: 'Sesi tidak valid.' };
+  const session = await getCurrentSession();
+  if (!session?.id) {
+    return { error: 'Sesi tidak valid atau telah berakhir.' };
   }
 
-  // Verifikasi password lama dengan otentikasi ulang diam-diam
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
-  });
-
-  if (signInError) {
-    return { error: 'Password saat ini yang Anda masukkan salah.' };
+  if (!newPassword || newPassword.length < 6) {
+    return { error: 'Password baru minimal 6 karakter.' };
   }
 
-  // Jika berhasil diverifikasi, perbarui ke password baru
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) {
-    return { error: error.message };
+  try {
+    const rows = await sql`
+      SELECT id, password_hash FROM public.profiles WHERE id = ${session.id} LIMIT 1;
+    `;
+
+    if (!rows || rows.length === 0) {
+      return { error: 'Pengguna tidak ditemukan.' };
+    }
+
+    const user = rows[0] as { id: string; password_hash: string | null };
+    if (!user.password_hash) {
+      return { error: 'Password pengguna belum diatur.' };
+    }
+
+    const isValid = await verifyPassword(currentPassword, user.password_hash);
+    if (!isValid) {
+      return { error: 'Password saat ini yang Anda masukkan salah.' };
+    }
+
+    const newHashedPassword = await hashPassword(newPassword);
+
+    await sql`
+      UPDATE public.profiles
+      SET password_hash = ${newHashedPassword}, updated_at = NOW()
+      WHERE id = ${session.id};
+    `;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[updateMyPassword error]:', err);
+    return { error: err.message || 'Gagal memperbarui password.' };
   }
-  
-  return { success: true };
 }

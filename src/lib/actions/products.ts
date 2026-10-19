@@ -1,30 +1,36 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { sql } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth/session';
 import { productSchema, stockAdjustmentSchema, type ProductFormValues, type StockAdjustmentValues } from '@/lib/validations/product';
 import { revalidatePath } from 'next/cache';
+import type { Product, Category } from '@/types';
 
 /**
  * PRODUCTS ACTIONS
  */
 
-export async function generateNextSKU() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('products')
-    .select('sku')
-    .ilike('sku', 'YAP-%')
-    .order('sku', { ascending: false })
-    .limit(1);
+export async function generateNextSKU(): Promise<string> {
+  try {
+    const rows = await sql`
+      SELECT sku FROM public.products
+      WHERE sku LIKE 'YAP-%'
+      ORDER BY sku DESC
+      LIMIT 1;
+    `;
 
-  if (!data || data.length === 0) {
-    return 'YAP-0001';
+    if (!rows || rows.length === 0) {
+      return 'YAP-0001';
+    }
+
+    const lastSku = rows[0].sku;
+    const lastNumber = parseInt(lastSku.split('-')[1]) || 0;
+    const nextNumber = lastNumber + 1;
+    return `YAP-${nextNumber.toString().padStart(4, '0')}`;
+  } catch (error) {
+    console.error('Error generating SKU:', error);
+    return `YAP-${Date.now().toString().slice(-4)}`;
   }
-
-  const lastSku = data[0].sku;
-  const lastNumber = parseInt(lastSku.split('-')[1]) || 0;
-  const nextNumber = lastNumber + 1;
-  return `YAP-${nextNumber.toString().padStart(4, '0')}`;
 }
 
 export async function createProduct(values: ProductFormValues) {
@@ -33,25 +39,38 @@ export async function createProduct(values: ProductFormValues) {
     return { error: validated.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClient();
-  
-  // Auto-generate SKU if empty
-  if (!validated.data.sku || validated.data.sku.trim() === '') {
-    validated.data.sku = await generateNextSKU();
-  }
-  
-  const { data, error } = await supabase
-    .from('products')
-    .insert([validated.data])
-    .select()
-    .single();
+  try {
+    let sku = validated.data.sku;
+    if (!sku || sku.trim() === '') {
+      sku = await generateNextSKU();
+    }
 
-  if (error) {
+    const rows = await sql`
+      INSERT INTO public.products (
+        name, sku, description, price, stock, min_stock,
+        category_id, brand_id, unit_id, discount_regular, image_url
+      ) VALUES (
+        ${validated.data.name},
+        ${sku},
+        ${validated.data.description || null},
+        ${validated.data.price},
+        ${validated.data.stock || 0},
+        ${validated.data.min_stock || 0},
+        ${validated.data.category_id || null},
+        ${validated.data.brand_id || null},
+        ${validated.data.unit_id || null},
+        ${validated.data.discount_regular || 0},
+        ${validated.data.image_url || null}
+      )
+      RETURNING *;
+    `;
+
+    revalidatePath('/admin/products');
+    return { data: rows[0] as unknown as Product };
+  } catch (error: any) {
+    console.error('Error creating product:', error);
     return { error: error.message };
   }
-
-  revalidatePath('/admin/products');
-  return { data };
 }
 
 export async function updateProduct(id: string, values: ProductFormValues) {
@@ -60,37 +79,47 @@ export async function updateProduct(id: string, values: ProductFormValues) {
     return { error: validated.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClient();
-  
-  const { data, error } = await supabase
-    .from('products')
-    .update(validated.data)
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    const rows = await sql`
+      UPDATE public.products
+      SET
+        name = ${validated.data.name},
+        sku = ${validated.data.sku},
+        description = ${validated.data.description || null},
+        price = ${validated.data.price},
+        stock = ${validated.data.stock || 0},
+        min_stock = ${validated.data.min_stock || 0},
+        category_id = ${validated.data.category_id || null},
+        brand_id = ${validated.data.brand_id || null},
+        unit_id = ${validated.data.unit_id || null},
+        discount_regular = ${validated.data.discount_regular || 0},
+        image_url = ${validated.data.image_url || null},
+        updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *;
+    `;
 
-  if (error) {
+    revalidatePath('/admin/products');
+    return { data: rows[0] as unknown as Product };
+  } catch (error: any) {
+    console.error('Error updating product:', error);
     return { error: error.message };
   }
-
-  revalidatePath('/admin/products');
-  return { data };
 }
 
 export async function softDeleteProduct(id: string) {
-  const supabase = await createClient();
-  
-  const { error } = await supabase
-    .from('products')
-    .update({ is_active: false })
-    .eq('id', id);
+  try {
+    await sql`
+      UPDATE public.products
+      SET is_active = false, updated_at = NOW()
+      WHERE id = ${id};
+    `;
 
-  if (error) {
+    revalidatePath('/admin/products');
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/admin/products');
-  return { success: true };
 }
 
 /**
@@ -103,115 +132,175 @@ export async function adjustStock(values: StockAdjustmentValues) {
     return { error: validated.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Unauthorized' };
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { error: 'Unauthorized' };
 
-  // Get current stock
-  const { data: product, error: pError } = await supabase
-    .from('products')
-    .select('stock')
-    .eq('id', validated.data.product_id)
-    .single();
+    const pRows = await sql`
+      SELECT stock FROM public.products WHERE id = ${validated.data.product_id} LIMIT 1;
+    `;
 
-  if (pError || !product) return { error: 'Product not found' };
+    if (!pRows || pRows.length === 0) return { error: 'Product not found' };
 
-  const adjustment = validated.data.reason === 'RESTOCK' ? validated.data.quantity : -validated.data.quantity;
-  const newStock = product.stock + adjustment;
+    const currentStock = Number(pRows[0].stock);
+    const adjustment = validated.data.reason === 'RESTOCK' ? validated.data.quantity : -validated.data.quantity;
+    const newStock = currentStock + adjustment;
 
-  if (newStock < 0) return { error: 'Stock cannot be negative' };
+    if (newStock < 0) return { error: 'Stock cannot be negative' };
 
-  // Perform multiple operations in a pseudo-transaction
-  // 1. Create adjustment log
-  const { error: logError } = await supabase
-    .from('stock_adjustments')
-    .insert([{
-      product_id: validated.data.product_id,
-      adjusted_by: user.id,
-      old_stock: product.stock,
-      new_stock: newStock,
-      reason: validated.data.reason + (validated.data.notes ? `: ${validated.data.notes}` : ''),
-    }]);
+    const reasonText = validated.data.reason + (validated.data.notes ? `: ${validated.data.notes}` : '');
 
-  if (logError) return { error: logError.message };
+    // 1. Log adjustment
+    await sql`
+      INSERT INTO public.stock_adjustments (product_id, adjusted_by, old_stock, new_stock, reason)
+      VALUES (
+        ${validated.data.product_id},
+        ${user.id},
+        ${currentStock},
+        ${newStock},
+        ${reasonText}
+      );
+    `;
 
-  // 2. Update product stock
-  const { error: updateError } = await supabase
-    .from('products')
-    .update({ stock: newStock })
-    .eq('id', validated.data.product_id);
+    // 2. Update product
+    await sql`
+      UPDATE public.products
+      SET stock = ${newStock}, updated_at = NOW()
+      WHERE id = ${validated.data.product_id};
+    `;
 
-  if (updateError) return { error: updateError.message };
-
-  revalidatePath('/admin/products');
-  return { success: true, newStock };
+    revalidatePath('/admin/products');
+    return { success: true, newStock };
+  } catch (error: any) {
+    console.error('Error adjusting stock:', error);
+    return { error: error.message };
+  }
 }
 
 /**
- * LOOKUP ACTIONS (Brands, Units)
+ * LOOKUP ACTIONS (Brands, Units, Categories)
  */
 
 export async function createBrand(name: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('brands')
-    .insert([{ name }])
-    .select()
-    .single();
-
-  if (error) return { error: error.message };
-  revalidatePath('/admin/products');
-  return { data };
+  try {
+    const rows = await sql`
+      INSERT INTO public.brands (name)
+      VALUES (${name.trim()})
+      ON CONFLICT (name) DO NOTHING
+      RETURNING *;
+    `;
+    revalidatePath('/admin/products');
+    return { data: rows[0] };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 export async function createUnit(name: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('units')
-    .insert([{ name }])
-    .select()
-    .single();
-
-  if (error) return { error: error.message };
-  revalidatePath('/admin/products');
-  return { data };
+  try {
+    const rows = await sql`
+      INSERT INTO public.units (name)
+      VALUES (${name.trim().toUpperCase()})
+      ON CONFLICT (name) DO NOTHING
+      RETURNING *;
+    `;
+    revalidatePath('/admin/products');
+    return { data: rows[0] };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 export async function createCategory(name: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('categories')
-    .insert([{ name }])
-    .select()
-    .single();
-
-  if (error) return { error: error.message };
-  revalidatePath('/admin/products');
-  return { data };
+  try {
+    const rows = await sql`
+      INSERT INTO public.categories (name)
+      VALUES (${name.trim()})
+      ON CONFLICT (name) DO NOTHING
+      RETURNING *;
+    `;
+    revalidatePath('/admin/products');
+    return { data: rows[0] };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 export async function deleteCategory(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from('categories').delete().eq('id', id);
-  if (error) return { error: error.message };
-  revalidatePath('/admin/products');
-  return { success: true };
+  try {
+    await sql`DELETE FROM public.categories WHERE id = ${id};`;
+    revalidatePath('/admin/products');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 export async function deleteBrand(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from('brands').delete().eq('id', id);
-  if (error) return { error: error.message };
-  revalidatePath('/admin/products');
-  return { success: true };
+  try {
+    await sql`DELETE FROM public.brands WHERE id = ${id};`;
+    revalidatePath('/admin/products');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function getUnits() {
+  try {
+    const rows = await sql`SELECT * FROM public.units ORDER BY name ASC;`;
+    return rows as any[];
+  } catch (err) {
+    console.error('Error fetching units:', err);
+    return [];
+  }
+}
+
+export async function getBrands() {
+  try {
+    const rows = await sql`SELECT * FROM public.brands ORDER BY name ASC;`;
+    return rows as any[];
+  } catch (err) {
+    console.error('Error fetching brands:', err);
+    return [];
+  }
+}
+
+export async function getCategories() {
+  try {
+    const rows = await sql`SELECT * FROM public.categories ORDER BY name ASC;`;
+    return rows as any[];
+  } catch (err) {
+    console.error('Error fetching categories:', err);
+    return [];
+  }
 }
 
 export async function deleteUnit(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from('units').delete().eq('id', id);
-  if (error) return { error: error.message };
-  revalidatePath('/admin/products');
-  return { success: true };
+  try {
+    await sql`DELETE FROM public.units WHERE id = ${id};`;
+    revalidatePath('/admin/products');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function searchProducts(query: string) {
+  try {
+    if (!query.trim()) return [];
+    const pattern = `%${query.trim().toLowerCase()}%`;
+    const rows = await sql`
+      SELECT id, name, sku, price, stock
+      FROM public.products
+      WHERE is_active = true AND stock > 0 AND LOWER(name) LIKE ${pattern}
+      LIMIT 8;
+    `;
+    return rows as any[];
+  } catch (err) {
+    console.error('Error searching products:', err);
+    return [];
+  }
 }
 
 export async function getPaginatedProducts(
@@ -222,88 +311,117 @@ export async function getPaginatedProducts(
   orderBy: string = 'name',
   orderDir: 'asc' | 'desc' = 'asc'
 ) {
-  const supabase = await createClient();
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+  try {
+    const offset = (page - 1) * pageSize;
+    const searchPattern = search.trim() ? `%${search.trim().toLowerCase()}%` : null;
+    const catFilter = filters?.category_id && filters.category_id.length > 0 ? filters.category_id : null;
+    const brandFilter = filters?.brand_id && filters.brand_id.length > 0 ? filters.brand_id : null;
 
-  let query = supabase
-    .from('products')
-    .select('*, category:categories(*), brand:brands(*), unit:units(*)', { count: 'exact' })
-    .eq('is_active', true);
+    const countRows = await sql`
+      SELECT COUNT(*)::int as total
+      FROM public.products p
+      WHERE 
+        p.is_active = true
+        AND (${searchPattern}::text IS NULL OR (
+          LOWER(p.name) LIKE ${searchPattern} 
+          OR LOWER(p.sku) LIKE ${searchPattern}
+        ))
+        AND (${catFilter}::uuid[] IS NULL OR p.category_id = ANY(${catFilter}))
+        AND (${brandFilter}::uuid[] IS NULL OR p.brand_id = ANY(${brandFilter}));
+    `;
 
-  // Apply sorting
-  if (orderBy === 'category') {
-    // Sorting by joined table name is tricky in some Supabase versions without a view,
-    // so we'll fallback to category_id or keep it simple
-    query = query.order('category_id', { ascending: orderDir === 'asc' });
-  } else if (orderBy === 'brand') {
-    query = query.order('brand_id', { ascending: orderDir === 'asc' });
-  } else {
-    query = query.order(orderBy, { ascending: orderDir === 'asc' });
+    const total = countRows[0]?.total || 0;
+
+    const rows = await sql`
+      SELECT 
+        p.*,
+        CASE WHEN c.id IS NOT NULL THEN json_build_object('id', c.id, 'name', c.name) ELSE NULL END as category,
+        CASE WHEN b.id IS NOT NULL THEN json_build_object('id', b.id, 'name', b.name) ELSE NULL END as brand,
+        CASE WHEN u.id IS NOT NULL THEN json_build_object('id', u.id, 'name', u.name) ELSE NULL END as unit
+      FROM public.products p
+      LEFT JOIN public.categories c ON p.category_id = c.id
+      LEFT JOIN public.brands b ON p.brand_id = b.id
+      LEFT JOIN public.units u ON p.unit_id = u.id
+      WHERE 
+        p.is_active = true
+        AND (${searchPattern}::text IS NULL OR (
+          LOWER(p.name) LIKE ${searchPattern} 
+          OR LOWER(p.sku) LIKE ${searchPattern}
+        ))
+        AND (${catFilter}::uuid[] IS NULL OR p.category_id = ANY(${catFilter}))
+        AND (${brandFilter}::uuid[] IS NULL OR p.brand_id = ANY(${brandFilter}))
+      ORDER BY p.name ASC
+      LIMIT ${pageSize} OFFSET ${offset};
+    `;
+
+    return { 
+      data: rows as any[], 
+      count: total,
+      totalPages: Math.ceil(total / pageSize)
+    };
+  } catch (error: any) {
+    console.error('Error fetching paginated products:', error);
+    return { error: error.message, data: [], count: 0, totalPages: 0 };
   }
-
-  if (search.trim()) {
-    // Note: for simpler code, we search by name or SKU
-    query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
-  }
-
-  if (filters?.category_id && filters.category_id.length > 0) {
-    query = query.in('category_id', filters.category_id);
-  }
-
-  if (filters?.brand_id && filters.brand_id.length > 0) {
-    query = query.in('brand_id', filters.brand_id);
-  }
-
-  if (filters?.stock_status && filters.stock_status.length > 0) {
-    const conditions: string[] = [];
-    filters.stock_status.forEach(status => {
-      if (status === 'OUT_OF_STOCK') {
-        conditions.push('stock.eq.0');
-      } else if (status === 'LOW_STOCK') {
-        conditions.push('and(stock.gt.0,stock.lte.10)');
-      } else if (status === 'IN_STOCK') {
-        conditions.push('stock.gt.10');
-      }
-    });
-    
-    if (conditions.length > 0) {
-      query = query.or(conditions.join(','));
-    }
-  }
-
-  const { data, count, error } = await query.range(from, to);
-
-  if (error) return { error: error.message };
-  
-  return { 
-    data: data as any[], 
-    count: count || 0,
-    totalPages: Math.ceil((count || 0) / pageSize)
-  };
 }
 
 export async function bulkDeleteProducts(ids: string[]) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from('products')
-    .update({ is_active: false })
-    .in('id', ids);
-
-  if (error) return { error: error.message };
-  
-  revalidatePath('/admin/products');
-  return { success: true };
+  try {
+    await sql`
+      UPDATE public.products
+      SET is_active = false, updated_at = NOW()
+      WHERE id = ANY(${ids}::uuid[]);
+    `;
+    revalidatePath('/admin/products');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
 
 export async function getAllProducts() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('products')
-    .select('*, category:categories(name), brand:brands(name), unit:units(name)')
-    .eq('is_active', true)
-    .order('name', { ascending: true });
-
-  if (error) return { error: error.message };
-  return { data };
+  try {
+    const rows = await sql`
+      SELECT 
+        p.*,
+        json_build_object('name', c.name) as category,
+        json_build_object('name', b.name) as brand,
+        json_build_object('name', u.name) as unit
+      FROM public.products p
+      LEFT JOIN public.categories c ON p.category_id = c.id
+      LEFT JOIN public.brands b ON p.brand_id = b.id
+      LEFT JOIN public.units u ON p.unit_id = u.id
+      WHERE p.is_active = true
+      ORDER BY p.name ASC;
+    `;
+    return { data: rows as any[] };
+  } catch (error: any) {
+    return { error: error.message };
+  }
 }
+
+export async function getPOSCatalogData() {
+  try {
+    const [products, categories] = await Promise.all([
+      sql`
+        SELECT 
+          p.*,
+          CASE WHEN c.id IS NOT NULL THEN json_build_object('id', c.id, 'name', c.name) ELSE NULL END as category
+        FROM public.products p
+        LEFT JOIN public.categories c ON p.category_id = c.id
+        WHERE p.is_active = true
+        ORDER BY p.name ASC;
+      `,
+      sql`SELECT * FROM public.categories ORDER BY name ASC;`,
+    ]);
+
+    return {
+      products: products as unknown as Product[],
+      categories: categories as unknown as Category[],
+    };
+  } catch (error) {
+    console.error('Error in getPOSCatalogData:', error);
+    return { products: [], categories: [] };
+  }
+}
+

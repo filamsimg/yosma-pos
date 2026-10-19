@@ -2,14 +2,16 @@ import { z } from 'zod';
 
 export const productSchema = z.object({
   name: z.string().min(3, 'Nama produk minimal 3 karakter'),
-  sku: z.string().min(0),
-  description: z.string().min(0),
+  sku: z.string().min(0).optional(),
+  description: z.string().min(0).optional(),
   price: z.number().min(0, 'Harga tidak boleh negatif'),
-  discount_regular: z.number().min(0).max(100),
+  discount_regular: z.number().min(0).max(100).default(0),
+  stock: z.number().min(0).default(0).optional(),
   min_stock: z.number().min(0, 'Batas minimal stok tidak boleh negatif').default(10),
   category_id: z.string().uuid('Kategori harus dipilih'),
   brand_id: z.string().uuid('Merk harus dipilih'),
   unit_id: z.string().uuid('Satuan harus dipilih'),
+  image_url: z.string().nullable().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
