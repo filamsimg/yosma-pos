@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,16 +34,20 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Transaction, TransactionItem } from '@/types';
-import { cancelTransaction } from '@/lib/actions/transactions';
+import { 
+  cancelTransaction, 
+  getSalesTransactionHistory, 
+  getTransactionItems 
+} from '@/lib/actions/transactions';
 import { TRANSACTION_STATUS_MAP, PAYMENT_STATUS_MAP } from '@/lib/constants';
 import { toast } from 'sonner';
 import { EditOrderDialog } from '@/components/sales/EditOrderDialog';
+import { HistoryFilterBar } from '@/components/sales/history/HistoryFilterBar';
+import { HistoryReceiptDialog } from '@/components/sales/history/HistoryReceiptDialog';
 
 import { StatCard } from '@/components/ui/stat-card';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { AppDialog } from '@/components/ui/app-dialog';
-import { FormSection } from '@/components/ui/form-section';
 
 export default function SalesHistoryPage() {
   const { user } = useAuth();
@@ -79,35 +82,21 @@ export default function SalesHistoryPage() {
     if (isNewSearch) setLoading(true);
     else setLoadingMore(true);
 
-    const supabase = createClient();
-    const from = pageToFetch * ITEMS_PER_PAGE;
-    const to = from + ITEMS_PER_PAGE - 1;
-
     try {
-      let query = supabase
-        .from('transactions')
-        .select('*, outlet:outlets(*), sales:profiles(*)', { count: 'exact' })
-        .eq('sales_id', user.id)
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      const res = await getSalesTransactionHistory({
+        page: pageToFetch,
+        pageSize: ITEMS_PER_PAGE,
+        searchQuery,
+        statusFilter,
+      });
 
-      if (statusFilter !== 'ALL') {
-        query = query.eq('status', statusFilter);
-      }
-
-      if (searchQuery.trim()) {
-        query = query.ilike('invoice_number', `%${searchQuery}%`);
-      }
-
-      const { data, count } = await query;
-
-      if (data) {
+      if (res.data) {
         if (isNewSearch) {
-          setTransactions(data);
+          setTransactions(res.data);
         } else {
-          setTransactions(prev => [...prev, ...data]);
+          setTransactions(prev => [...prev, ...res.data]);
         }
-        setHasMore(count ? (from + data.length) < count : false);
+        setHasMore(res.hasMore);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -140,12 +129,8 @@ export default function SalesHistoryPage() {
   async function handleViewDetail(txn: Transaction) {
     setSelectedTxn(txn);
     setDetailOpen(true);
-    const supabase = createClient();
-    const { data } = await supabase
-      .from('transaction_items')
-      .select('*, product:products(*)')
-      .eq('transaction_id', txn.id);
-    if (data) setTxnItems(data);
+    const res = await getTransactionItems(txn.id);
+    if (res.data) setTxnItems(res.data);
   }
 
   async function handleCancelFromHistory(txnId: string, invoiceNumber: string) {
@@ -252,42 +237,12 @@ export default function SalesHistoryPage() {
       </div>
 
       <div className="p-5 space-y-5">
-        {/* Search & Filter Bar */}
-        <div className="space-y-3">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-            <input
-              type="text"
-              placeholder="Cari No. Invoice atau Nama Outlet..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-12 bg-white border border-slate-200 rounded-sm text-sm font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {[
-              { id: 'ALL', label: 'SEMUA', icon: History },
-              { id: 'PENDING', label: 'MENUNGGU', icon: Clock },
-              { id: 'COMPLETED', label: 'SELESAI', icon: CheckCircle2 },
-              { id: 'CANCELLED', label: 'DIBATALKAN', icon: XCircle },
-            ].map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setStatusFilter(f.id)}
-                className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 rounded-sm text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border",
-                  statusFilter === f.id
-                    ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100"
-                    : "bg-white text-slate-400 border-slate-100 hover:border-blue-200 hover:text-blue-600"
-                )}
-              >
-                <f.icon className="h-3 w-3" />
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <HistoryFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+        />
 
         {loading ? (
           <div className="space-y-3">
@@ -347,101 +302,16 @@ export default function SalesHistoryPage() {
         )}
       </div>
 
-      <AppDialog 
-        open={detailOpen} 
+      <HistoryReceiptDialog
+        open={detailOpen}
         onOpenChange={setDetailOpen}
-        variant="receipt"
-        title={selectedTxn?.invoice_number}
-        subtitle="Tanda terima transaksi"
-      >
-        {selectedTxn && (
-          <>
-            <div className="absolute top-6 right-16">
-               <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "text-[9px] font-black px-2.5 py-1 border rounded-sm uppercase tracking-widest shadow-sm bg-white", 
-                    getStatusInfo(selectedTxn).style
-                  )}
-               >
-                 {getStatusInfo(selectedTxn).label}
-               </Badge>
-            </div>
-
-            <FormSection padding="md" className="grid grid-cols-2 gap-6">
-               <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Outlet Kunjungan</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-sm bg-blue-500" />
-                    <p className="text-xs font-black text-slate-800 uppercase">{selectedTxn.outlet?.name}</p>
-                  </div>
-               </div>
-               <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Waktu Transaksi</p>
-                  <p className="text-xs font-bold text-slate-600">{format(new Date(selectedTxn.created_at), 'dd MMM yyyy, HH:mm')}</p>
-               </div>
-            </FormSection>
-
-            <div className="flex-1 overflow-y-auto">
-              <FormSection 
-                title="Detail Pesanan" 
-                subtitle={`${txnItems.length} Items`}
-                dashed={false}
-              >
-                 <div className="space-y-3">
-                   {txnItems.map(item => (
-                     <div key={item.id} className="group relative">
-                        <div className="flex justify-between items-start mb-1">
-                           <div className="flex-1 pr-4">
-                              <p className="font-black text-xs text-slate-800 uppercase leading-snug">{item.product?.name}</p>
-                              <p className="text-[10px] font-bold text-slate-400 mt-0.5 tracking-tight">
-                                {item.quantity} Unit <span className="mx-1 text-slate-200">|</span> Rp {item.price_at_sale.toLocaleString('id-ID')}
-                              </p>
-                           </div>
-                           <p className="text-sm font-black text-slate-900 tabular-nums">Rp {item.subtotal.toLocaleString('id-ID')}</p>
-                        </div>
-                     </div>
-                   ))}
-                 </div>
-              </FormSection>
-            </div>
-
-            <FormSection padding="lg" className="bg-slate-50/50" dashed={false}>
-               <div className="flex justify-between items-end mb-6">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Total Pembayaran</p>
-                    <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-black rounded-sm uppercase tracking-tighter">IDR</span>
-                      <p className="text-2xl font-black text-blue-600 tracking-tighter tabular-nums">
-                        {selectedTxn.total_price.toLocaleString('id-ID')}
-                      </p>
-                    </div>
-                  </div>
-               </div>
-
-               {selectedTxn.status === 'PENDING' && (
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => setEditOpen(true)} 
-                      className="w-full h-12 rounded-sm bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Koreksi Pesanan
-                    </button>
-                    
-                    <button 
-                      onClick={() => setConfirmCancelOpen(true)} 
-                      disabled={cancelling}
-                      className="w-full h-12 rounded-sm bg-red-50 text-red-600 border border-red-100 flex items-center justify-center gap-2 transition-all hover:bg-red-100 disabled:opacity-50 text-[10px] font-black uppercase tracking-[0.1em]"
-                    >
-                      {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-                      Batalkan Pesanan
-                    </button>
-                  </div>
-               )}
-            </FormSection>
-          </>
-        )}
-      </AppDialog>
+        selectedTxn={selectedTxn}
+        txnItems={txnItems}
+        statusInfo={selectedTxn ? getStatusInfo(selectedTxn) : { label: '', style: '' }}
+        onEditOrder={() => setEditOpen(true)}
+        onCancelOrder={() => setConfirmCancelOpen(true)}
+        cancelling={cancelling}
+      />
 
       {selectedTxn && (
         <EditOrderDialog

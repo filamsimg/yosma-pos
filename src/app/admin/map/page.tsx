@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { createClient } from '@/lib/supabase/client';
 import {
   Card,
   CardContent,
@@ -15,6 +14,7 @@ import { MapPin, Navigation, RefreshCcw } from 'lucide-react';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import { Button } from '@/components/ui/button';
 import type { Transaction } from '@/types';
+import { getTodayTransactionLocations } from '@/lib/actions/transactions';
 
 // Dynamically import the Leaflet map component to prevent SSR errors
 const MapCanvas = dynamic(() => import('@/components/admin/map-canvas'), {
@@ -35,22 +35,14 @@ export default function AdminMapPage() {
 
   async function fetchLocations() {
     setLoading(true);
-    const supabase = createClient();
-    
-    // Get today's start date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const { data } = await supabase
-      .from('transactions')
-      .select('*, outlet:outlets(name, address), sales:profiles(full_name)')
-      .not('lat', 'is', null)
-      .not('lng', 'is', null)
-      .gte('created_at', today.toISOString())
-      .order('created_at', { ascending: false });
-
-    if (data) setLocations(data);
-    setLoading(false);
+    try {
+      const { data } = await getTodayTransactionLocations();
+      if (data) setLocations(data as any);
+    } catch (err) {
+      console.error('Failed to fetch map locations:', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {

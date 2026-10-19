@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/store/cart-store';
 import { useAuth } from '@/components/providers/auth-provider';
 import { OutletCheckin } from '@/components/sales/outlet-checkin';
@@ -14,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { addDays } from 'date-fns';
 import { useOfflineSync } from '@/hooks/use-offline-sync';
 import { OfflineBanner } from '@/components/sales/OfflineBanner';
+import { createSalesTransaction, getPOSCatalogSyncData } from '@/lib/actions/transactions';
+import { recordOutletVisit } from '@/lib/actions/outlets';
 import type { Outlet } from '@/types';
 
 interface CheckinData {
@@ -37,33 +38,8 @@ export default function SalesPOSPage() {
 
   // --- Offline Sync Integration ---
   const handleSyncItem = async (item: any) => {
-    const supabase = createClient();
-    
     if (item.type === 'ORDER') {
-      const { transactionData, itemsData } = item.payload;
-      
-      // 1. Create transaction
-      const { data: transaction, error: txnError } = await supabase
-        .from('transactions')
-        .insert(transactionData)
-        .select('id, invoice_number')
-        .single();
-
-      if (txnError) throw txnError;
-
-      // 2. Create transaction items with the new ID
-      const txnItems = itemsData.map((it: any) => ({
-        ...it,
-        transaction_id: transaction.id
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('transaction_items')
-        .insert(txnItems);
-
-      if (itemsError) throw itemsError;
-      
-      return transaction;
+      return await createSalesTransaction(item.payload);
     }
     throw new Error('Unknown sync type');
   };
@@ -83,18 +59,11 @@ export default function SalesPOSPage() {
     const syncToastId = toast.loading("Sedang memperbarui data offline...");
 
     try {
-      const supabase = createClient();
-      
-      // 1. Sync Products & Categories
-      const [pRes, cRes, oRes] = await Promise.all([
-        supabase.from('products').select('*, category:categories(*)').eq('is_active', true).order('name'),
-        supabase.from('categories').select('*').order('name'),
-        supabase.from('outlets').select('*').eq('is_active', true).order('name')
-      ]);
+      const { products, categories, outlets } = await getPOSCatalogSyncData();
 
-      if (pRes.data) localStorage.setItem('yosma_products_cache', JSON.stringify(pRes.data));
-      if (cRes.data) localStorage.setItem('yosma_categories_cache', JSON.stringify(cRes.data));
-      if (oRes.data) localStorage.setItem('yosma_outlets_cache', JSON.stringify(oRes.data));
+      if (products) localStorage.setItem('yosma_products_cache', JSON.stringify(products));
+      if (categories) localStorage.setItem('yosma_categories_cache', JSON.stringify(categories));
+      if (outlets) localStorage.setItem('yosma_outlets_cache', JSON.stringify(outlets));
       
       localStorage.setItem('yosma_last_sync', new Date().toISOString());
 
@@ -123,20 +92,16 @@ export default function SalesPOSPage() {
 
   async function handleCheckin(data: CheckinData) {
     if (data.mode === 'VISIT_ONLY') {
-      // 1. Record visit directly to Supabase
-      const supabase = createClient();
-      const { error } = await supabase.from('visits').insert({
-        sales_id: user?.id,
+      const res = await recordOutletVisit({
         outlet_id: data.outlet.id,
         lat: data.lat,
         lng: data.lng,
         photo_url: data.photoUrl,
-        notes: 'Kunjungan rutin (Tanpa Order)',
-        status: 'COMPLETED'
+        notes: 'Kunjungan rutin (Tanpa Order)'
       });
 
-      if (error) {
-        console.error('Gagal mencatat kunjungan:', error);
+      if (res?.error) {
+        console.error('Gagal mencatat kunjungan:', res.error);
         toast.error('Gagal mencatat kunjungan.');
         return;
       }
@@ -145,7 +110,7 @@ export default function SalesPOSPage() {
         description: `Kunjungan ke ${data.outlet.name} telah disimpan.`
       });
       
-      // 2. Reset everything - don't enter transaction mode
+      // Reset everything - don't enter transaction mode
       setCheckedIn(false);
       setCheckinData(null);
       return;
@@ -205,17 +170,6 @@ export default function SalesPOSPage() {
       addToQueue('ORDER', payload);
 
       // 4. Automatic Promotion to ACTIVE
-      if (checkinData.outlet.status === 'PROSPECT') {
-        const supabase = createClient();
-        supabase
-          .from('outlets')
-          .update({ status: 'ACTIVE' })
-          .eq('id', checkinData.outlet.id)
-          .then(({ error }) => {
-            if (error) console.error('Gagal update status outlet:', error);
-          });
-      }
-
       toast.success(`Pesanan Disimpan!`, {
         duration: 4000,
         description: !isOnline 

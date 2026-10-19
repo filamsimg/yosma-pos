@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import {
   Card,
   CardContent,
@@ -29,7 +28,7 @@ import { cn } from '@/lib/utils';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 import Link from 'next/link';
 
-import { getAdminDashboardStats } from '@/lib/actions/dashboard';
+import { getAdminDashboardData } from '@/lib/actions/dashboard';
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<any>(null);
@@ -38,42 +37,15 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     async function fetchDashboard() {
-      const supabase = createClient();
-      
-      // 1. Fetch optimized stats from summary tables
-      const dashboardStats = await getAdminDashboardStats();
-      
-      // 2. Fetch recent transactions (only 8 items, so it's fast)
-      const { data: recentResult } = await supabase
-        .from('transactions')
-        .select('*, outlet:outlets(name, type), sales:profiles(full_name)')
-        .order('created_at', { ascending: false })
-        .limit(8);
-
-      // 3. Fetch top products (this is still raw but we can optimize later)
-      // For now we keep it simple as it only scans top 100 recent items
-      const { data: topProductsResult } = await supabase
-        .from('transaction_items')
-        .select('product_id, quantity, product:products(name, sku)')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      const topMap = new Map();
-      topProductsResult?.forEach(item => {
-        const id = item.product_id;
-        const p = Array.isArray(item.product) ? item.product[0] : item.product;
-        const current = topMap.get(id) || { name: p?.name, sku: p?.sku, qty: 0 };
-        topMap.set(id, { ...current, qty: current.qty + item.quantity });
-      });
-      const topList = Array.from(topMap.values()).sort((a, b) => b.qty - a.qty).slice(0, 5);
-
-      setStats({
-        ...dashboardStats,
-        topProducts: topList
-      });
-
-      if (recentResult) setRecentTxns(recentResult as any);
-      setLoading(false);
+      try {
+        const { stats: dStats, recentTxns: dRecent } = await getAdminDashboardData();
+        setStats(dStats);
+        setRecentTxns(dRecent as any);
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchDashboard();

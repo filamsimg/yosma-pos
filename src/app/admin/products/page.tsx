@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,11 +51,14 @@ import {
   adjustStock,
   getPaginatedProducts,
   bulkDeleteProducts,
-  getAllProducts
+  getAllProducts,
+  getCategories,
+  getBrands
 } from '@/lib/actions/products';
 import { ExportButton } from '@/components/admin/shared/ExportButton';
 import { type Product, type Category } from '@/types';
 import { type ProductFormValues } from '@/lib/validations/product';
+
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -122,11 +124,11 @@ export default function AdminProductsPage() {
       toast.error('Gagal mengambil data', { description: result.error });
     }
 
-    const supabase = createClient();
-    const { data: cData } = await supabase.from('categories').select('*').order('name');
+    const [cData, bData] = await Promise.all([
+      getCategories(),
+      getBrands()
+    ]);
     if (cData) setCategories(cData);
-
-    const { data: bData } = await supabase.from('brands').select('*').order('name');
     if (bData) setBrands(bData);
     
     setLoading(false);
