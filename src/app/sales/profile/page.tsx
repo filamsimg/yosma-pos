@@ -1,23 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth/session';
 import { ProfileForm } from '@/components/profile/ProfileForm';
 
 export default async function SalesProfilePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const profile = await getCurrentUser();
   
-  if (!user) {
-    redirect('/auth/login');
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
   if (!profile) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   return (
@@ -29,7 +18,7 @@ export default async function SalesProfilePage() {
         </div>
       </div>
       
-      <ProfileForm profile={profile} email={user.email} />
+      <ProfileForm profile={profile} email={profile.email || ''} />
     </div>
   );
 }

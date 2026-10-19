@@ -1,24 +1,13 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth/session';
 import { ProfileForm } from '@/components/profile/ProfileForm';
 import { AdminPageHeader } from '@/components/ui/admin/page-header';
 
 export default async function AdminProfilePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const profile = await getCurrentUser();
   
-  if (!user) {
-    redirect('/auth/login');
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
   if (!profile) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   return (
@@ -29,7 +18,7 @@ export default async function AdminProfilePage() {
         breadcrumbs={[{ label: 'Profil' }, { label: 'Pengaturan' }]}
       />
       
-      <ProfileForm profile={profile} email={user.email} />
+      <ProfileForm profile={profile} email={profile.email || ''} />
     </div>
   );
 }

@@ -62,9 +62,6 @@ export default function RegisterPage() {
     if (result?.error) {
       setError(result.error);
       setLoading(false);
-    } else if (result?.success) {
-      setSuccess(result.message || 'Registrasi berhasil! Silakan cek email Anda untuk konfirmasi.');
-      setLoading(false);
     }
   }
 

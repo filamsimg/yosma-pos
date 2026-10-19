@@ -8,7 +8,6 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types';
 
 interface AuthContextType {
@@ -46,43 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const supabase = createClient();
-      const {
-        data: { user: authUser },
-        error
-      } = await supabase.auth.getUser();
-
-      if (error) {
-        // If it's a network error (Failed to fetch), don't log out
-        if (error.message?.includes('FetchError') || error.message?.includes('Failed to fetch')) {
-          console.log('Network error detected, maintaining current session');
-          return;
-        }
-        setUser(null);
-        return;
-      }
-
-      if (authUser) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-
-        if (profileError) {
-           // If we can't fetch profile due to network, don't clear user yet
-           if (profileError.message?.includes('Failed to fetch')) return;
-           setUser(null);
-        } else {
-           setUser(profile);
-        }
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user || null);
       } else {
         setUser(null);
       }
     } catch (err: any) {
-      // Catch blocks for network errors
-      if (err.message?.includes('Failed to fetch')) {
-        console.log('Caught network error in AuthProvider');
+      // If network error, don't clear user immediately if already loaded
+      if (err?.message?.includes('Failed to fetch') || !navigator.onLine) {
+        console.warn('Network offline or fetch error detected in AuthProvider');
         return;
       }
       setUser(null);
@@ -93,23 +66,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchProfile();
-
-    // Listen for auth state changes
-    const supabase = createClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchProfile();
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [fetchProfile]);
 
   return (
